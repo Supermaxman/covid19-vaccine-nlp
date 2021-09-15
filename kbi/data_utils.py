@@ -63,7 +63,8 @@ class MultiClassMisinfoDataset(Dataset):
 
 	def _create_example(self, tokenizer, ex, m_id, m_label):
 		ex_id = ex['id']
-		ex_text = ex['text'].strip().replace('\r', ' ').replace('\n', ' ')
+		ex_text = ex['full_text'] if 'full_text' in ex else ex['text']
+		ex_text = ex_text.strip().replace('\r', ' ').replace('\n', ' ')
 		m = self.misinfo[m_id]
 		m_text = m['text']
 		token_data = tokenizer(
