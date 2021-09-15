@@ -51,7 +51,7 @@ python kbi/train.py \
   --data.num_workers 8 \
   --trainer.gpus ${gpus}, \
   --trainer.deterministic true \
-  --trainer.default_root_dir models \
+  --trainer.default_root_dir models/${run_id} \
   --data.train_path ${train_path} \
   --data.train_misinfo_path ${train_misinfo_path} \
   --data.val_path ${val_path} \
