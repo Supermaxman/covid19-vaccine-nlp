@@ -73,7 +73,7 @@ class MultiClassMisinfoDataset(Dataset):
 		)
 
 		p_ex = {
-			'id': f'{ex_id}|{m_id}',
+			'ids': f'{ex_id}|{m_id}',
 			'labels': m_label,
 			'input_ids': token_data['input_ids'],
 			'token_type_ids': token_data['token_type_ids'],

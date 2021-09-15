@@ -70,7 +70,7 @@ class MultiSequenceBatchCollator(BatchCollator):
 			self.pad_and_apply(ex['token_type_ids'], token_type_ids, ex_idx)
 
 		batch = {
-			'id': ids,
+			'ids': ids,
 			'input_ids': input_ids,
 			'attention_mask': attention_mask,
 			'token_type_ids': token_type_ids,
