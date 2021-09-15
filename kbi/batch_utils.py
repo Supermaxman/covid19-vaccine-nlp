@@ -64,7 +64,7 @@ class MultiSequenceBatchCollator(BatchCollator):
 
 		ids = []
 		for ex_idx, ex in enumerate(examples):
-			ids.append(ex['id'])
+			ids.append(ex['ids'])
 			self.pad_and_apply(ex['input_ids'], input_ids, ex_idx)
 			self.pad_and_apply(ex['attention_mask'], attention_mask, ex_idx)
 			self.pad_and_apply(ex['token_type_ids'], token_type_ids, ex_idx)
