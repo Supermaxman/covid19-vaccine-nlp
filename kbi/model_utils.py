@@ -79,7 +79,8 @@ class MultiClassLanguageModel(BaseLanguageModel):
 
 	def _eval_step(self, batch, batch_idx, dataloader_idx=None):
 		results = self.predict_step(batch, batch_idx, dataloader_idx)
-		loss = self.criterion(
+		los
+		s = self.criterion(
 			results['logits'],
 			batch['labels']
 		)

@@ -49,7 +49,7 @@ python kbi/train.py \
   --data.tokenizer_name ${pre_model_name} \
   --data.collator_type multi_sequence \
   --data.num_workers 8 \
-  --trainer.gpus ${gpus} \
+  --trainer.gpus ${gpus}, \
   --trainer.deterministic true \
   --trainer.default_root_dir models \
   --data.train_path ${train_path} \
