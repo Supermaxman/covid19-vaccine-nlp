@@ -34,15 +34,24 @@ class MultiClassMisinfoDataset(Dataset):
 		super().__init__()
 		self.label_map = {
 			'No Stance': 0,
+			'no_stance': 0,
 			'Accept': 1,
-			'Reject': 2
+			'agree': 1,
+			'Reject': 2,
+			'disagree': 2
 		}
 		with open(misinfo_path) as f:
 			self.misinfo = json.load(f)
 
 		self.examples = []
 		for ex in read_jsonl(data_path):
-			for m_id, m_label in ex['labels'].items():
+			if 'labels' in ex:
+				ex_labels = ex['labels']
+			elif 'misinfo' in ex:
+				ex_labels = ex['misinfo']
+			else:
+				raise ValueError()
+			for m_id, m_label in ex_labels.items():
 				if m_id not in self.misinfo:
 					continue
 				if m_label not in self.label_map:

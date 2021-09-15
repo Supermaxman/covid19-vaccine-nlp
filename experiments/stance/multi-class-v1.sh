@@ -49,6 +49,7 @@ python kbi/train.py \
   --data.collator_type multi_sequence \
   --data.num_workers 8 \
   --trainer.gpus ${gpus} \
+  --trainer.deterministic true \
   --trainer.default_root_dir models \
   --data.train_path ${train_path} \
   --data.train_misinfo_path ${train_misinfo_path} \
