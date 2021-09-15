@@ -1,6 +1,7 @@
 
 import argparse
 from pytorch_lightning.utilities.cli import LightningCLI
+import pytorch_lightning as pl
 
 from model_utils import get_model
 from data_utils import get_data_module

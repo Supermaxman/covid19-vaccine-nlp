@@ -15,8 +15,9 @@ class BaseLanguageModel(pl.LightningModule):
 			learning_rate: float = 5e-5,
 			weight_decay: float = 0.0,
 			lr_warm_up: float = 0.1,
+			epochs=10,
 			load_pre_model: bool = True,
-			torch_cache_dir: str = None,
+			torch_cache_dir: str = None
 	):
 		super().__init__()
 		self.pre_model_name = pre_model_name
@@ -26,6 +27,7 @@ class BaseLanguageModel(pl.LightningModule):
 		# assigned later when training starts
 		self.train_steps = 0
 		self.torch_cache_dir = torch_cache_dir
+		self.epochs = epochs
 
 		if load_pre_model:
 			self.lm = AutoModel.from_pretrained(
@@ -52,9 +54,14 @@ class BaseLanguageModel(pl.LightningModule):
 
 	def setup(self, stage: Optional[str] = None):
 		if stage == 'fit':
-			total_devices = self.hparams.n_gpus * self.hparams.n_nodes
+			# TODO get this from trainer
+			# total_devices = self.hparams.n_gpus * self.hparams.n_nodes
+			total_devices = 1
+			# self.trainer.fit_loop.max_steps()
 			train_batches = len(self.train_dataloader()) // total_devices
-			self.train_steps = (self.hparams.epochs * train_batches) // self.hparams.accumulate_grad_batches
+			# self.train_steps = (self.hparams.epochs * train_batches) // self.hparams.accumulate_grad_batches
+			self.train_steps = (self.epochs * train_batches)
+			# self.train_steps = self.trainer.fit_loop.max_steps()
 
 	def configure_optimizers(self):
 		params = self._get_optimizer_params(self.weight_decay)
