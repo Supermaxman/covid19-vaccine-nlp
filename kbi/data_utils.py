@@ -92,6 +92,9 @@ class MultiClassMisinfoDataset(Dataset):
 
 		return example
 
+	def worker_init_fn(self, _):
+		pass
+
 
 class MultiClassMisinfoDataModule(BaseDataModule):
 	def __init__(
