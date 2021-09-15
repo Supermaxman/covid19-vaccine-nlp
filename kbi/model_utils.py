@@ -37,7 +37,7 @@ class MultiClassLanguageModel(BaseLanguageModel):
 			attention_mask=batch['attention_mask'],
 			token_type_ids=batch['token_type_ids'],
 		)
-		cls_embedding = contextualized_embeddings[0]
+		cls_embedding = contextualized_embeddings[:, 0]
 		logits = self.cls_layer(cls_embedding)
 		return logits
 
@@ -64,8 +64,6 @@ class MultiClassLanguageModel(BaseLanguageModel):
 	def predict_step(self, batch, batch_idx, dataloader_idx=None):
 		batch_logits = self(batch)
 		batch_ids = batch['ids']
-		print(batch_logits.shape)
-		print(len(batch_ids))
 		assert batch_logits.shape[0] == len(batch_ids)
 		results = {
 			'ids': batch_ids,
