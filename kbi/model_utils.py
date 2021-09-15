@@ -64,6 +64,8 @@ class MultiClassLanguageModel(BaseLanguageModel):
 	def predict_step(self, batch, batch_idx, dataloader_idx=None):
 		batch_logits = self(batch)
 		batch_ids = batch['ids']
+		print(batch_logits.shape)
+		print(len(batch_ids))
 		assert batch_logits.shape[0] == len(batch_ids)
 		results = {
 			'ids': batch_ids,
