@@ -41,7 +41,7 @@ class F1PRMultiClassMetric(Metric):
 	def forward(self, labels, predictions):
 		labels = labels.cpu().numpy()
 		predictions = predictions.cpu().numpy()
-		cls_precision, cls_recall, cls_f1 = precision_recall_fscore_support(
+		cls_precision, cls_recall, cls_f1, cls_sup = precision_recall_fscore_support(
 			labels,
 			predictions,
 			average=None,
@@ -53,7 +53,7 @@ class F1PRMultiClassMetric(Metric):
 			mode_precision = cls_precision.mean()
 			mode_recall = cls_recall.mean()
 		elif self.mode == 'micro':
-			mode_precision, mode_recall, mode_f1 = precision_recall_fscore_support(
+			mode_precision, mode_recall, mode_f1, mode_sup = precision_recall_fscore_support(
 				labels,
 				predictions,
 				average='micro',
