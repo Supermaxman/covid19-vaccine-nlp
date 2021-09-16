@@ -91,6 +91,8 @@ class MultiClassLanguageModel(BaseLanguageModel):
 			self.log(f'{stage}_{cls_index}_p', c_p)
 			self.log(f'{stage}_{cls_index}_r', c_r)
 
+		self.threshold.to(self.device)
+
 	def training_step(self, batch, batch_idx):
 		batch_logits = self(batch)
 		batch_labels = batch['labels']
