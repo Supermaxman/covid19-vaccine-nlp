@@ -1,26 +1,23 @@
 
+import os
+
 from pytorch_lightning.utilities.cli import LightningCLI
-from pytorch_lightning.callbacks.model_checkpoint import ModelCheckpoint
 
 from model_utils import *
 from data_utils import *
 
 
 if __name__ == '__main__':
-	checkpoint_callback = ModelCheckpoint(
-		save_weights_only=True,
-		monitor=None,
-		save_top_k=0,
-		save_last=False
-	)
 	cli = LightningCLI(
 		MultiClassLanguageModel,
 		MultiClassMisinfoDataModule,
 		run=False,
 		trainer_defaults={
-			'callbacks': [
-				checkpoint_callback
-			]
+			'checkpoint_callback': False
 		}
 	)
 	cli.trainer.fit(cli.model, datamodule=cli.datamodule)
+	checkpoint_path = os.path.join(cli.trainer.default_root_dir, 'pytorch_model.bin')
+	if cli.trainer.should_rank_save_checkpoint:
+		cli.trainer.model.to('cpu')
+		torch.save(cli.trainer.model.state_dict(), checkpoint_path)
