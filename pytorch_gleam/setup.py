@@ -36,11 +36,11 @@ setup(
 	author_email="maxwellweinzierl@gmail.com",
 	description=DESCRIPTION,
 	long_description=LONG_DESCRIPTION,
-	packages=find_packages(),
 	install_requires=_load_requirements(_PATH_ROOT),
 	keywords=['pytorch', 'torch', 'pytorch_lightning', 'nlp', 'deep learning'],
 	python_requires=">=3.9",
 	license="Apache-2.0",
+	packages=find_packages(where='pytorch_gleam'),
 	classifiers=[
 		"Environment :: Console",
 		"Natural Language :: English",
