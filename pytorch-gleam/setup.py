@@ -30,7 +30,7 @@ LONG_DESCRIPTION = 'NLP package for pytorch and pytorch_lightning with pre-built
 
 # Setting up
 setup(
-	name="pytorch_gleam",
+	name="pytorch-gleam",
 	version=VERSION,
 	author="Maxwell Weinzierl",
 	author_email="maxwellweinzierl@gmail.com",
@@ -40,7 +40,7 @@ setup(
 	keywords=['pytorch', 'torch', 'pytorch_lightning', 'nlp', 'deep learning'],
 	python_requires=">=3.9",
 	license="Apache-2.0",
-	packages=find_packages(where='pytorch_gleam'),
+	packages=find_packages(),
 	classifiers=[
 		"Environment :: Console",
 		"Natural Language :: English",
