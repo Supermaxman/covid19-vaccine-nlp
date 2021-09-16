@@ -1,20 +1,11 @@
 
 import os
-from importlib.util import module_from_spec, spec_from_file_location
 from typing import List
-import time
 
 from setuptools import setup, find_packages
 
 _PATH_ROOT = os.path.dirname(__file__)
 _PATH_REQUIRE = os.path.join(_PATH_ROOT, "requirements")
-
-
-def _load_py_module(file_name, pkg="pytorch_gleam"):
-	spec = spec_from_file_location(os.path.join(pkg, file_name), os.path.join(_PATH_ROOT, pkg, file_name))
-	py = module_from_spec(spec)
-	spec.loader.exec_module(py)
-	return py
 
 
 def _load_requirements(path_dir: str, file_name: str = "requirements.txt", comment_char: str = "#") -> List[str]:
@@ -36,8 +27,6 @@ def _load_requirements(path_dir: str, file_name: str = "requirements.txt", comme
 VERSION = '0.1.0'
 DESCRIPTION = 'NLP package for pytorch and pytorch_lightning with pre-built models'
 LONG_DESCRIPTION = 'NLP package for pytorch and pytorch_lightning with pre-built models'
-
-_this_year = time.strftime("%Y")
 
 # Setting up
 setup(

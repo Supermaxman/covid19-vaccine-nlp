@@ -7,7 +7,7 @@ from torch.utils.data import Dataset
 
 from pytorch_gleam.data.base_datasets import BaseDataModule
 
-from pytorch_gleam.data.collators.misinfo_stance import MultiSequenceBatchCollator
+from pytorch_gleam.data.collators import MultiSequenceBatchCollator
 
 
 def read_jsonl(path):
@@ -19,7 +19,7 @@ def read_jsonl(path):
 				yield ex
 
 
-class MultiClassMisinfoDataset(Dataset):
+class MultiClassMisinfoStanceDataset(Dataset):
 	def __init__(self, tokenizer, data_path, misinfo_path):
 		super().__init__()
 		self.label_map = {
@@ -86,7 +86,7 @@ class MultiClassMisinfoDataset(Dataset):
 		pass
 
 
-class MultiClassMisinfoDataModule(BaseDataModule):
+class MultiClassMisinfoStanceDataModule(BaseDataModule):
 	def __init__(
 			self,
 			train_misinfo_path: str = None,
@@ -104,25 +104,25 @@ class MultiClassMisinfoDataModule(BaseDataModule):
 		self.predict_misinfo_path = predict_misinfo_path
 
 		if self.train_path is not None and self.train_misinfo_path is not None:
-			self.train_dataset = MultiClassMisinfoDataset(
+			self.train_dataset = MultiClassMisinfoStanceDataset(
 				tokenizer=self.tokenizer,
 				data_path=self.train_path,
 				misinfo_path=train_misinfo_path
 			)
 		if self.val_path is not None and self.val_misinfo_path is not None:
-			self.val_dataset = MultiClassMisinfoDataset(
+			self.val_dataset = MultiClassMisinfoStanceDataset(
 				tokenizer=self.tokenizer,
 				data_path=self.val_path,
 				misinfo_path=val_misinfo_path
 			)
 		if self.test_path is not None and self.test_misinfo_path is not None:
-			self.test_dataset = MultiClassMisinfoDataset(
+			self.test_dataset = MultiClassMisinfoStanceDataset(
 				tokenizer=self.tokenizer,
 				data_path=self.test_path,
 				misinfo_path=test_misinfo_path
 			)
 		if self.predict_path is not None and self.predict_misinfo_path is not None:
-			self.predict_dataset = MultiClassMisinfoDataset(
+			self.predict_dataset = MultiClassMisinfoStanceDataset(
 				tokenizer=self.tokenizer,
 				data_path=self.predict_path,
 				misinfo_path=predict_misinfo_path
