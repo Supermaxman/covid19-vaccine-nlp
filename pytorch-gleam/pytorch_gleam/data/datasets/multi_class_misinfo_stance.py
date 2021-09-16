@@ -1,20 +1,7 @@
 
-import json
-
-import torch
-
 from pytorch_gleam.data.datasets.misinfo_stance import MisinfoStanceDataset
 from pytorch_gleam.data.base_datasets import BaseDataModule
 from pytorch_gleam.data.collators import MultiSequenceBatchCollator
-
-
-def read_jsonl(path):
-	with open(path, 'r') as f:
-		for line in f:
-			line = line.strip()
-			if line:
-				ex = json.loads(line)
-				yield ex
 
 
 class MultiClassMisinfoStanceDataset(MisinfoStanceDataset):

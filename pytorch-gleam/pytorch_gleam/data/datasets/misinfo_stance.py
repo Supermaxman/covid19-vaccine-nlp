@@ -1,5 +1,6 @@
 
 import json
+from typing import List
 
 import torch
 from torch.utils.data import Dataset
@@ -15,6 +16,8 @@ def read_jsonl(path):
 
 
 class MisinfoStanceDataset(Dataset):
+	examples: List[dict]
+
 	def __init__(self, data_path, misinfo_path):
 		super().__init__()
 		self.label_map = {
