@@ -45,7 +45,8 @@ class F1PRMultiClassMetric(Metric):
 			labels,
 			predictions,
 			average=None,
-			labels=self.pos_labels
+			labels=self.pos_labels,
+			zero_division=0
 		)
 		if self.mode == 'macro':
 			# ignore 0 class in macro average
@@ -57,7 +58,8 @@ class F1PRMultiClassMetric(Metric):
 				labels,
 				predictions,
 				average='micro',
-				labels=self.pos_labels
+				labels=self.pos_labels,
+				zero_division=0
 			)
 		else:
 			raise ValueError(f'Unknown metric mode: {self.mode}')
