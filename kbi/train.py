@@ -4,7 +4,6 @@ from pytorch_lightning.utilities.cli import LightningCLI
 from model_utils import *
 from data_utils import *
 from checkpoint_utils import FitCheckpointCallback
-from prediction_utils import JsonlWriter
 
 if __name__ == '__main__':
 	cli = LightningCLI(
@@ -14,10 +13,7 @@ if __name__ == '__main__':
 		trainer_defaults={
 			'checkpoint_callback': False,
 			'callbacks': [
-				FitCheckpointCallback(),
-				JsonlWriter(
-					write_interval='epoch'
-				)
+				FitCheckpointCallback()
 			]
 		}
 	)

@@ -38,27 +38,27 @@ handler()
 }
 trap handler SIGINT
 
-echo "Training model..."
+#echo "Training model..."
 # PL_CONFIG=config_path to set from config
 # TODO checkpoint callback removal, set to only save at end
-#python kbi/train.py \
-#  --seed_everything 0 \
-#  --model.learning_rate 5e-5 \
-#  --trainer.max_epochs 10 \
-#  --data.batch_size 8 \
-#  --data.max_seq_len 128 \
-#  --model.pre_model_name ${pre_model_name} \
-#  --data.tokenizer_name ${pre_model_name} \
-#  --data.num_workers 8 \
-#  --trainer.gpus ${gpus}, \
-#  --trainer.deterministic true \
-#  --trainer.default_root_dir models/${run_id} \
-#  --data.train_path ${train_path} \
-#  --data.train_misinfo_path ${train_misinfo_path} \
-#  --data.val_path ${val_path} \
-#  --data.val_misinfo_path ${val_misinfo_path}
+python kbi/train.py \
+  --seed_everything 0 \
+  --model.learning_rate 5e-5 \
+  --trainer.max_epochs 10 \
+  --data.batch_size 8 \
+  --data.max_seq_len 128 \
+  --model.pre_model_name ${pre_model_name} \
+  --data.tokenizer_name ${pre_model_name} \
+  --data.num_workers 8 \
+  --trainer.gpus ${gpus}, \
+  --trainer.deterministic true \
+  --trainer.default_root_dir models/${run_id} \
+  --data.train_path ${train_path} \
+  --data.train_misinfo_path ${train_misinfo_path} \
+  --data.val_path ${val_path} \
+  --data.val_misinfo_path ${val_misinfo_path}
 
-
+echo "Testing model..."
 python kbi/test.py \
   --seed_everything 0 \
   --data.batch_size 16 \

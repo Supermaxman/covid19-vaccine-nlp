@@ -1,6 +1,5 @@
 
 from pytorch_lightning.utilities.cli import LightningCLI
-from pytorch_lightning.callbacks import LearningRateMonitor
 
 from model_utils import *
 from data_utils import *
