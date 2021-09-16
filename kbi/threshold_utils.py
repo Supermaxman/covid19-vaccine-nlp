@@ -13,7 +13,7 @@ class ThresholdModule(torch.nn.Module):
 		self.threshold_delta = threshold_delta
 
 		self.thresholds = torch.nn.Parameter(
-			torch.zeros(num_thresholds, dtype=torch.float32),
+			torch.zeros(num_thresholds, dtype=torch.float32, device='cpu'),
 			requires_grad=False
 		)
 		self.threshold_range = np.arange(
