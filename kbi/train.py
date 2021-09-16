@@ -7,16 +7,19 @@ from data_utils import *
 
 
 if __name__ == '__main__':
+	checkpoint_callback = ModelCheckpoint(
+		save_weights_only=True,
+		monitor=None,
+		save_top_k=0,
+		save_last=False
+	)
 	cli = LightningCLI(
 		MultiClassLanguageModel,
 		MultiClassMisinfoDataModule,
 		run=False,
 		trainer_defaults={
 			'callbacks': [
-				ModelCheckpoint(
-					save_weights_only=True,
-					monitor=None
-				),
+				checkpoint_callback
 			]
 		}
 	)
