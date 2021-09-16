@@ -1,5 +1,5 @@
 
-from abc import ABC
+from abc import ABC, abstractmethod
 
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
@@ -40,6 +40,7 @@ class BaseDataModule(pl.LightningDataModule, ABC):
 		self.test_dataset = None
 		self.predict_dataset = None
 
+	@abstractmethod
 	def create_collator(self):
 		pass
 

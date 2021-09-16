@@ -1,10 +1,11 @@
+from abc import abstractmethod, ABC
 
 import torch
 
 from pytorch_gleam.modeling.base_thresholds import ThresholdModule
 
 
-class Metric(torch.nn.Module):
+class Metric(torch.nn.Module, ABC):
 	def __init__(self, mode: str = 'max'):
 		super().__init__()
 		self.mode = mode
@@ -15,6 +16,7 @@ class Metric(torch.nn.Module):
 		else:
 			raise ValueError(f'Unknown mode: {self.mode}')
 
+	@abstractmethod
 	def forward(self, labels, predictions):
 		pass
 

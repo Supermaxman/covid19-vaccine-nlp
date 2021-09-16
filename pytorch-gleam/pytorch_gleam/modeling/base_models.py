@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from typing import Optional, Union, Callable
 
 import pytorch_lightning as pl
@@ -6,7 +6,7 @@ from transformers import AutoModel, AutoConfig
 from transformers import AdamW, get_linear_schedule_with_warmup
 
 
-class BaseLanguageModel(pl.LightningModule):
+class BaseLanguageModel(pl.LightningModule, ABC):
 	lm: Union[Callable]
 
 	def __init__(

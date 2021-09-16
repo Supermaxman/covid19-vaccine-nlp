@@ -1,6 +1,6 @@
 
 import torch
-from abc import ABC
+from abc import ABC, abstractmethod
 
 
 class BatchCollator(ABC):
@@ -26,6 +26,7 @@ class BatchCollator(ABC):
 		ex_ids = id_list[:self.max_seq_len]
 		id_tensor[ex_idx, :len(ex_ids)] = torch.tensor(ex_ids, dtype=torch.long)
 
+	@abstractmethod
 	def __call__(self, examples: list) -> dict:
 		pass
 

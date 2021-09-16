@@ -6,7 +6,6 @@ import torch
 from torch.utils.data import Dataset
 
 from pytorch_gleam.data.base_datasets import BaseDataModule
-
 from pytorch_gleam.data.collators import MultiSequenceBatchCollator
 
 
