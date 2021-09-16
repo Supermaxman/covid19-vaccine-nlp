@@ -24,7 +24,7 @@ class ThresholdModule(torch.nn.Module):
 		)
 
 	def forward(self, scores):
-		return self.predict(scores, self.thresholds)
+		return self.predict(scores, self.thresholds.numpy())
 
 	def predict(self, scores: np.ndarray, thresholds):
 		preds = (scores > thresholds).astype(np.int64)
