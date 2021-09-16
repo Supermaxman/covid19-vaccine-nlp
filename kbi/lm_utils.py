@@ -37,7 +37,7 @@ class BaseLanguageModel(pl.LightningModule):
 				pre_model_name,
 				cache_dir=torch_cache_dir
 			)
-			self.lm = AutoModel(config)
+			self.lm = AutoModel.from_config(config)
 		# noinspection PyUnresolvedReferences
 		self.hidden_size = self.lm.config.hidden_size
 

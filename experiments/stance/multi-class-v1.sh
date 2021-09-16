@@ -59,7 +59,7 @@ echo "Training model..."
 #  --data.val_misinfo_path ${val_misinfo_path}
 
 
-python kbi/predict.py \
+python kbi/test.py \
   --seed_everything 0 \
   --data.batch_size 16 \
   --data.max_seq_len 128 \
