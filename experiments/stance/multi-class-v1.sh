@@ -21,7 +21,7 @@ export TOKENIZERS_PARALLELISM=true
 echo "Starting experiment ${run_id}"
 echo "Reserving ${num_gpus} GPU(s)..."
 
-gpus=`python pytorch_gleam/gpu/request_gpus.py -r ${num_gpus}`
+gpus=`python pytorch-gleam/pytorch_gleam/gpu/request_gpus.py -r ${num_gpus}`
 if [[ ${gpus} -eq -1 ]]; then
     echo "Unable to reserve ${num_gpus} GPU(s), exiting."
     exit -1
@@ -33,7 +33,7 @@ handler()
 {
     echo "Experiment aborted."
     echo "Freeing ${num_gpus} GPUs: ${gpus}"
-    python pytorch_gleam/gpu/free_gpus.py -i ${gpus}
+    python pytorch-gleam/pytorch_gleam/gpu/free_gpus.py -i ${gpus}
     exit -1
 }
 trap handler SIGINT
@@ -74,4 +74,4 @@ python multi_class/test.py \
   --data.test_misinfo_path ${test_misinfo_path}
 
 echo "Freeing ${num_gpus} GPUs: ${gpus}"
-python pytorch_gleam/gpu/free_gpus.py -i ${gpus}
+python pytorch-gleam/pytorch_gleam/gpu/free_gpus.py -i ${gpus}
