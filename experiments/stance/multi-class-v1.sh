@@ -47,7 +47,6 @@ python kbi/train.py \
   --data.max_seq_len 128 \
   --model.pre_model_name ${pre_model_name} \
   --data.tokenizer_name ${pre_model_name} \
-  --data.collator_type multi_sequence \
   --data.num_workers 8 \
   --trainer.gpus ${gpus}, \
   --trainer.deterministic true \

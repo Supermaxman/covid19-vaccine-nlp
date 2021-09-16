@@ -6,6 +6,7 @@ import torch
 from torch.utils.data import Dataset
 
 from dm_utils import BaseDataModule
+from batch_utils import MultiSequenceBatchCollator
 
 
 def read_jsonl(path):
@@ -96,27 +97,38 @@ class MultiClassMisinfoDataModule(BaseDataModule):
 	):
 		super().__init__(*args, **kwargs)
 
-		if self.train_path is not None and train_misinfo_path is not None:
+		self.train_misinfo_path = train_misinfo_path
+		self.val_misinfo_path = val_misinfo_path
+		self.test_misinfo_path = test_misinfo_path
+		self.predict_misinfo_path = predict_misinfo_path
+
+		if self.train_path is not None and self.train_misinfo_path is not None:
 			self.train_dataset = MultiClassMisinfoDataset(
 				tokenizer=self.tokenizer,
 				data_path=self.train_path,
 				misinfo_path=train_misinfo_path
 			)
-		if self.val_path is not None and val_misinfo_path is not None:
+		if self.val_path is not None and self.val_misinfo_path is not None:
 			self.val_dataset = MultiClassMisinfoDataset(
 				tokenizer=self.tokenizer,
 				data_path=self.val_path,
 				misinfo_path=val_misinfo_path
 			)
-		if self.test_path is not None and test_misinfo_path is not None:
+		if self.test_path is not None and self.test_misinfo_path is not None:
 			self.test_dataset = MultiClassMisinfoDataset(
 				tokenizer=self.tokenizer,
 				data_path=self.test_path,
 				misinfo_path=test_misinfo_path
 			)
-		if self.predict_path is not None and predict_misinfo_path is not None:
+		if self.predict_path is not None and self.predict_misinfo_path is not None:
 			self.predict_dataset = MultiClassMisinfoDataset(
 				tokenizer=self.tokenizer,
 				data_path=self.predict_path,
 				misinfo_path=predict_misinfo_path
 			)
+
+	def create_collator(self):
+		return MultiSequenceBatchCollator(
+			max_seq_len=self.max_seq_len,
+			use_tpus=self.use_tpus,
+		)

@@ -1,4 +1,4 @@
-
+from abc import abstractmethod
 from typing import Optional, Union, Callable
 
 import pytorch_lightning as pl
@@ -78,3 +78,23 @@ class BaseLanguageModel(pl.LightningModule):
 			{'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': weight_decay},
 			{'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}]
 		return optimizer_params
+
+	def validation_step(self, batch, batch_idx, dataloader_idx=None):
+		return self.eval_step(batch, batch_idx, dataloader_idx=None)
+
+	def test_step(self, batch, batch_idx, dataloader_idx=None):
+		return self.eval_step(batch, batch_idx, dataloader_idx=None)
+
+	def validation_epoch_end(self, outputs):
+		self.eval_epoch_end(outputs, 'val')
+
+	def test_epoch_end(self, outputs):
+		self.eval_epoch_end(outputs, 'test')
+
+	@abstractmethod
+	def eval_step(self, batch, batch_idx, dataloader_idx=None):
+		pass
+
+	@abstractmethod
+	def eval_epoch_end(self, outputs, stage):
+		pass

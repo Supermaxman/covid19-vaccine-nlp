@@ -1,12 +1,12 @@
 
+from abc import ABC
+
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 
-from batch_utils import get_collator_type
 
-
-class BaseDataModule(pl.LightningDataModule):
+class BaseDataModule(pl.LightningDataModule, ABC):
 	def __init__(
 			self,
 			tokenizer_name: str,
@@ -14,7 +14,6 @@ class BaseDataModule(pl.LightningDataModule):
 			val_path: str = None,
 			test_path: str = None,
 			predict_path: str = None,
-			collator_type: str = 'multi_sequence',
 			batch_size: int = 32,
 			max_seq_len: int = 512,
 			num_workers: int = 8,
@@ -23,7 +22,6 @@ class BaseDataModule(pl.LightningDataModule):
 		super().__init__()
 
 		self.tokenizer_name = tokenizer_name
-		self.collator_type = collator_type
 		self.batch_size = batch_size
 		self.max_seq_len = max_seq_len
 		self.num_workers = num_workers
@@ -31,8 +29,6 @@ class BaseDataModule(pl.LightningDataModule):
 		self.tokenizer = AutoTokenizer.from_pretrained(
 			self.tokenizer_name
 		)
-
-		self.collator = get_collator_type(collator_type)
 
 		self.train_path = train_path
 		self.val_path = val_path
@@ -44,6 +40,9 @@ class BaseDataModule(pl.LightningDataModule):
 		self.test_dataset = None
 		self.predict_dataset = None
 
+	def create_collator(self):
+		pass
+
 	def train_dataloader(self):
 		train_dataloader = DataLoader(
 			self.train_dataset,
@@ -51,10 +50,7 @@ class BaseDataModule(pl.LightningDataModule):
 			batch_size=self.batch_size,
 			shuffle=True,
 			drop_last=True,
-			collate_fn=self.collator(
-				max_seq_len=self.max_seq_len,
-				use_tpus=self.use_tpus,
-			),
+			collate_fn=self.create_collator(),
 			worker_init_fn=self.train_dataset.worker_init_fn
 		)
 		return train_dataloader
@@ -65,10 +61,7 @@ class BaseDataModule(pl.LightningDataModule):
 			num_workers=self.num_workers,
 			batch_size=self.batch_size,
 			shuffle=False,
-			collate_fn=self.collator(
-				max_seq_len=self.max_seq_len,
-				use_tpus=self.use_tpus,
-			),
+			collate_fn=self.create_collator(),
 			worker_init_fn=self.val_dataset.worker_init_fn
 		)
 		return val_dataloader
@@ -79,10 +72,7 @@ class BaseDataModule(pl.LightningDataModule):
 			num_workers=self.num_workers,
 			batch_size=self.batch_size,
 			shuffle=False,
-			collate_fn=self.collator(
-				max_seq_len=self.max_seq_len,
-				use_tpus=self.use_tpus,
-			),
+			collate_fn=self.create_collator(),
 			worker_init_fn=self.test_dataset.worker_init_fn
 		)
 		return test_dataloader
@@ -93,10 +83,7 @@ class BaseDataModule(pl.LightningDataModule):
 			num_workers=self.num_workers,
 			batch_size=self.batch_size,
 			shuffle=False,
-			collate_fn=self.collator(
-				max_seq_len=self.max_seq_len,
-				use_tpus=self.use_tpus,
-			),
+			collate_fn=self.create_collator(),
 			worker_init_fn=self.predict_dataset.worker_init_fn
 		)
 		return predict_dataloader

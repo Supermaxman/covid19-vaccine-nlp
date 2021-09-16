@@ -1,8 +1,9 @@
 
 import torch
+from abc import ABC
 
 
-class BatchCollator:
+class BatchCollator(ABC):
 	def __init__(
 			self,
 			max_seq_len: int = 512,
@@ -27,16 +28,6 @@ class BatchCollator:
 
 	def __call__(self, examples: list) -> dict:
 		pass
-
-
-def get_collator_type(collator_type: str):
-	col_map = {
-		'multi_sequence': MultiSequenceBatchCollator
-	}
-	collator_type = collator_type.lower()
-	if collator_type not in col_map:
-		raise ValueError(f'Unknown collator_type: {collator_type}')
-	return col_map[collator_type]
 
 
 class MultiSequenceBatchCollator(BatchCollator):
