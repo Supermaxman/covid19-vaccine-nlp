@@ -39,6 +39,8 @@ class F1PRMultiClassMetric(Metric):
 		self.pos_labels = list(range(self.num_classes))[1:]
 
 	def forward(self, labels, predictions):
+		labels = labels.cpu().numpy()
+		predictions = predictions.cpu().numpy()
 		cls_precision, cls_recall, cls_f1 = precision_recall_fscore_support(
 			labels,
 			predictions,
