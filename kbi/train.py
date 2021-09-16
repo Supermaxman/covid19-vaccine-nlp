@@ -13,9 +13,11 @@ if __name__ == '__main__':
 		MultiClassMisinfoDataModule,
 		run=False,
 		trainer_defaults={
+			'save_callback': False,
 			'callbacks': [
 				ModelCheckpoint(
-					save_weights_only=True
+					save_weights_only=True,
+					monitor=None
 				),
 				# EarlyStopping(
 				# 	monitor='val_f1',
