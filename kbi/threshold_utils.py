@@ -1,3 +1,4 @@
+import numpy as np
 
 import torch
 
@@ -15,19 +16,18 @@ class ThresholdModule(torch.nn.Module):
 			torch.zeros(num_thresholds, dtype=torch.float32),
 			requires_grad=False
 		)
-		self.threshold_range = torch.arange(
+		self.threshold_range = np.arange(
 			self.threshold_min,
 			self.threshold_max,
 			self.threshold_delta,
-			dtype=torch.float32,
-			requires_grad=False
+			dtype=np.float32,
 		)
 
 	def forward(self, scores):
 		return self.predict(scores, self.thresholds)
 
-	def predict(self, scores, thresholds):
-		preds = scores.gt(thresholds).long()
+	def predict(self, scores: np.ndarray, thresholds):
+		preds = (scores > thresholds).astype(np.int64)
 		return preds
 
 	def update_thresholds(self, new_value):
@@ -59,22 +59,24 @@ class MultiClassThresholdModule(ThresholdModule):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, num_thresholds=1, **kwargs)
 
-	def predict(self, scores, thresholds):
+	def predict(self, scores: np.ndarray, thresholds: np.ndarray):
 		# zero class is idx 0
 		# pos classes is idx 1, ...
 		pos_scores = scores[..., 1:]
 		# filter out non-threshold classes
-		pos_above = pos_scores.gt(thresholds).float()
+		pos_above = (pos_scores > thresholds).astype(np.float32)
 		# [bsize, num_labels-1]
 		pos_scores = pos_scores * pos_above
 		# 1 if any are above threshold, 0 if none are above threshold
 		# [bsize]
-		pos_any_above = (pos_above.sum(dim=-1).gt(0)).long()
+
+		pos_any_above = (np.sum(pos_above, axis=-1) > 0).astype(np.int64)
 		# if none are above threshold then our prediction will be class 0, otherwise it will be
 		# between the classes which have scores above the threshold
 		# [bsize]
 		# we add one to the class id to account for the [:, 1:] filtering of only positive scores
-		pos_predictions = (pos_scores.max(dim=-1)[1] + 1)
+
+		pos_predictions = (np.max(pos_scores, axis=-1)[1] + 1)
 		# [bsize]
 		predictions = pos_predictions * pos_any_above
 		return predictions
