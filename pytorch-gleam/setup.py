@@ -24,7 +24,7 @@ def _load_requirements(path_dir: str, file_name: str = "requirements.txt", comme
 	return requirements
 
 
-VERSION = '0.1.0'
+VERSION = '0.1.1'
 DESCRIPTION = 'NLP package for pytorch and pytorch_lightning with pre-built models'
 LONG_DESCRIPTION = 'NLP package for pytorch and pytorch_lightning with pre-built models'
 
