@@ -52,14 +52,9 @@ class BaseLanguageModel(pl.LightningModule):
 
 	def setup(self, stage: Optional[str] = None):
 		if stage == 'fit':
-			print(f'num_nodes={self.trainer.num_nodes}')
 			total_devices = self.trainer.num_nodes * self.trainer.num_gpus
-			print(f'num_gpus={self.trainer.num_gpus}')
-			print(f'total_devices={total_devices}')
 			train_batches = len(self.train_dataloader()) // total_devices
-			print(f'train_batches={train_batches}')
 			self.train_steps = (self.trainer.max_epochs * train_batches)
-			print(f'train_steps={self.train_steps}')
 
 	def configure_optimizers(self):
 		params = self._get_optimizer_params(self.weight_decay)
