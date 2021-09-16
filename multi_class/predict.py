@@ -1,10 +1,11 @@
 
 from pytorch_lightning.utilities.cli import LightningCLI
 
-from model_utils import *
-from data_utils import *
-from checkpoint_utils import FitCheckpointCallback
-from prediction_utils import JsonlWriter
+from pytorch_gleam.data.datasets.misinfo_stance import MultiClassMisinfoDataModule
+from pytorch_gleam.modeling.models.multi_class import MultiClassLanguageModel
+from pytorch_gleam.callbacks.prediction import JsonlWriter
+from pytorch_gleam.callbacks.checkpoint import FitCheckpointCallback
+
 
 if __name__ == '__main__':
 	cli = LightningCLI(

@@ -41,7 +41,7 @@ trap handler SIGINT
 #echo "Training model..."
 # PL_CONFIG=config_path to set from config
 # TODO checkpoint callback removal, set to only save at end
-python kbi/train.py \
+python multi_class/train.py \
   --seed_everything 0 \
   --model.learning_rate 5e-5 \
   --trainer.max_epochs 10 \
@@ -59,7 +59,7 @@ python kbi/train.py \
   --data.val_misinfo_path ${val_misinfo_path}
 
 echo "Testing model..."
-python kbi/test.py \
+python multi_class/test.py \
   --seed_everything 0 \
   --data.batch_size 16 \
   --data.max_seq_len 128 \

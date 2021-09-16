@@ -5,8 +5,9 @@ import random
 import torch
 from torch.utils.data import Dataset
 
-from dm_utils import BaseDataModule
-from batch_utils import MultiSequenceBatchCollator
+from pytorch_gleam.data.base_datasets import BaseDataModule
+
+from pytorch_gleam.data.collators.misinfo_stance import MultiSequenceBatchCollator
 
 
 def read_jsonl(path):
