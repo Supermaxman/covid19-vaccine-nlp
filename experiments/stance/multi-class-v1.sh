@@ -37,12 +37,11 @@ handler()
 trap handler SIGINT
 
 echo "Training model..."
-
+# TODO checkpoint callback removal, set to only save at end
 python kbi/train.py \
   --seed_everything 0 \
   --model.learning_rate 5e-5 \
   --trainer.max_epochs 10 \
-  --model.epochs 10 \
   --data.batch_size 8 \
   --data.max_seq_len 128 \
   --model.pre_model_name ${pre_model_name} \
