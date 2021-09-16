@@ -37,6 +37,7 @@ handler()
 trap handler SIGINT
 
 echo "Training model..."
+# PL_CONFIG=config_path to set from config
 # TODO checkpoint callback removal, set to only save at end
 python kbi/train.py \
   --seed_everything 0 \

@@ -1,23 +1,11 @@
 
 import json
-from typing import Type
 import random
 
-from torch.utils.data import Dataset
-import pytorch_lightning as pl
 import torch
+from torch.utils.data import Dataset
 
 from dm_utils import BaseDataModule
-
-
-def get_data_module(data_type: str) -> Type[pl.LightningDataModule]:
-	dm_map = {
-		'mc_misinfo': MultiClassMisinfoDataModule
-	}
-	data_type = data_type.lower()
-	if data_type not in dm_map:
-		raise ValueError(f'Unknown data_type: {data_type}')
-	return dm_map[data_type]
 
 
 def read_jsonl(path):
