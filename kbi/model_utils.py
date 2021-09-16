@@ -61,9 +61,9 @@ class MultiClassLanguageModel(BaseLanguageModel):
 	def eval_epoch_end(self, outputs, stage):
 		loss = torch.cat([x['loss'] for x in outputs], dim=0).mean()
 		scores = torch.cat([x['scores'] for x in outputs], dim=0)
-		scores = scores.cpu().numpy()
+		scores = scores.cpu()
 		labels = torch.cat([x['labels'] for x in outputs], dim=0)
-		labels = labels.cpu().numpy()
+		labels = labels.cpu()
 
 		if stage == 'val':
 			# select max f1 threshold
@@ -76,8 +76,8 @@ class MultiClassLanguageModel(BaseLanguageModel):
 
 		preds = self.threshold(scores)
 		f1, p, r, cls_f1, cls_p, cls_r, cls_indices = self.metric(
-			labels,
-			preds
+			labels.numpy(),
+			preds.numpy()
 		)
 		self.log(f'{stage}_loss', loss)
 		self.log(f'{stage}_f1', f1)
