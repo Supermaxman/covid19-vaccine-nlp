@@ -15,9 +15,6 @@ if __name__ == '__main__':
 		trainer_defaults={
 			'checkpoint_callback': False,
 			'callbacks': [
-				LearningRateMonitor(
-					logging_interval='epoch',
-				),
 				FitCheckpointCallback(),
 				JsonlWriter(
 					write_interval='epoch'
@@ -25,7 +22,7 @@ if __name__ == '__main__':
 			]
 		}
 	)
-	cli.trainer.fit(
+	cli.trainer.predict(
 		cli.model,
 		datamodule=cli.datamodule
 	)

@@ -2,7 +2,7 @@
 import os
 import torch
 
-from pytorch_lightning.callbacks import Callback, ModelCheckpoint
+from pytorch_lightning.callbacks import Callback
 import pytorch_lightning as pl
 from pytorch_lightning.trainer.states import TrainerFn
 
