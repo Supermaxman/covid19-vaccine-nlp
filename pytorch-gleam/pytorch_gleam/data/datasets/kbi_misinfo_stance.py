@@ -257,6 +257,7 @@ class MultiClassMisinfoStanceDataModule(BaseDataModule):
 			predict_misinfo_path: str = None,
 			pos_samples: int = 1,
 			neg_samples: int = 1,
+			num_relations: int = 2,
 			*args,
 			**kwargs
 	):
@@ -266,19 +267,22 @@ class MultiClassMisinfoStanceDataModule(BaseDataModule):
 		self.val_misinfo_path = val_misinfo_path
 		self.test_misinfo_path = test_misinfo_path
 		self.predict_misinfo_path = predict_misinfo_path
+		self.pos_samples = pos_samples
+		self.neg_samples = neg_samples
+		self.num_relations = num_relations
 
 		if self.train_path is not None and self.train_misinfo_path is not None:
 			self.train_dataset = KbiMisinfoStanceDataset(
-				pos_samples=pos_samples,
-				neg_samples=neg_samples,
+				pos_samples=self.pos_samples,
+				neg_samples=self.neg_samples,
 				tokenizer=self.tokenizer,
 				data_path=self.train_path,
 				misinfo_path=train_misinfo_path
 			)
 		if self.val_path is not None and self.val_misinfo_path is not None:
 			self.val_dataset = KbiMisinfoStanceDataset(
-				pos_samples=pos_samples,
-				neg_samples=neg_samples,
+				pos_samples=self.pos_samples,
+				neg_samples=self.neg_samples,
 				tokenizer=self.tokenizer,
 				data_path=self.val_path,
 				misinfo_path=val_misinfo_path
@@ -298,6 +302,7 @@ class MultiClassMisinfoStanceDataModule(BaseDataModule):
 
 	def create_collator(self):
 		return KbiBatchCollator(
+			num_relations=self.num_relations,
 			max_seq_len=self.max_seq_len,
 			use_tpus=self.use_tpus,
 		)

@@ -7,13 +7,15 @@ from pytorch_gleam.data.base_collators import BatchCollator
 class KbiBatchCollator(BatchCollator):
 	def __init__(
 			self,
+			num_relations: int = 2,
 			*args,
 			**kwargs
 	):
+		self.num_relations = num_relations
 		super().__init__(*args, **kwargs)
 
 	def _calculate_multi_seq_padding(self, examples):
-		if self.force_max_seq_len:
+		if self.use_tpus:
 			pad_seq_len = self.max_seq_len
 		else:
 			pad_seq_len = 0
@@ -38,12 +40,15 @@ class KbiBatchCollator(BatchCollator):
 		token_type_ids = torch.zeros([num_examples, num_sequences_per_example, pad_seq_len], dtype=torch.long)
 		direction_mask = torch.zeros([num_examples, 2], dtype=torch.float)
 		labels = torch.zeros([num_examples, num_samples], dtype=torch.long)
+		relation_mask = torch.zeros([num_examples, num_samples, self.num_relations], dtype=torch.float)
 		ids = []
 		m_ids = []
 		for ex_idx, ex in enumerate(examples):
 			ids.append(ex['t_ex']['t_id'])
 			m_ids.append(ex['m_ex']['m_id'])
-			labels[ex_idx] = torch.tensor(ex['labels'], dtype=torch.long)
+			for l_idx, label in enumerate(ex['labels']):
+				labels[ex_idx, l_idx] = label
+				relation_mask[ex_idx, l_idx, label] = 1.0
 			ex_seqs = [ex['m_ex'], ex['t_ex']] + ex['p_samples'] + ex['n_samples']
 			direction_mask[ex_idx, ex['direction']] = 1.0
 			for seq_idx, seq in enumerate(ex_seqs):
@@ -64,6 +69,7 @@ class KbiBatchCollator(BatchCollator):
 			'token_type_ids': token_type_ids,
 			'direction_mask': direction_mask,
 			'labels': torch.tensor(labels, dtype=torch.long),
+			'relation_mask': relation_mask
 		}
 
 		return batch
