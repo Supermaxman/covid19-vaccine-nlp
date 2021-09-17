@@ -66,7 +66,6 @@ class KbiLanguageModel(BaseLanguageModel):
 
 	def eval_step(self, batch, batch_idx, dataloader_idx=None):
 		loss, accuracy = self.triplet_step(batch)
-		print(loss.shape)
 		result = {
 			'loss': loss,
 			'accuracy': accuracy,
@@ -166,23 +165,19 @@ class KbiLanguageModel(BaseLanguageModel):
 		pos_backward_energy = self.ke.energy(pos_embs, pos_m_embs, t_ex_embs)
 		# [bsize, pos_samples, 2]
 		pos_energy = torch.stack([pos_forward_energy, pos_backward_energy], dim=-1)
-		print(f'pos_energy.shape={pos_energy.shape}')
 		# [bsize, neg_samples]
 		neg_forward_energy = self.ke.energy(t_ex_embs, neg_m_embs, neg_embs)
 		# [bsize, neg_samples]
 		neg_backward_energy = self.ke.energy(neg_embs, neg_m_embs, t_ex_embs)
 		# [bsize, neg_samples, 2]
 		neg_energy = torch.stack([neg_forward_energy, neg_backward_energy], dim=-1)
-		print(f'neg_energy.shape={neg_energy.shape}')
 		# [bsize, 1, 2]
 		direction_mask = batch['direction_mask'].unsqueeze(dim=-2)
 		# first randomly pick between subject and object losses
 		# [bsize, pos_samples]
 		pos_energy = (pos_energy * direction_mask).sum(dim=-1)
-		print(f'pos_energy.shape={pos_energy.shape}')
 		# [bsize, neg_samples]
 		neg_energy = (neg_energy * direction_mask).sum(dim=-1)
-		print(f'neg_energy.shape={neg_energy.shape}')
 
 		return pos_energy, neg_energy
 
