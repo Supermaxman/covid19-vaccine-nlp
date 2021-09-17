@@ -1,6 +1,6 @@
 
 import json
-from typing import List
+from typing import List, Dict, Any, Union
 
 import torch
 from torch.utils.data import Dataset
@@ -16,7 +16,7 @@ def read_jsonl(path):
 
 
 class MisinfoStanceDataset(Dataset):
-	examples: List[dict]
+	examples: List[Dict[Any, Union[Any, Dict]]]
 
 	def __init__(self, data_path, misinfo_path):
 		super().__init__()
