@@ -248,7 +248,7 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 			return 1
 
 
-class MultiClassMisinfoStanceDataModule(BaseDataModule):
+class KbiMisinfoStanceDataModule(BaseDataModule):
 	def __init__(
 			self,
 			train_misinfo_path: str = None,
