@@ -120,7 +120,7 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 
 		direction = self._sample_direction()
 		# [pos sample relation labels + neg_sample_relation_labels]
-		labels = [tmp_relation for _ in range(len(pos_examples))] + neg_relations
+		labels = [tmp_relation for _ in range(len(pos_samples))] + neg_relations
 		ex = {
 			't_ex': t_ex,
 			'm_ex': m_ex,
