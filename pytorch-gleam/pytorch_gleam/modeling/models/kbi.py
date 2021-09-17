@@ -160,13 +160,6 @@ class KbiLanguageModel(BaseLanguageModel):
 		# [bsize, neg_samples, emb_size]
 		neg_m_embs = m_embs[..., pos_samples:pos_samples+neg_samples, :]
 
-		print(f't_ex_embs.shape={t_ex_embs.shape}')
-		print(f'neg_m_embs.shape={neg_m_embs.shape}')
-		print(f'neg_embs.shape={neg_embs.shape}')
-
-		print(f't_ex_embs.shape={t_ex_embs.shape}')
-		print(f'pos_m_embs.shape={pos_m_embs.shape}')
-		print(f'pos_embs.shape={pos_embs.shape}')
 		# [bsize, pos_samples]
 		pos_forward_energy = self.ke.energy(t_ex_embs, pos_m_embs, pos_embs)
 		# [bsize, neg_samples]
@@ -181,7 +174,8 @@ class KbiLanguageModel(BaseLanguageModel):
 		# [bsize, neg_samples, 2]
 		neg_energy = torch.stack([neg_forward_energy, neg_backward_energy], dim=-1)
 		print(f'neg_energy.shape={neg_energy.shape}')
-		direction_mask = batch['direction_mask']
+		# [bsize, 1, 2]
+		direction_mask = batch['direction_mask'].unsqueeze(dim=-2)
 		# first randomly pick between subject and object losses
 		# [bsize, pos_samples]
 		pos_energy = (pos_energy * direction_mask).sum(dim=-1)
