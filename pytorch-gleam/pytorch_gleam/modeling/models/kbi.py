@@ -66,6 +66,7 @@ class KbiLanguageModel(BaseLanguageModel):
 
 	def eval_step(self, batch, batch_idx, dataloader_idx=None):
 		loss, accuracy = self.triplet_step(batch)
+		print(loss.shape)
 		result = {
 			'loss': loss,
 			'accuracy': accuracy,
