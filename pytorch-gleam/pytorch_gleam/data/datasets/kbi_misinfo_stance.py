@@ -164,7 +164,7 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 		possible_permutations = [
 			permutation
 			for permutation in self.permutations
-			if permutation(m_id, tmp_relation, pm_stance) is not None
+			if permutation(m_id, tmp_relation, pm_stance, pos_samples) is not None
 		]
 		p_indices = torch.randint(
 			high=len(possible_permutations),
