@@ -57,7 +57,7 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 				'm_ex': m_ex,
 				'm_label': m_label
 			}
-			self.label_examples[m_id][m_label].append(ex)
+			self.label_examples[m_id][m_label].append(t_ex)
 			# no stance has no true pairs
 			if m_label != 0:
 				self.examples.append(ex)
