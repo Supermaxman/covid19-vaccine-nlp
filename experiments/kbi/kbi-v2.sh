@@ -64,6 +64,7 @@ python kbi/train.py \
   --data.val_misinfo_path ${val_misinfo_path}
 
 #echo "Testing model..."
+# TODO PL_CONFIG
 #python multi_class/test.py \
 #  --seed_everything 0 \
 #  --data.batch_size 16 \
