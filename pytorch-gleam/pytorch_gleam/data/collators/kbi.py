@@ -68,7 +68,7 @@ class KbiBatchCollator(BatchCollator):
 			'attention_mask': attention_mask,
 			'token_type_ids': token_type_ids,
 			'direction_mask': direction_mask,
-			'labels': torch.tensor(labels, dtype=torch.long),
+			'labels': labels,
 			'relation_mask': relation_mask
 		}
 

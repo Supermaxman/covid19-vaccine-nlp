@@ -101,7 +101,7 @@ class KbiLanguageModel(BaseLanguageModel):
 		e_proj = self.ke_entity_layer(e_lm_output)
 		e_embs = self.ke(e_proj, 'entity')
 		# [bsize, num_entities, emb_size]
-		e_embs = e_embs.view(num_examples, num_entities, self.ke_emb_size)
+		e_embs = e_embs.view(num_examples, num_entities, e_embs.shape[-1])
 		# num_samples = batch['pos_samples'] + batch['neg_samples']
 		# [bsize, num_samples, num_relations]
 		# relation_mask = batch['relation_mask']
@@ -116,7 +116,7 @@ class KbiLanguageModel(BaseLanguageModel):
 		# [bsize * num_relations, ke_emb_size]
 		r_embs = self.ke(r_projections, 'rel')
 		# [bsize, num_relations, ke_emb_size]
-		r_embs = r_embs.view(num_examples, self.num_relations, self.ke_emb_size)
+		r_embs = r_embs.view(num_examples, self.num_relations, r_embs.shape[-1])
 		# [bsize, num_entities, emb_size]
 		return e_embs, r_embs
 
