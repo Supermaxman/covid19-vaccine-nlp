@@ -82,11 +82,10 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 		# TODO could sample positive relations too
 		tmp_relation = self._sample_relation()
 		pm_stance = self.tmp_stance(tmp_relation, tm_stance)
-
 		pos_examples = self.label_examples[m_id][pm_stance]
 		# if pos_examples is empty then flip tmp_relation
 		if len(pos_examples) == 0:
-			tmp_relation = (tmp_relation + 1) % 2
+			tmp_relation = self.flip_relation(tmp_relation)
 			pm_stance = self.tmp_stance(tmp_relation, tm_stance)
 			pos_examples = self.label_examples[m_id][pm_stance]
 
@@ -140,7 +139,7 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 		# 2 % 2 = 0 + 1 = 1
 		# r_mod is 1 when entail, so flipping (tm_stance + 1) % 2 to get 1 is same as tm_stance
 		# r_mod is 0 when contradict, so flipping tm_stance is correct
-		return self.flip_tm_stance((tm_stance + r_mod) % 2)
+		return (tm_stance + r_mod) % 2 + 1
 
 	def flip_tm_stance(self, tm_stance):
 		# 0 is no_stance
