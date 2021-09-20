@@ -46,6 +46,9 @@ class KbiLanguageModel(BaseLanguageModel):
 			gamma=self.ke_gamma,
 			loss_norm=self.ke_loss_norm
 		)
+		self.f_dropout = torch.nn.Dropout(
+			p=self.hidden_dropout_prob
+		)
 		# TODO build multi-class multi-label threshold module
 		# self.threshold = MultiClassThresholdModule()
 		# TODO select based on metric
@@ -92,7 +95,7 @@ class KbiLanguageModel(BaseLanguageModel):
 		# [bsize * num_seq, hidden_size]
 		lm_output = contextualized_embeddings[:, 0]
 		# TODO consider dropout
-		# lm_output = self.f_dropout(lm_output)
+		lm_output = self.f_dropout(lm_output)
 		lm_output = lm_output.view(num_examples, num_sequences_per_example, self.hidden_size)
 		# [bsize, hidden_size]
 		r_lm_output = lm_output[:, 0]

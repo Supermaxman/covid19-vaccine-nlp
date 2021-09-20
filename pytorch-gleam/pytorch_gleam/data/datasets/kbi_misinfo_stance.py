@@ -8,11 +8,10 @@ from pytorch_gleam.data.collators import KbiBatchCollator
 
 
 class KbiMisinfoStanceDataset(MisinfoStanceDataset):
-	def __init__(self, tokenizer, pos_samples: int = 1, neg_samples: int = 1, shuffle=False, *args, **kwargs):
+	def __init__(self, tokenizer, pos_samples: int = 1, neg_samples: int = 1, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		self.pos_samples = pos_samples
 		self.neg_samples = neg_samples
-		self.shuffle = shuffle
 		self.permutations = [
 			self.flip_polarity,
 			self.flip_rel,

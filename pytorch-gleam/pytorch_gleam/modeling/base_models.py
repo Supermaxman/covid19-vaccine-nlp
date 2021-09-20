@@ -40,6 +40,8 @@ class BaseLanguageModel(pl.LightningModule, ABC):
 			self.lm = AutoModel.from_config(config)
 		# noinspection PyUnresolvedReferences
 		self.hidden_size = self.lm.config.hidden_size
+		# noinspection PyUnresolvedReferences
+		self.hidden_dropout_prob = self.lm.config.hidden_dropout_prob
 
 	def lm_step(self, input_ids, attention_mask, token_type_ids):
 		outputs = self.lm(
