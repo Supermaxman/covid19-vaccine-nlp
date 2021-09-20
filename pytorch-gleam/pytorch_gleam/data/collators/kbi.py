@@ -59,9 +59,9 @@ class KbiBatchCollator(BatchCollator):
 				self.pad_and_apply_seq(seq['attention_mask'], attention_mask, ex_idx, seq_idx)
 				self.pad_and_apply_seq(seq['token_type_ids'], token_type_ids, ex_idx, seq_idx)
 			for p_ex in ex['p_samples']:
-				p_ids.append(p_ex['id'])
+				p_ids.append(p_ex['t_id'])
 			for n_ex in ex['n_samples']:
-				n_ids	.append(n_ex['id'])
+				n_ids	.append(n_ex['t_id'])
 		batch = {
 			'ids': ids,
 			'm_ids': m_ids,
