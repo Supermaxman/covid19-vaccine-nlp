@@ -52,7 +52,10 @@ class BaseDataModule(pl.LightningDataModule, ABC):
 			shuffle=True,
 			drop_last=True,
 			collate_fn=self.create_collator(),
-			worker_init_fn=self.train_dataset.worker_init_fn
+			worker_init_fn=self.train_dataset.worker_init_fn,
+			# ensures different samples across epochs from rng generator
+			# seeded on creation with worker seed
+			persistent_workers=True
 		)
 		return train_dataloader
 
@@ -63,7 +66,9 @@ class BaseDataModule(pl.LightningDataModule, ABC):
 			batch_size=self.batch_size,
 			shuffle=False,
 			collate_fn=self.create_collator(),
-			worker_init_fn=self.val_dataset.worker_init_fn
+			worker_init_fn=self.val_dataset.worker_init_fn,
+			# ensures same samples because rng will get assigned during worker creation
+			persistent_workers=False
 		)
 		return val_dataloader
 
@@ -74,7 +79,9 @@ class BaseDataModule(pl.LightningDataModule, ABC):
 			batch_size=self.batch_size,
 			shuffle=False,
 			collate_fn=self.create_collator(),
-			worker_init_fn=self.test_dataset.worker_init_fn
+			worker_init_fn=self.test_dataset.worker_init_fn,
+			# ensures same samples because rng will get assigned during worker creation
+			persistent_workers=False
 		)
 		return test_dataloader
 
@@ -85,6 +92,8 @@ class BaseDataModule(pl.LightningDataModule, ABC):
 			batch_size=self.batch_size,
 			shuffle=False,
 			collate_fn=self.create_collator(),
-			worker_init_fn=self.predict_dataset.worker_init_fn
+			worker_init_fn=self.predict_dataset.worker_init_fn,
+			# ensures same samples because rng will get assigned during worker creation
+			persistent_workers=False
 		)
 		return predict_dataloader

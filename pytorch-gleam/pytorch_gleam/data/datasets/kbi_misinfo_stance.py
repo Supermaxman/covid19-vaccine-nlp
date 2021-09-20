@@ -1,3 +1,4 @@
+
 import torch
 from collections import defaultdict
 
@@ -7,10 +8,11 @@ from pytorch_gleam.data.collators import KbiBatchCollator
 
 
 class KbiMisinfoStanceDataset(MisinfoStanceDataset):
-	def __init__(self, tokenizer, pos_samples: int = 1, neg_samples: int = 1, *args, **kwargs):
+	def __init__(self, tokenizer, pos_samples: int = 1, neg_samples: int = 1, shuffle=False, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		self.pos_samples = pos_samples
 		self.neg_samples = neg_samples
+		self.shuffle = shuffle
 		self.permutations = [
 			self.flip_polarity,
 			self.flip_rel,
@@ -167,7 +169,7 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 		]
 		p_indices = torch.randint(
 			high=len(possible_permutations),
-			size=[sample_count]
+			size=[sample_count],
 		).tolist()
 		samples = [
 			possible_permutations[i](m_id, tmp_relation, pm_stance, pos_samples) for i in p_indices
@@ -222,7 +224,7 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 		else:
 			m_s_indices = torch.randint(
 				high=len(m_examples),
-				size=[m_count]
+				size=[m_count],
 			).tolist()
 		for s_idx in m_s_indices:
 			samples.append(m_examples[s_idx])
@@ -245,6 +247,9 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 			return 0
 		else:
 			return 1
+
+	def worker_init_fn(self, _):
+		pass
 
 
 class KbiMisinfoStanceDataModule(BaseDataModule):
