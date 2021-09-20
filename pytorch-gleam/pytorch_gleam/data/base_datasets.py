@@ -44,56 +44,71 @@ class BaseDataModule(pl.LightningDataModule, ABC):
 	def create_collator(self):
 		pass
 
+	def get_datasets(self, ds):
+		if not isinstance(ds, list):
+			ds = [ds]
+		return ds
+
+	def flatten_dataloaders(self, data_loaders):
+		if isinstance(data_loaders, list):
+			if len(data_loaders) == 0:
+				data_loaders = data_loaders[0]
+		return data_loaders
+
+	def create_eval_data_loaders(self, datasets):
+		data_loaders = [
+			DataLoader(
+				ds,
+				num_workers=self.num_workers,
+				batch_size=self.batch_size,
+				shuffle=False,
+				collate_fn=self.create_collator(),
+				worker_init_fn=ds.worker_init_fn,
+				# ensures same samples because rng will get assigned during worker creation
+				persistent_workers=False
+			)
+			for ds in datasets
+		]
+		return data_loaders
+
+	def create_train_data_loaders(self, datasets):
+		data_loaders = [
+			DataLoader(
+				ds,
+				num_workers=self.num_workers,
+				batch_size=self.batch_size,
+				shuffle=True,
+				drop_last=True,
+				collate_fn=self.create_collator(),
+				worker_init_fn=ds.worker_init_fn,
+				# ensures different samples across epochs from rng generator
+				# seeded on creation with worker seed
+				persistent_workers=True
+			)
+			for ds in datasets
+		]
+		return data_loaders
+
 	def train_dataloader(self):
-		train_dataloader = DataLoader(
-			self.train_dataset,
-			num_workers=self.num_workers,
-			batch_size=self.batch_size,
-			shuffle=True,
-			drop_last=True,
-			collate_fn=self.create_collator(),
-			worker_init_fn=self.train_dataset.worker_init_fn,
-			# ensures different samples across epochs from rng generator
-			# seeded on creation with worker seed
-			persistent_workers=True
-		)
-		return train_dataloader
+		data_sets = self.get_datasets(self.train_dataset)
+		data_loaders = self.create_train_data_loaders(data_sets)
+		data_loaders = self.flatten_dataloaders(data_loaders)
+		return data_loaders
 
 	def val_dataloader(self):
-		val_dataloader = DataLoader(
-			self.val_dataset,
-			num_workers=self.num_workers,
-			batch_size=self.batch_size,
-			shuffle=False,
-			collate_fn=self.create_collator(),
-			worker_init_fn=self.val_dataset.worker_init_fn,
-			# ensures same samples because rng will get assigned during worker creation
-			persistent_workers=False
-		)
-		return val_dataloader
+		data_sets = self.get_datasets(self.val_dataset)
+		data_loaders = self.create_eval_data_loaders(data_sets)
+		data_loaders = self.flatten_dataloaders(data_loaders)
+		return data_loaders
 
 	def test_dataloader(self):
-		test_dataloader = DataLoader(
-			self.test_dataset,
-			num_workers=self.num_workers,
-			batch_size=self.batch_size,
-			shuffle=False,
-			collate_fn=self.create_collator(),
-			worker_init_fn=self.test_dataset.worker_init_fn,
-			# ensures same samples because rng will get assigned during worker creation
-			persistent_workers=False
-		)
-		return test_dataloader
+		data_sets = self.get_datasets(self.test_dataset)
+		data_loaders = self.create_eval_data_loaders(data_sets)
+		data_loaders = self.flatten_dataloaders(data_loaders)
+		return data_loaders
 
 	def predict_dataloader(self):
-		predict_dataloader = DataLoader(
-			self.predict_dataset,
-			num_workers=self.num_workers,
-			batch_size=self.batch_size,
-			shuffle=False,
-			collate_fn=self.create_collator(),
-			worker_init_fn=self.predict_dataset.worker_init_fn,
-			# ensures same samples because rng will get assigned during worker creation
-			persistent_workers=False
-		)
-		return predict_dataloader
+		data_sets = self.get_datasets(self.predict_dataset)
+		data_loaders = self.create_eval_data_loaders(data_sets)
+		data_loaders = self.flatten_dataloaders(data_loaders)
+		return data_loaders

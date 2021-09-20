@@ -5,6 +5,7 @@ from collections import defaultdict
 from pytorch_gleam.data.base_datasets import BaseDataModule
 from pytorch_gleam.data.datasets.misinfo_stance import MisinfoStanceDataset
 from pytorch_gleam.data.collators import KbiBatchCollator
+import itertools
 
 
 class KbiMisinfoStanceDataset(MisinfoStanceDataset):
@@ -22,9 +23,12 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 			m['token_data'] = tokenizer(
 				m['text']
 			)
+		self.full_examples = []
 		self.base_examples = self.examples
 		self.examples = []
 		self.label_examples = defaultdict(lambda: defaultdict(list))
+		self.m_examples = defaultdict(list)
+		self.m_exs = {}
 		ex_token_data = {}
 		for pair_ex in self.base_examples:
 			ex_id = pair_ex['ex_id']
@@ -39,29 +43,35 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 			m_id = pair_ex['m_id']
 			m = self.misinfo[m_id]
 			m_label = pair_ex['m_label']
-			m_ex = {
-				'm_id': m_id,
-				'm_text': pair_ex['m_text'],
-				'input_ids': m['token_data']['input_ids'],
-				'token_type_ids': m['token_data']['token_type_ids'],
-				'attention_mask': m['token_data']['attention_mask'],
-			}
+			if m_id in self.m_exs:
+				m_ex = self.m_exs[m_id]
+			else:
+				m_ex = {
+					'm_id': m_id,
+					'm_text': pair_ex['m_text'],
+					'input_ids': m['token_data']['input_ids'],
+					'token_type_ids': m['token_data']['token_type_ids'],
+					'attention_mask': m['token_data']['attention_mask'],
+				}
+				self.m_exs[m_id] = m_ex
 			t_ex = {
 				't_id': ex_id,
 				't_text': pair_ex['ex_text'],
 				'input_ids': token_data['input_ids'],
 				'token_type_ids': token_data['token_type_ids'],
 				'attention_mask': token_data['attention_mask'],
+				'm_label': m_label
 			}
 			ex = {
 				't_ex': t_ex,
 				'm_ex': m_ex,
-				'm_label': m_label
 			}
 			self.label_examples[m_id][m_label].append(t_ex)
+			self.m_examples[m_id].append(t_ex)
 			# no stance has no true pairs
 			if m_label != 0:
 				self.examples.append(ex)
+			self.full_examples.append(ex)
 
 	def __getitem__(self, idx):
 		if torch.is_tensor(idx):
@@ -73,7 +83,7 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 		# 1 is accept
 		# 2 is reject
 		# 0 is no stance, and is only in negative_examples
-		tm_stance = ex['m_label']
+		tm_stance = t_ex['m_label']
 		m_id = m_ex['m_id']
 		t_id = t_ex['t_id']
 
@@ -120,14 +130,17 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 
 		direction = self._sample_direction()
 		# [pos sample relation labels + neg_sample_relation_labels]
-		labels = [tmp_relation for _ in range(len(pos_samples))] + neg_relations
+		# not used for training, stance labels are unnecessary
+		labels = [tm_stance] + [p_ex['m_label'] for p_ex in pos_samples] + [n_ex['m_label'] for n_ex in neg_samples]
+		relations = [tmp_relation for _ in range(len(pos_samples))] + neg_relations
 		ex = {
 			't_ex': t_ex,
 			'm_ex': m_ex,
 			'labels': labels,
 			'p_samples': pos_samples,
 			'n_samples': neg_samples,
-			'direction': direction
+			'direction': direction,
+			'relations': relations
 		}
 
 		return ex
@@ -251,6 +264,52 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 		pass
 
 
+class KbiMisinfoInferStanceDataset(KbiMisinfoStanceDataset):
+	def __init__(self, pair_count=1, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		# TODO support pair counts greater than 1
+		self.pair_count = pair_count
+		self.examples = []
+		for m_id, m_examples in self.m_examples.items():
+			m_ex = self.m_exs[m_id]
+			for a_ex, b_ex in itertools.combinations(m_examples, 2):
+				pair_ex = {
+					't_ex': a_ex,
+					'p_ex': b_ex,
+					'm_ex': m_ex,
+				}
+				self.examples.append(pair_ex)
+
+	def __getitem__(self, idx):
+		if torch.is_tensor(idx):
+			idx = idx.tolist()
+
+		ex = self.examples[idx]
+		t_ex = ex['t_ex']
+		m_ex = ex['m_ex']
+		pair_examples = [ex['p_ex']]
+		# 1 is accept
+		# 2 is reject
+		# 0 is no stance, and is only in negative_examples
+
+		# both directions
+		direction = [0, 1]
+		labels = [t_ex['m_label']] + [p_ex['m_label'] for p_ex in pair_examples]
+		# both relations
+		relations = [[0, 1] for _ in range(len(pair_examples))]
+		ex = {
+			't_ex': t_ex,
+			'm_ex': m_ex,
+			'labels': labels,
+			'p_samples': pair_examples,
+			'n_samples': [],
+			'direction': direction,
+			'relations': relations
+		}
+
+		return ex
+
+
 class KbiMisinfoStanceDataModule(BaseDataModule):
 	def __init__(
 			self,
@@ -283,13 +342,25 @@ class KbiMisinfoStanceDataModule(BaseDataModule):
 				misinfo_path=train_misinfo_path
 			)
 		if self.val_path is not None and self.val_misinfo_path is not None:
-			self.val_dataset = KbiMisinfoStanceDataset(
+			val_triplet_dataset = KbiMisinfoStanceDataset(
 				pos_samples=self.pos_samples,
 				neg_samples=self.neg_samples,
 				tokenizer=self.tokenizer,
 				data_path=self.val_path,
 				misinfo_path=val_misinfo_path
 			)
+			val_infer_dataset = KbiMisinfoInferStanceDataset(
+				pos_samples=self.pos_samples,
+				neg_samples=self.neg_samples,
+				tokenizer=self.tokenizer,
+				data_path=self.val_path,
+				misinfo_path=val_misinfo_path
+			)
+
+			self.val_dataset = [
+				val_triplet_dataset,
+				val_infer_dataset
+			]
 		if self.test_path is not None and self.test_misinfo_path is not None:
 			self.test_dataset = KbiMisinfoStanceDataset(
 				tokenizer=self.tokenizer,

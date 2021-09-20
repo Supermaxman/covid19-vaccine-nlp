@@ -1,3 +1,4 @@
+from collections import defaultdict
 
 import torch
 
@@ -57,22 +58,57 @@ class KbiLanguageModel(BaseLanguageModel):
 		# 	mode=metric_mode
 		# )
 	# TODO
-	# def predict_step(self, batch, batch_idx, dataloader_idx=None):
-	#
 
 	def eval_epoch_end(self, outputs, stage):
-		loss = torch.cat([x['loss'] for x in outputs], dim=0).mean()
-		accuracy = torch.cat([x['accuracy'] for x in outputs], dim=0).mean()
-
+		triplet_eval_outputs, infer_eval_outputs = outputs
+		loss = torch.cat([x['loss'] for x in triplet_eval_outputs], dim=0).mean()
+		accuracy = torch.cat([x['accuracy'] for x in triplet_eval_outputs], dim=0).mean()
 		self.log(f'{stage}_loss', loss)
 		self.log(f'{stage}_accuracy', accuracy)
 
+		# [count]
+		t_ids = flatten([x['ids'] for x in infer_eval_outputs])
+		# [count]
+		m_ids = flatten([x['m_ids'] for x in infer_eval_outputs])
+		# [count, num_pairs]
+		p_ids = flatten([x['p_ids'] for x in infer_eval_outputs])
+		# [count, num_pairs + 1]
+		labels = torch.cat([x['labels'] for x in infer_eval_outputs], dim=0)
+		# [count]
+		t_label = labels[:, 0]
+		# [count, num_pairs]
+		p_labels = labels[:, 1:]
+		# [count, num_pairs, num_relations]
+		t_energies = torch.cat([x['energies'] for x in infer_eval_outputs], dim=0)
+
+		m_adj_list = defaultdict(list)
+		m_labels = {}
+		for ex_t_id, ex_m_id, ex_p_ids, ex_t_label, ex_p_labels, ex_t_energies in zip(
+				t_ids,
+				m_ids,
+				p_ids,
+				labels,
+				t_label,
+				p_labels,
+				t_energies
+		):
+			m_labels[ex_t_id] = ex_t_label
+			for ex_p_id, ex_p_label, ex_tmp_energy in zip(ex_p_ids, ex_p_labels, ex_t_energies):
+				m_adj_list[ex_m_id].append((ex_t_id, ex_p_id, ex_tmp_energy))
+				m_labels[ex_p_id] = ex_p_label
+
+		# TODO use adj list for inference
+
 	def eval_step(self, batch, batch_idx, dataloader_idx=None):
-		loss, accuracy = self.triplet_step(batch)
-		result = {
-			'loss': loss,
-			'accuracy': accuracy,
-		}
+		if dataloader_idx is None or dataloader_idx == 0:
+			loss, accuracy = self.triplet_step(batch)
+			result = {
+				'loss': loss,
+				'accuracy': accuracy,
+			}
+		else:
+			result = self.predict_step(batch, batch_idx, dataloader_idx)
+
 		return result
 
 	def forward(self, batch):
@@ -138,51 +174,72 @@ class KbiLanguageModel(BaseLanguageModel):
 			neg_embs = None
 		return t_ex_embs, pos_embs, neg_embs
 
-	def triplet_energy(self, e_embs, m_embs, batch):
-		# all
+	def predict_energy(self, e_embs, m_embs, batch):
+		# convert m_embs to both relation types
+		# [bsize, 1, num_relations, emb_size]
+		m_embs = m_embs.unsqueeze(dim=-3)
+		# [bsize, pos_samples, num_relations, 1]
+		rel_mask = batch['relation_mask'].unsqueeze(dim=-1)
+		# [bsize, pos_samples, num_relations, emb_size]
+		m_embs = m_embs * rel_mask
+
 		# t_ex_embs: [bsize, emb_size],
-		# pos_embs: [bsize, pos_samples, emb_size],
-		# neg_embs: [bsize, pos_samples, emb_size],
-		t_ex_embs, pos_embs, neg_embs = self.split_embeddings(e_embs, batch)
-		# [bsize, 1, emb_size]
-		t_ex_embs = t_ex_embs.unsqueeze(dim=-2)
+		# pos_embs: [bsize, pos_samples, emb_size]
+		t_ex_embs, pos_embs, _ = self.split_embeddings(e_embs, batch)
+		# [bsize, 1, 1, emb_size]
+		t_ex_embs = t_ex_embs.unsqueeze(dim=-2).unsqueeze(dim=-2)
+		# [bsize, pos_samples, 1, emb_size]
+		pos_embs = pos_embs.unsqueeze(dim=-2)
+		# [bsize, 1, 1, 2]
+		d_mask = batch['direction_mask'].unsqueeze(dim=-2).unsqueeze(dim=-2)
+		# [bsize, pos_samples, num_relations]
+		pos_energy = self._energy(t_ex_embs, m_embs, pos_embs, d_mask)
+		return pos_energy
+
+	def triplet_energy(self, e_embs, m_embs, batch):
+		# convert m_embs to only one relation type
 		# [bsize, 1, num_relations, emb_size]
 		m_embs = m_embs.unsqueeze(dim=-3)
 		# [bsize, pos_samples + neg_samples, num_relations, 1]
 		rel_mask = batch['relation_mask'].unsqueeze(dim=-1)
 		# [bsize, pos_samples + neg_samples, num_relations, emb_size]
 		m_embs = m_embs * rel_mask
+		# using the rel_mask we are able to sum over m_embs that are zero'd
+		m_embs = m_embs.sum(dim=-2)
+
+		# t_ex_embs: [bsize, emb_size],
+		# pos_embs: [bsize, pos_samples, emb_size],
+		# neg_embs: [bsize, pos_samples, emb_size],
+		t_ex_embs, pos_embs, neg_embs = self.split_embeddings(e_embs, batch)
+		# [bsize, 1, emb_size]
+		t_ex_embs = t_ex_embs.unsqueeze(dim=-2)
 		pos_samples = batch['pos_samples']
 		neg_samples = batch['neg_samples']
 		# [bsize, pos_samples + neg_samples, emb_size]
-		# using the rel_mask we are able to sum over m_embs that are zero'd
-		m_embs = m_embs.sum(dim=-2)
 		# [bsize, pos_samples, emb_size]
 		pos_m_embs = m_embs[..., :pos_samples, :]
 		# [bsize, neg_samples, emb_size]
 		neg_m_embs = m_embs[..., pos_samples:pos_samples+neg_samples, :]
 
-		# [bsize, pos_samples]
-		pos_forward_energy = self.ke.energy(t_ex_embs, pos_m_embs, pos_embs)
-		# [bsize, neg_samples]
-		pos_backward_energy = self.ke.energy(pos_embs, pos_m_embs, t_ex_embs)
-		# [bsize, pos_samples, 2]
-		pos_energy = torch.stack([pos_forward_energy, pos_backward_energy], dim=-1)
-		# [bsize, neg_samples]
-		neg_forward_energy = self.ke.energy(t_ex_embs, neg_m_embs, neg_embs)
-		# [bsize, neg_samples]
-		neg_backward_energy = self.ke.energy(neg_embs, neg_m_embs, t_ex_embs)
-		# [bsize, neg_samples, 2]
-		neg_energy = torch.stack([neg_forward_energy, neg_backward_energy], dim=-1)
 		# [bsize, 1, 2]
-		direction_mask = batch['direction_mask'].unsqueeze(dim=-2)
-		# first randomly pick between subject and object losses
+		d_mask = batch['direction_mask'].unsqueeze(dim=-2)
 		# [bsize, pos_samples]
-		pos_energy = (pos_energy * direction_mask).sum(dim=-1)
+		pos_energy = self._energy(t_ex_embs, pos_m_embs, pos_embs, d_mask)
 		# [bsize, neg_samples]
-		neg_energy = (neg_energy * direction_mask).sum(dim=-1)
+		neg_energy = self._energy(t_ex_embs, neg_m_embs, neg_embs, d_mask)
 
 		return pos_energy, neg_energy
+
+	def _energy(self, t_embs, m_embs, e_embs, direction_mask):
+		# [bsize, pos_samples]
+		forward_energy = self.ke.energy(t_embs, m_embs, e_embs)
+		# [bsize, neg_samples]
+		backward_energy = self.ke.energy(e_embs, m_embs, t_embs)
+		# [bsize, pos_samples, 2]
+		tme_energy = torch.stack([forward_energy, backward_energy], dim=-1)
+		d_sum = direction_mask.sum(dim=-1)
+		tme_energy = (tme_energy * direction_mask).sum(dim=-1) / d_sum
+		return tme_energy
 
 	def loss(self, pos_energy, neg_energy):
 		loss, accuracy = self.ke.loss(pos_energy, neg_energy)
@@ -204,3 +261,25 @@ class KbiLanguageModel(BaseLanguageModel):
 			'loss': loss
 		}
 		return result
+
+	def predict_step(self, batch, batch_idx, dataloader_idx=None):
+		e_embs, r_embs = self(batch)
+		# [bsize, num_pairs, num_relations]
+		pair_rel_energy = self.predict_energy(e_embs, r_embs, batch)
+		results = {
+			# [bsize]
+			'ids': batch['ids'],
+			# [bsize]
+			'm_ids': batch['m_ids'],
+			# [bsize, num_pairs]
+			'p_ids': batch['p_ids'],
+			# [bsize, num_pairs+1]
+			'labels': batch['labels'],
+			# [bsize, num_pairs, num_relations]
+			'energies': pair_rel_energy
+		}
+		return results
+
+
+def flatten(l):
+	return [item for sublist in l for item in sublist]
