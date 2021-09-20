@@ -51,7 +51,7 @@ class BaseDataModule(pl.LightningDataModule, ABC):
 
 	def flatten_dataloaders(self, data_loaders):
 		if isinstance(data_loaders, list):
-			if len(data_loaders) == 0:
+			if len(data_loaders) == 1:
 				data_loaders = data_loaders[0]
 		return data_loaders
 

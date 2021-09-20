@@ -250,10 +250,7 @@ class KbiLanguageModel(BaseLanguageModel):
 		loss, accuracy = self.loss(pos_energy, neg_energy)
 		return loss, accuracy
 
-	def training_step(self, *args, **kwargs):
-		print(args)
-		print(kwargs)
-		batch = args[0]
+	def training_step(self, batch, batch_idx):
 		loss, accuracy = self.triplet_step(batch)
 		accuracy = accuracy.mean()
 		loss = loss.mean()
