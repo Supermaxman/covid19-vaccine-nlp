@@ -82,10 +82,10 @@ class BaseLanguageModel(pl.LightningModule, ABC):
 		return optimizer_params
 
 	def validation_step(self, batch, batch_idx, dataloader_idx=None):
-		return self.eval_step(batch, batch_idx, dataloader_idx=None)
+		return self.eval_step(batch, batch_idx, dataloader_idx)
 
 	def test_step(self, batch, batch_idx, dataloader_idx=None):
-		return self.eval_step(batch, batch_idx, dataloader_idx=None)
+		return self.eval_step(batch, batch_idx, dataloader_idx)
 
 	def validation_epoch_end(self, outputs):
 		self.eval_epoch_end(outputs, 'val')
