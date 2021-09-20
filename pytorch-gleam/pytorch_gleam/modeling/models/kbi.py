@@ -87,7 +87,6 @@ class KbiLanguageModel(BaseLanguageModel):
 				t_ids,
 				m_ids,
 				p_ids,
-				labels,
 				t_label,
 				p_labels,
 				t_energies
