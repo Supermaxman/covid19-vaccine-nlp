@@ -18,7 +18,7 @@ def read_jsonl(path):
 class MisinfoStanceDataset(Dataset):
 	examples: List[Dict[Any, Union[Any, Dict]]]
 
-	def __init__(self, data_path, misinfo_path):
+	def __init__(self, data_path: Union[str, List[str]], misinfo_path: str):
 		super().__init__()
 		self.label_map = {
 			'No Stance': 0,
@@ -32,6 +32,13 @@ class MisinfoStanceDataset(Dataset):
 			self.misinfo = json.load(f)
 
 		self.examples = []
+		if isinstance(data_path, str):
+			self.read_path(data_path)
+		else:
+			for stage, stage_path in enumerate(data_path):
+				self.read_path(stage_path, stage)
+
+	def read_path(self, data_path, stage=0):
 		for ex in read_jsonl(data_path):
 			ex_id = ex['id']
 			ex_text = ex['full_text'] if 'full_text' in ex else ex['text']
@@ -55,7 +62,8 @@ class MisinfoStanceDataset(Dataset):
 					'm_id': m_id,
 					'ex_text': ex_text,
 					'm_text': m_text,
-					'm_label': m_label_idx
+					'm_label': m_label_idx,
+					'stage': stage
 				}
 				self.examples.append(example)
 

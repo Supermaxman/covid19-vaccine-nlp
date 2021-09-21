@@ -60,7 +60,8 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 				'input_ids': token_data['input_ids'],
 				'token_type_ids': token_data['token_type_ids'],
 				'attention_mask': token_data['attention_mask'],
-				'm_label': m_label
+				'm_label': m_label,
+				'stage': pair_ex['stage']
 			}
 			ex = {
 				't_ex': t_ex,
@@ -132,11 +133,13 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 		# [pos sample relation labels + neg_sample_relation_labels]
 		# not used for training, stance labels are unnecessary
 		labels = [tm_stance] + [p_ex['m_label'] for p_ex in pos_samples] + [n_ex['m_label'] for n_ex in neg_samples]
+		stages = [t_ex['stage']] + [p_ex['stage'] for p_ex in pos_samples] + [n_ex['stage'] for n_ex in neg_samples]
 		relations = [tmp_relation for _ in range(len(pos_samples))] + neg_relations
 		ex = {
 			't_ex': t_ex,
 			'm_ex': m_ex,
 			'labels': labels,
+			'stages': stages,
 			'p_samples': pos_samples,
 			'n_samples': neg_samples,
 			'direction': direction,
@@ -267,12 +270,14 @@ class KbiMisinfoInferStanceDataset(KbiMisinfoStanceDataset):
 		# both directions
 		direction = [0, 1]
 		labels = [t_ex['m_label']] + [p_ex['m_label'] for p_ex in pair_examples]
+		stages = [t_ex['stage']] + [p_ex['stage'] for p_ex in pair_examples]
 		# both relations
 		relations = [[0, 1] for _ in range(len(pair_examples))]
 		ex = {
 			't_ex': t_ex,
 			'm_ex': m_ex,
 			'labels': labels,
+			'stages': stages,
 			'p_samples': pair_examples,
 			'n_samples': [],
 			'direction': direction,
@@ -311,7 +316,7 @@ class KbiMisinfoStanceDataModule(BaseDataModule):
 				neg_samples=self.neg_samples,
 				tokenizer=self.tokenizer,
 				data_path=self.train_path,
-				misinfo_path=train_misinfo_path
+				misinfo_path=self.train_misinfo_path
 			)
 		if self.val_path is not None and self.val_misinfo_path is not None:
 			val_triplet_dataset = KbiMisinfoStanceDataset(
@@ -319,14 +324,14 @@ class KbiMisinfoStanceDataModule(BaseDataModule):
 				neg_samples=self.neg_samples,
 				tokenizer=self.tokenizer,
 				data_path=self.val_path,
-				misinfo_path=val_misinfo_path
+				misinfo_path=self.val_misinfo_path
 			)
 			val_infer_dataset = KbiMisinfoInferStanceDataset(
 				pos_samples=self.pos_samples,
 				neg_samples=self.neg_samples,
 				tokenizer=self.tokenizer,
 				data_path=self.val_path,
-				misinfo_path=val_misinfo_path
+				misinfo_path=self.val_misinfo_path
 			)
 
 			self.val_dataset = [
@@ -334,16 +339,31 @@ class KbiMisinfoStanceDataModule(BaseDataModule):
 				val_infer_dataset
 			]
 		if self.test_path is not None and self.test_misinfo_path is not None:
-			self.test_dataset = KbiMisinfoStanceDataset(
+			test_triplet_dataset = KbiMisinfoStanceDataset(
+				pos_samples=self.pos_samples,
+				neg_samples=self.neg_samples,
 				tokenizer=self.tokenizer,
-				data_path=self.test_path,
-				misinfo_path=test_misinfo_path
+				data_path=self.val_path,
+				misinfo_path=self.test_misinfo_path
 			)
+			test_infer_dataset = KbiMisinfoInferStanceDataset(
+				pos_samples=self.pos_samples,
+				neg_samples=self.neg_samples,
+				tokenizer=self.tokenizer,
+				data_path=[self.val_path, self.test_path],
+				misinfo_path=self.test_misinfo_path
+			)
+
+			self.test_dataset = [
+				test_triplet_dataset,
+				test_infer_dataset
+			]
 		if self.predict_path is not None and self.predict_misinfo_path is not None:
+			# TODO infer
 			self.predict_dataset = KbiMisinfoStanceDataset(
 				tokenizer=self.tokenizer,
 				data_path=self.predict_path,
-				misinfo_path=predict_misinfo_path
+				misinfo_path=self.predict_misinfo_path
 			)
 
 	def create_collator(self):

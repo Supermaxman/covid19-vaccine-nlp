@@ -40,6 +40,7 @@ class KbiBatchCollator(BatchCollator):
 		token_type_ids = torch.zeros([num_examples, num_sequences_per_example, pad_seq_len], dtype=torch.long)
 		direction_mask = torch.zeros([num_examples, 2], dtype=torch.float)
 		labels = torch.zeros([num_examples, num_sequences_per_example - 1], dtype=torch.long)
+		stages = torch.zeros([num_examples, num_sequences_per_example - 1], dtype=torch.long)
 		relation_mask = torch.zeros([num_examples, num_samples, self.num_relations], dtype=torch.float)
 		ids = []
 		m_ids = []
@@ -52,6 +53,8 @@ class KbiBatchCollator(BatchCollator):
 				relation_mask[ex_idx, l_idx, r_label] = 1.0
 			for l_idx, label in enumerate(ex['labels']):
 				labels[ex_idx, l_idx] = label
+			for l_idx, stage in enumerate(ex['stages']):
+				stages[ex_idx, l_idx] = stage
 			ex_seqs = [ex['m_ex'], ex['t_ex']] + ex['p_samples'] + ex['n_samples']
 			direction_mask[ex_idx, ex['direction']] = 1.0
 			for seq_idx, seq in enumerate(ex_seqs):
@@ -61,7 +64,7 @@ class KbiBatchCollator(BatchCollator):
 			for p_ex in ex['p_samples']:
 				p_ids.append(p_ex['t_id'])
 			for n_ex in ex['n_samples']:
-				n_ids	.append(n_ex['t_id'])
+				n_ids.append(n_ex['t_id'])
 		batch = {
 			'ids': ids,
 			'm_ids': m_ids,
@@ -77,6 +80,7 @@ class KbiBatchCollator(BatchCollator):
 			'token_type_ids': token_type_ids,
 			'direction_mask': direction_mask,
 			'labels': labels,
+			'stage': stages,
 			'relation_mask': relation_mask
 		}
 

@@ -75,66 +75,87 @@ class KbiLanguageModel(BaseLanguageModel):
 		self.log(f'{stage}_accuracy', accuracy)
 
 		self.threshold.cpu()
+		# stage 0 is validation
+		# stage 1 is test
 		# [count]
 		t_ids = flatten([x['ids'] for x in infer_eval_outputs])
 		# [count]
 		m_ids = flatten([x['m_ids'] for x in infer_eval_outputs])
-		# [count, num_pairs]
+		# [count]
 		p_ids = flatten([x['p_ids'] for x in infer_eval_outputs])
-		# [count, num_pairs + 1]
+		# [count, 2]
 		labels = torch.cat([x['labels'] for x in infer_eval_outputs], dim=0).cpu()
+		stages = torch.cat([x['stages'] for x in infer_eval_outputs], dim=0).cpu()
 		# [count]
 		t_label = labels[:, 0]
-		# [count, num_pairs]
+		# [count]
+		t_stage = stages[:, 0]
+		# [count, 1]
 		p_labels = labels[:, 1:]
-		# [count, num_pairs, num_relations]
+		# [count, 1]
+		p_stage = stages[:, 1:]
+		# [count, 1, num_relations]
 		t_energies = torch.cat([x['energies'] for x in infer_eval_outputs], dim=0).cpu()
 		max_score = -torch.min(t_energies).item()
 		min_score = -torch.max(t_energies).item()
 
 		m_adj_list = defaultdict(list)
-		m_labels = defaultdict(dict)
-		for ex_t_id, ex_m_id, ex_p_ids, ex_t_label, ex_p_labels, ex_t_energies in zip(
-				t_ids,
-				m_ids,
-				p_ids,
-				t_label,
-				p_labels,
-				t_energies
-		):
-			m_labels[ex_m_id][ex_t_id] = ex_t_label
-			for ex_p_id, ex_p_label, ex_tmp_energy in zip(ex_p_ids, ex_p_labels, ex_t_energies):
+		m_labels = defaultdict(lambda: defaultdict(dict))
+		ex_stage = {}
+		for ex_idx in range(len(t_ids)):
+			ex_t_id = t_ids[ex_idx]
+			ex_m_id = m_ids[ex_idx]
+			ex_p_ids = p_ids[ex_idx]
+			ex_t_label = t_label[ex_idx]
+			ex_t_stage = int(t_stage[ex_idx])
+			ex_stage[ex_t_id] = ex_t_stage
+			ex_p_labels = p_labels[ex_idx]
+			ex_p_stage = p_stage[ex_idx]
+			ex_t_energies = t_energies[ex_idx]
+			m_labels[ex_m_id][ex_t_stage][ex_t_id] = ex_t_label
+			for p_idx in range(len(ex_p_ids)):
+				ex_p_id = ex_p_ids[p_idx]
+				ex_p_label = ex_p_labels[p_idx]
+				ex_p_stage = int(ex_p_stage[p_idx])
+				ex_stage[ex_p_id] = ex_p_stage
+				ex_tmp_energy = ex_t_energies[p_idx]
 				m_adj_list[ex_m_id].append((ex_t_id, ex_p_id, ex_tmp_energy))
-				m_labels[ex_m_id][ex_p_id] = ex_p_label
+				m_labels[ex_m_id][ex_p_stage][ex_p_id] = ex_p_label
 
-		m_s_labels = []
-		m_m_ids = []
-		m_t_ids = []
+		m_s_labels = defaultdict(list)
+		m_m_ids = defaultdict(list)
+		m_t_ids = defaultdict(list)
 		for m_id, m_t_labels in m_labels.items():
-			for m_t_id, m_t_label in m_t_labels.items():
-				m_t_ids.append(m_t_id)
-				m_m_ids.append(m_id)
-				m_s_labels.append(m_t_label)
-
-		# TODO split up test and validation labels
+			for stage_idx, stage_labels in m_t_labels.items():
+				for m_t_id, m_t_label in stage_labels.items():
+					m_t_ids[stage_idx].append(m_t_id)
+					m_m_ids[stage_idx].append(m_id)
+					m_s_labels[stage_idx].append(m_t_label)
 
 		# TODO use adj list for inference
 		def predict(m_thresholds):
 			m_thresholds = m_thresholds.item()
 			preds = []
 			# TODO thresholding here
-			for m_id, m_t_labels in m_labels.items():
-				m_t_rel_labels = [(m_t_id, m_t_label) for (m_t_id, m_t_label) in m_t_labels.items() if m_t_label != 0]
-				num_seeds = 1
-				m_t_rel_labels = {m_t_id: m_t_label for (m_t_id, m_t_label) in m_t_rel_labels[:num_seeds]}
+
+			for m_id, m_s_t_labels in m_labels.items():
 				m_i_adj = m_adj_list[m_id]
-				# TODO map cluster to stance?
-				# TODO
+				# always use stage 0 (val) for seeds
+				m_t_labels = m_s_t_labels[0]
+				m_t_rel_labels = [(m_t_id, m_t_label) for (m_t_id, m_t_label) in m_t_labels.items() if m_t_label != 0]
+
+				if stage == 'val':
+					num_seeds = 1
+					m_t_rel_labels = {m_t_id: m_t_label for (m_t_id, m_t_label) in m_t_rel_labels[:num_seeds]}
+
 				# infer_clusters
 				# infer_seed_clusters
 				# infer_seed_only_clusters
 				# infer_seed_min_clusters
 				m_s_i_preds = infer_seed_min_clusters(m_i_adj, m_thresholds, m_t_rel_labels)
+				if stage != 'val':
+					# use test label ordering
+					m_t_labels = m_s_t_labels[1]
 				for ex_id in m_t_labels:
 					# TODO filter out val predictions
 					ex_pred = m_s_i_preds[ex_id]
@@ -142,6 +163,10 @@ class KbiLanguageModel(BaseLanguageModel):
 			preds = torch.tensor(preds, dtype=torch.long)
 			return preds
 
+		if stage == 'val':
+			m_s_labels = m_s_labels[0]
+		else:
+			m_s_labels = m_s_labels[1]
 		m_s_labels = torch.tensor(m_s_labels, dtype=torch.long)
 
 		if stage == 'val':
@@ -354,6 +379,8 @@ class KbiLanguageModel(BaseLanguageModel):
 			'p_ids': batch['p_ids'],
 			# [bsize, num_pairs+1]
 			'labels': batch['labels'],
+			# [bsize, num_pairs+1]
+			'stage': batch['stage'],
 			# [bsize, num_pairs, num_relations]
 			'energies': pair_rel_energy
 		}
