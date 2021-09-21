@@ -116,16 +116,26 @@ class KbiLanguageModel(BaseLanguageModel):
 				m_m_ids.append(m_id)
 				m_s_labels.append(m_t_label)
 
+		# TODO split up test and validation labels
+
 		# TODO use adj list for inference
 		def predict(m_thresholds):
 			m_thresholds = m_thresholds.item()
 			preds = []
 			# TODO thresholding here
 			for m_id, m_t_labels in m_labels.items():
+				m_t_rel_labels = [(m_t_id, m_t_label) for (m_t_id, m_t_label) in m_t_labels.items() if t_label != 0]
+				num_seeds = 1
+				m_t_rel_labels = {m_t_id: m_t_label for (m_t_id, m_t_label) in m_t_rel_labels[:num_seeds]}
 				m_i_adj = m_adj_list[m_id]
 				# TODO map cluster to stance?
-				m_s_i_preds = infer_clusters(m_i_adj, m_thresholds)
+				# TODO
+				# infer_clusters
+				# infer_seed_clusters
+				# infer_seed_only_clusters
+				m_s_i_preds = infer_clusters(m_i_adj, m_thresholds, m_t_rel_labels)
 				for ex_id in m_t_labels:
+					# TODO filter out val predictions
 					ex_pred = m_s_i_preds[ex_id]
 					preds.append(ex_pred)
 			preds = torch.tensor(preds, dtype=torch.long)
@@ -297,7 +307,7 @@ class KbiLanguageModel(BaseLanguageModel):
 	def _energy(self, t_embs, m_embs, e_embs, direction_mask):
 		# [bsize, pos_samples]
 		forward_energy = self.ke.energy(t_embs, m_embs, e_embs)
-		# [bsize, neg_samples]
+		# [bsize, pos_samples]
 		backward_energy = self.ke.energy(e_embs, m_embs, t_embs)
 		# [bsize, pos_samples, 2]
 		tme_energy = torch.stack([forward_energy, backward_energy], dim=-1)
