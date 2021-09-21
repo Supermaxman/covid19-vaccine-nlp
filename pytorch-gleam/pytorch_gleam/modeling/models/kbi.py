@@ -133,7 +133,8 @@ class KbiLanguageModel(BaseLanguageModel):
 				# infer_clusters
 				# infer_seed_clusters
 				# infer_seed_only_clusters
-				m_s_i_preds = infer_seed_clusters(m_i_adj, m_thresholds, m_t_rel_labels)
+				# infer_seed_min_clusters
+				m_s_i_preds = infer_seed_min_clusters(m_i_adj, m_thresholds, m_t_rel_labels)
 				for ex_id in m_t_labels:
 					# TODO filter out val predictions
 					ex_pred = m_s_i_preds[ex_id]
