@@ -256,7 +256,7 @@ class KbiMisinfoInferStanceDataset(KbiMisinfoStanceDataset):
 				self.examples.append(pair_ex)
 		import random
 		random.shuffle(self.examples)
-		self.examples = self.examples[:100]
+		self.examples = self.examples[:1000]
 
 	def __getitem__(self, idx):
 		if torch.is_tensor(idx):
