@@ -118,17 +118,15 @@ class KbiLanguageModel(BaseLanguageModel):
 
 		# TODO split up test and validation labels
 
-		num_seeds = 1
 		# TODO use adj list for inference
 		def predict(m_thresholds):
 			m_thresholds = m_thresholds.item()
 			preds = []
 			# TODO thresholding here
 			for m_id, m_t_labels in m_labels.items():
-				m_t_rel_1_labels = [(m_t_id, m_t_label) for (m_t_id, m_t_label) in m_t_labels.items() if m_t_label == 1][:num_seeds]
-				m_t_rel_2_labels = [(m_t_id, m_t_label) for (m_t_id, m_t_label) in m_t_labels.items() if m_t_label == 2][:num_seeds]
-				m_t_rel_labels = m_t_rel_1_labels + m_t_rel_2_labels
-				m_t_rel_labels = {m_t_id: m_t_label for (m_t_id, m_t_label) in m_t_rel_labels}
+				m_t_rel_labels = [(m_t_id, m_t_label) for (m_t_id, m_t_label) in m_t_labels.items() if m_t_label != 0]
+				num_seeds = 1
+				m_t_rel_labels = {m_t_id: m_t_label for (m_t_id, m_t_label) in m_t_rel_labels[:num_seeds]}
 				m_i_adj = m_adj_list[m_id]
 				# TODO map cluster to stance?
 				# TODO

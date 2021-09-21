@@ -4,8 +4,9 @@ from typing import Dict, List, Tuple
 
 import networkx as nx
 import numpy as np
-from pytorch_gleam.data.datasets.kbi_misinfo_stance import flip_tm_stance
+from pytorch_gleam.data.datasets.kbi_misinfo_stance import flip_tm_stance, tmp_stance
 from networkx.algorithms.traversal.breadth_first_search import bfs_predecessors
+import heapq
 
 
 def infer_clusters(
@@ -242,4 +243,61 @@ def infer_seed_only_clusters(
 
 	return node_labels
 
+
+def infer_seed_min_clusters(
+		adj_list: List[Tuple[str, str, Tuple[float, float]]],
+		threshold: float,
+		node_labels: Dict[str, int]
+):
+	seed_node_labels = node_labels.copy()
+	node_labels = node_labels.copy()
+	g = nx.Graph()
+	# list of (ex_t_id, ex_p_id, ex_tmp_energy)
+	# 0 - entail
+	# 1 - contradict
+	for t_id, p_id, tp_r_dists in adj_list:
+		entail_weight, contradict_weight = tp_r_dists
+		g.add_edge(t_id, p_id, entail_weight=entail_weight, contradict_weight=contradict_weight)
+
+	edge_heap = []
+	for node in g.nodes():
+		if node not in seed_node_labels:
+			continue
+		node_label = seed_node_labels[node]
+		if node_label == 0:
+			continue
+		for other_node in g.neighbors(node):
+			if other_node in seed_node_labels:
+				continue
+			edge = g.get_edge_data(node, other_node)
+			entail_weight = edge['entail_weight']
+			contradict_weight = edge['contradict_weight']
+			min_weight, min_relation = min([(entail_weight, 0), (contradict_weight, 1)], key=lambda x: x[0])
+			heapq.heappush(edge_heap, (min_weight, (node, other_node, min_relation)))
+
+	while edge_heap:
+		weight, (other_node, node, relation) = heapq.heappop(edge_heap)
+		if node in node_labels:
+			continue
+		if -weight <= threshold:
+			break
+		if len(node_labels) == len(g.nodes()):
+			break
+		other_label = node_labels[other_node]
+		node_label = tmp_stance(relation, other_label)
+		node_labels[node] = node_label
+		for next_node in g.neighbors(node):
+			if next_node in node_labels:
+				continue
+			edge = g.get_edge_data(node, next_node)
+			entail_weight = edge['entail_weight']
+			contradict_weight = edge['contradict_weight']
+			min_weight, min_relation = min([(entail_weight, 0), (contradict_weight, 1)], key=lambda x: x[0])
+			heapq.heappush(edge_heap, (min_weight, (node, next_node, min_relation)))
+
+	for node in g.nodes():
+		if node not in node_labels:
+			node_labels[node] = 0
+
+	return node_labels
 
