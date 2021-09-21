@@ -146,7 +146,8 @@ class KbiLanguageModel(BaseLanguageModel):
 
 				if stage == 'val':
 					num_seeds = 1
-					m_t_rel_labels = {m_t_id: m_t_label for (m_t_id, m_t_label) in m_t_rel_labels[:num_seeds]}
+					m_t_rel_labels = m_t_rel_labels[:num_seeds]
+				m_t_rel_labels = {m_t_id: m_t_label for (m_t_id, m_t_label) in m_t_rel_labels}
 
 				# infer_clusters
 				# infer_seed_clusters
