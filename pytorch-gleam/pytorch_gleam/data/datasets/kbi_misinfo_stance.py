@@ -327,8 +327,8 @@ class KbiMisinfoStanceDataModule(BaseDataModule):
 				misinfo_path=self.val_misinfo_path
 			)
 			val_infer_dataset = KbiMisinfoInferStanceDataset(
-				pos_samples=self.pos_samples,
-				neg_samples=self.neg_samples,
+				pos_samples=1,
+				neg_samples=1,
 				tokenizer=self.tokenizer,
 				data_path=self.val_path,
 				misinfo_path=self.val_misinfo_path
@@ -347,8 +347,8 @@ class KbiMisinfoStanceDataModule(BaseDataModule):
 				misinfo_path=self.test_misinfo_path
 			)
 			test_infer_dataset = KbiMisinfoInferStanceDataset(
-				pos_samples=self.pos_samples,
-				neg_samples=self.neg_samples,
+				pos_samples=1,
+				neg_samples=1,
 				tokenizer=self.tokenizer,
 				data_path=[self.val_path, self.test_path],
 				misinfo_path=self.test_misinfo_path

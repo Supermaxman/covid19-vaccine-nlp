@@ -51,6 +51,15 @@ class TransMSEmbedding(nn.Module):
 		return h_r_t_energy
 
 	def loss(self, pos_energy, neg_energy):
+		# [bsize, pos_samples]
+		# pos_energy
+		# [bsize, neg_samples]
+		# neg_energy
+		# [bsize, 1, pos_samples]
+		pos_energy = pos_energy.unsqueeze(dim=-2)
+		# [bsize, neg_samples, 1]
+		neg_energy = neg_energy.unsqueeze(dim=-1)
+		# [bsize, neg_samples, pos_samples]
 		margin = pos_energy - neg_energy
 		loss = torch.clamp(self.gamma + margin, min=0.0)
 		accuracy = (pos_energy.lt(neg_energy)).float()
