@@ -124,7 +124,7 @@ class KbiLanguageModel(BaseLanguageModel):
 			preds = []
 			# TODO thresholding here
 			for m_id, m_t_labels in m_labels.items():
-				m_t_rel_labels = [(m_t_id, m_t_label) for (m_t_id, m_t_label) in m_t_labels.items() if t_label != 0]
+				m_t_rel_labels = [(m_t_id, m_t_label) for (m_t_id, m_t_label) in m_t_labels.items() if m_t_label != 0]
 				num_seeds = 1
 				m_t_rel_labels = {m_t_id: m_t_label for (m_t_id, m_t_label) in m_t_rel_labels[:num_seeds]}
 				m_i_adj = m_adj_list[m_id]
