@@ -17,7 +17,9 @@ def infer_clusters(adj_list, threshold: float):
 		g.add_edge(t_id, p_id, entail_weight=entail_weight, contradict_weight=contradict_weight)
 
 	node_entailments = defaultdict(int)
+	first_node = None
 	for node in g.nodes():
+		first_node = node
 		for other_node in g.neighbors(node):
 			edge = g.get_edge_data(node, other_node)
 			entail_weight = edge['entail_weight']
@@ -31,7 +33,7 @@ def infer_clusters(adj_list, threshold: float):
 			if max_label == 'entail':
 				node_entailments[node] += 1
 
-	max_entail_node, max_entail_count = max(node_entailments.items(), key=lambda x: x[1])
+	max_entail_node, max_entail_count = max(node_entailments.items(), key=lambda x: x[1], default=(first_node, 0))
 
 	# assume the node with the most entailments is stance 1
 	node_labels = {max_entail_node: 1}
