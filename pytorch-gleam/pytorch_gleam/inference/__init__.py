@@ -1,2 +1,4 @@
 
 from pytorch_gleam.inference.clustering import infer_clusters
+from pytorch_gleam.inference.clustering import infer_seed_clusters
+from pytorch_gleam.inference.clustering import infer_seed_only_clusters
