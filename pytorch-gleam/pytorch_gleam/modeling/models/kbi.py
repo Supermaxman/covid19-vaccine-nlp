@@ -115,13 +115,14 @@ class KbiLanguageModel(BaseLanguageModel):
 				m_s_labels.append(m_t_label)
 
 		# TODO use adj list for inference
-		def predict(c_threshold):
+		def predict(m_thresholds):
+			m_thresholds = m_thresholds.item()
 			preds = []
 			# TODO thresholding here
 			for m_id, m_t_labels in m_labels.items():
 				m_i_adj = m_adj_list[m_id]
 				# TODO map cluster to stance?
-				m_s_i_preds = infer_clusters(m_i_adj, c_threshold)
+				m_s_i_preds = infer_clusters(m_i_adj, m_thresholds)
 				for ex_id in m_t_labels:
 					ex_pred = m_s_i_preds[ex_id]
 					preds.append(ex_pred)

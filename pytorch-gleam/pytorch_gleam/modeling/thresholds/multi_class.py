@@ -33,6 +33,6 @@ class MultiClassCallableThresholdModule(MultiClassThresholdModule):
 		super().__init__(*args, **kwargs)
 
 	def predict(self, scores, thresholds):
-		predictions = scores(thresholds.item())
+		predictions = scores(thresholds)
 		return predictions
 
