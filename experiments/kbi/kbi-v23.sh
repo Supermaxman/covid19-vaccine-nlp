@@ -41,11 +41,11 @@ trap handler SIGINT
 #echo "Training model..."
 python kbi/train.py \
   --seed_everything 0 \
-  --model.ke_model transms \
-  --model.ke_emb_size 8 \
+  --model.ke_model transd \
+  --model.ke_emb_size 16 \
   --model.ke_hidden_size 32 \
   --model.ke_gamma 1.0 \
-  --model.ke_loss_norm 1 \
+  --model.ke_loss_norm 2 \
   --model.learning_rate 5e-4 \
   --trainer.max_epochs 40 \
   --data.batch_size 4 \

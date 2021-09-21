@@ -62,5 +62,5 @@ class TuckEREmbedding(nn.Module):
 		pos_loss = -torch.log(torch.sigmoid(-pos_energy) + 1e-6)
 		neg_loss = -torch.log(1.0 - torch.sigmoid(-neg_energy) + 1e-6)
 		loss = pos_loss + neg_loss
-		accuracy = (pos_energy.lt(neg_energy)).float().mean()
+		accuracy = (pos_energy.lt(neg_energy)).float()
 		return loss, accuracy

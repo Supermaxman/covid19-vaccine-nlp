@@ -77,6 +77,6 @@ class TransDEmbedding(nn.Module):
 	def loss(self, pos_energy, neg_energy):
 		margin = pos_energy - neg_energy
 		loss = torch.clamp(self.gamma + margin, min=0.0)
-		accuracy = (pos_energy.lt(neg_energy)).float().mean()
+		accuracy = (pos_energy.lt(neg_energy)).float()
 		return loss, accuracy
 

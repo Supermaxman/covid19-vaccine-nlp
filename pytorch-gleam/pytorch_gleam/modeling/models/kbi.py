@@ -45,13 +45,29 @@ class KbiLanguageModel(BaseLanguageModel):
 			in_features=self.hidden_size,
 			out_features=self.ke_hidden_size
 		)
-		# TODO select ke from self.ke_model
-		self.ke = TransMSEmbedding(
-			hidden_size=self.ke_hidden_size,
-			emb_size=self.ke_emb_size,
-			gamma=self.ke_gamma,
-			loss_norm=self.ke_loss_norm
-		)
+		if self.ke_model == 'transms':
+			self.ke = TransMSEmbedding(
+				hidden_size=self.ke_hidden_size,
+				emb_size=self.ke_emb_size,
+				gamma=self.ke_gamma,
+				loss_norm=self.ke_loss_norm
+			)
+		elif self.ke_model == 'transe':
+			self.ke = TransEEmbedding(
+				hidden_size=self.ke_hidden_size,
+				emb_size=self.ke_emb_size,
+				gamma=self.ke_gamma,
+				loss_norm=self.ke_loss_norm
+			)
+		elif self.ke_model == 'transd':
+			self.ke = TransDEmbedding(
+				hidden_size=self.ke_hidden_size,
+				emb_size=self.ke_emb_size,
+				gamma=self.ke_gamma,
+				loss_norm=self.ke_loss_norm
+			)
+		else:
+			raise ValueError(f'Unknown ke_model: {self.ke_model}')
 		self.f_dropout = torch.nn.Dropout(
 			p=self.hidden_dropout_prob
 		)
@@ -61,11 +77,72 @@ class KbiLanguageModel(BaseLanguageModel):
 			threshold_max=0.0,
 			threshold_delta=0.1
 		)
-		# TODO select based on metric
-		self.metric = F1PRMultiClassMetric(
-			num_classes=self.num_classes,
-			mode=metric_mode
-		)
+
+		if metric == 'f1':
+			self.metric = F1PRMultiClassMetric(
+				num_classes=self.num_classes,
+				mode=metric_mode
+			)
+		else:
+			raise ValueError(f'Unknown metric: {metric}')
+
+	def _eval_build_adj(self, outputs):
+		# [count]
+		t_ids = flatten([x['ids'] for x in outputs])
+		# [count]
+		m_ids = flatten([x['m_ids'] for x in outputs])
+		# [count]
+		p_ids = flatten([x['p_ids'] for x in outputs])
+		# [count, 2]
+		labels = torch.cat([x['labels'] for x in outputs], dim=0).cpu()
+		stages = torch.cat([x['stages'] for x in outputs], dim=0).cpu()
+		# [count]
+		t_label = labels[:, 0]
+		# [count]
+		t_stage = stages[:, 0]
+		# [count, 1]
+		p_labels = labels[:, 1:]
+		# [count, 1]
+		p_stage = stages[:, 1:]
+
+		# [count, 1, num_relations]
+		t_energies = torch.cat([x['energies'] for x in outputs], dim=0).cpu()
+		max_score = -torch.min(t_energies).item()
+		min_score = -torch.max(t_energies).item()
+
+		m_adj_list = defaultdict(list)
+		m_labels = defaultdict(lambda: defaultdict(dict))
+		for ex_idx in range(len(t_ids)):
+			ex_t_id = t_ids[ex_idx]
+			ex_m_id = m_ids[ex_idx]
+			ex_p_ids = [p_ids[ex_idx]]
+			ex_t_label = t_label[ex_idx]
+			ex_t_stage = int(t_stage[ex_idx])
+			ex_p_labels = p_labels[ex_idx]
+			ex_p_stage = p_stage[ex_idx]
+			ex_t_energies = t_energies[ex_idx]
+			m_labels[ex_m_id][ex_t_stage][ex_t_id] = ex_t_label
+			for p_idx in range(len(ex_p_ids)):
+				ex_p_id = ex_p_ids[p_idx]
+				ex_p_label = ex_p_labels[p_idx]
+				ex_p_stage = int(ex_p_stage[p_idx])
+				ex_tmp_energy = ex_t_energies[p_idx]
+				m_adj_list[ex_m_id].append((ex_t_id, ex_p_id, ex_tmp_energy))
+				m_labels[ex_m_id][ex_p_stage][ex_p_id] = ex_p_label
+
+		return m_adj_list, m_labels, max_score, min_score
+
+	def _eval_build_stage_labels(self, m_labels):
+		m_s_labels = defaultdict(list)
+		m_m_ids = defaultdict(list)
+		m_t_ids = defaultdict(list)
+		for m_id, m_t_labels in m_labels.items():
+			for stage_idx, stage_labels in m_t_labels.items():
+				for m_t_id, m_t_label in stage_labels.items():
+					m_t_ids[stage_idx].append(m_t_id)
+					m_m_ids[stage_idx].append(m_id)
+					m_s_labels[stage_idx].append(m_t_label)
+		return m_s_labels, m_m_ids, m_t_ids
 
 	def eval_epoch_end(self, outputs, stage):
 		triplet_eval_outputs, infer_eval_outputs = outputs
@@ -77,63 +154,11 @@ class KbiLanguageModel(BaseLanguageModel):
 		self.threshold.cpu()
 		# stage 0 is validation
 		# stage 1 is test
-		# [count]
-		t_ids = flatten([x['ids'] for x in infer_eval_outputs])
-		# [count]
-		m_ids = flatten([x['m_ids'] for x in infer_eval_outputs])
-		# [count]
-		p_ids = flatten([x['p_ids'] for x in infer_eval_outputs])
-		# [count, 2]
-		labels = torch.cat([x['labels'] for x in infer_eval_outputs], dim=0).cpu()
-		stages = torch.cat([x['stages'] for x in infer_eval_outputs], dim=0).cpu()
-		# [count]
-		t_label = labels[:, 0]
-		# [count]
-		t_stage = stages[:, 0]
-		# [count, 1]
-		p_labels = labels[:, 1:]
-		# [count, 1]
-		p_stage = stages[:, 1:]
-		# [count, 1, num_relations]
-		t_energies = torch.cat([x['energies'] for x in infer_eval_outputs], dim=0).cpu()
-		max_score = -torch.min(t_energies).item()
-		min_score = -torch.max(t_energies).item()
+		m_adj_list, m_labels, max_score, min_score = self._eval_build_adj(infer_eval_outputs)
 
-		m_adj_list = defaultdict(list)
-		m_labels = defaultdict(lambda: defaultdict(dict))
-		ex_stage = {}
-		for ex_idx in range(len(t_ids)):
-			ex_t_id = t_ids[ex_idx]
-			ex_m_id = m_ids[ex_idx]
-			ex_p_ids = [p_ids[ex_idx]]
-			ex_t_label = t_label[ex_idx]
-			ex_t_stage = int(t_stage[ex_idx])
-			ex_stage[ex_t_id] = ex_t_stage
-			ex_p_labels = p_labels[ex_idx]
-			ex_p_stage = p_stage[ex_idx]
-			ex_t_energies = t_energies[ex_idx]
-			m_labels[ex_m_id][ex_t_stage][ex_t_id] = ex_t_label
-			for p_idx in range(len(ex_p_ids)):
-				ex_p_id = ex_p_ids[p_idx]
-				ex_p_label = ex_p_labels[p_idx]
-				ex_p_stage = int(ex_p_stage[p_idx])
-				ex_stage[ex_p_id] = ex_p_stage
-				ex_tmp_energy = ex_t_energies[p_idx]
-				m_adj_list[ex_m_id].append((ex_t_id, ex_p_id, ex_tmp_energy))
-				m_labels[ex_m_id][ex_p_stage][ex_p_id] = ex_p_label
+		m_s_labels, m_m_ids, m_t_ids = self._eval_build_stage_labels(m_labels)
 
-		m_s_labels = defaultdict(list)
-		m_m_ids = defaultdict(list)
-		m_t_ids = defaultdict(list)
-		for m_id, m_t_labels in m_labels.items():
-			for stage_idx, stage_labels in m_t_labels.items():
-				for m_t_id, m_t_label in stage_labels.items():
-					m_t_ids[stage_idx].append(m_t_id)
-					m_m_ids[stage_idx].append(m_id)
-					m_s_labels[stage_idx].append(m_t_label)
-
-		# TODO use adj list for inference
-		def predict(m_thresholds):
+		def _infer_predict(m_thresholds):
 			m_thresholds = m_thresholds.item()
 			preds = []
 			for m_id, m_s_t_labels in m_labels.items():
@@ -147,16 +172,17 @@ class KbiLanguageModel(BaseLanguageModel):
 					m_t_rel_labels = m_t_rel_labels[:num_seeds]
 				m_t_rel_labels = {m_t_id: m_t_label for (m_t_id, m_t_label) in m_t_rel_labels}
 
+				# TODO make model argument
 				# infer_clusters
 				# infer_seed_clusters
 				# infer_seed_only_clusters
 				# infer_seed_min_clusters
-				m_s_i_preds = infer_seed_only_clusters(m_i_adj, m_thresholds, m_t_rel_labels)
+				# infer_seed_clusters vs infer_seed_only_clusters
+				m_s_i_preds = infer_seed_clusters(m_i_adj, m_thresholds, m_t_rel_labels)
 				if stage != 'val':
 					# use test label ordering
 					m_t_labels = m_s_t_labels[1]
 				for ex_id in m_t_labels:
-					# TODO filter out val predictions
 					ex_pred = m_s_i_preds[ex_id]
 					preds.append(ex_pred)
 			preds = torch.tensor(preds, dtype=torch.long)
@@ -172,14 +198,14 @@ class KbiLanguageModel(BaseLanguageModel):
 			# select max f1 threshold
 			max_threshold, max_metrics = self.metric.best(
 				m_s_labels,
-				predict,
+				_infer_predict,
 				self.threshold,
 				threshold_min=min_score,
 				threshold_max=max_score,
 				threshold_delta=0.1,
 			)
 			self.threshold.update_thresholds(max_threshold)
-		m_s_preds = self.threshold(predict)
+		m_s_preds = self.threshold(_infer_predict)
 
 		f1, p, r, cls_f1, cls_p, cls_r, cls_indices = self.metric(
 			m_s_labels,
