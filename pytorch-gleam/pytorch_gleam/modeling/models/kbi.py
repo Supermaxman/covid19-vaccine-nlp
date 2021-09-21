@@ -130,10 +130,10 @@ class KbiLanguageModel(BaseLanguageModel):
 				m_i_adj = m_adj_list[m_id]
 				# TODO map cluster to stance?
 				# TODO
-				# infer_clusters 0.844
+				# infer_clusters
 				# infer_seed_clusters
 				# infer_seed_only_clusters
-				m_s_i_preds = infer_seed_clusters(m_i_adj, m_thresholds, m_t_rel_labels)
+				m_s_i_preds = infer_clusters(m_i_adj, m_thresholds, m_t_rel_labels)
 				for ex_id in m_t_labels:
 					# TODO filter out val predictions
 					ex_pred = m_s_i_preds[ex_id]
