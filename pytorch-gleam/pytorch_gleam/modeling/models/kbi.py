@@ -57,9 +57,9 @@ class KbiLanguageModel(BaseLanguageModel):
 		)
 		# TODO build multi-class multi-label threshold module
 		self.threshold = MultiClassCallableThresholdModule(
-			threshold_min=-20.0,
-			threshold_max=20.0,
-			threshold_delta=1.0
+			threshold_min=-30.0,
+			threshold_max=0.0,
+			threshold_delta=0.1
 		)
 		# TODO select based on metric
 		self.metric = F1PRMultiClassMetric(
@@ -296,7 +296,11 @@ class KbiLanguageModel(BaseLanguageModel):
 		backward_energy = self.ke.energy(e_embs, m_embs, t_embs)
 		# [bsize, pos_samples, 2]
 		tme_energy = torch.stack([forward_energy, backward_energy], dim=-1)
+		# [bsize, 1]
 		d_sum = direction_mask.sum(dim=-1)
+		# [bsize, pos_samples, 2] x [bsize, 1, 2] sum
+		# -> [bsize, pos_samples] / [bsize, 1]
+		# [bsize, pos_samples]
 		tme_energy = (tme_energy * direction_mask).sum(dim=-1) / d_sum
 		return tme_energy
 
