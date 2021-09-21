@@ -151,7 +151,7 @@ class KbiLanguageModel(BaseLanguageModel):
 				# infer_seed_clusters
 				# infer_seed_only_clusters
 				# infer_seed_min_clusters
-				m_s_i_preds = infer_clusters(m_i_adj, m_thresholds, m_t_rel_labels)
+				m_s_i_preds = infer_seed_clusters(m_i_adj, m_thresholds, m_t_rel_labels)
 				if stage != 'val':
 					# use test label ordering
 					m_t_labels = m_s_t_labels[1]
