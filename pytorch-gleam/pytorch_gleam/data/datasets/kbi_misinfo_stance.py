@@ -254,7 +254,7 @@ class KbiMisinfoInferStanceDataset(KbiMisinfoStanceDataset):
 					'm_ex': m_ex,
 				}
 				self.examples.append(pair_ex)
-
+			self.examples = self.examples[:100]
 	def __getitem__(self, idx):
 		if torch.is_tensor(idx):
 			idx = idx.tolist()
