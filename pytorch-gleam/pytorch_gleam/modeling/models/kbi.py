@@ -380,7 +380,7 @@ class KbiLanguageModel(BaseLanguageModel):
 			# [bsize, num_pairs+1]
 			'labels': batch['labels'],
 			# [bsize, num_pairs+1]
-			'stage': batch['stage'],
+			'stages': batch['stages'],
 			# [bsize, num_pairs, num_relations]
 			'energies': pair_rel_energy
 		}
