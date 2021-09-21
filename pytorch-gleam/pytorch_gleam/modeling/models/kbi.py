@@ -19,6 +19,7 @@ class KbiLanguageModel(BaseLanguageModel):
 			ke_gamma: float = 1.0,
 			ke_loss_norm: int = 1,
 			num_relations: int = 2,
+			num_classes: int = 3,
 			metric: str = 'f1',
 			metric_mode: str = 'macro',
 			*args,
@@ -26,6 +27,7 @@ class KbiLanguageModel(BaseLanguageModel):
 	):
 		super().__init__(*args, **kwargs)
 		self.num_relations = num_relations
+		self.num_classes = num_classes
 		self.ke_model = ke_model
 		self.ke_emb_size = ke_emb_size
 		self.ke_hidden_size = ke_hidden_size
