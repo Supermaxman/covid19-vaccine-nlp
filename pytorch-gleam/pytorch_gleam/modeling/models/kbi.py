@@ -89,6 +89,8 @@ class KbiLanguageModel(BaseLanguageModel):
 		p_labels = labels[:, 1:]
 		# [count, num_pairs, num_relations]
 		t_energies = torch.cat([x['energies'] for x in infer_eval_outputs], dim=0).cpu()
+		max_score = -torch.min(t_energies).item()
+		min_score = -torch.max(t_energies).item()
 
 		m_adj_list = defaultdict(list)
 		m_labels = defaultdict(dict)
@@ -136,7 +138,10 @@ class KbiLanguageModel(BaseLanguageModel):
 			max_threshold, max_metrics = self.metric.best(
 				m_s_labels,
 				predict,
-				self.threshold
+				self.threshold,
+				threshold_min=min_score,
+				threshold_max=max_score,
+				threshold_delta=0.1,
 			)
 			self.threshold.update_thresholds(max_threshold)
 		m_s_preds = self.threshold(predict)

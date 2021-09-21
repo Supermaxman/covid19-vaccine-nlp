@@ -15,13 +15,6 @@ class ThresholdModule(torch.nn.Module):
 			torch.zeros(num_thresholds, dtype=torch.float32),
 			requires_grad=False
 		)
-		self.threshold_range = torch.arange(
-			self.threshold_min,
-			self.threshold_max,
-			self.threshold_delta,
-			dtype=torch.float32,
-			requires_grad=False
-		)
 
 	def forward(self, scores):
 		return self.predict(scores, self.thresholds)
@@ -33,12 +26,19 @@ class ThresholdModule(torch.nn.Module):
 	def update_thresholds(self, new_value):
 		self.thresholds.copy_(new_value)
 
-	def get_range(self):
-		return self.threshold_range
+	def get_range(self, threshold_min: float = None, threshold_max: float = None, threshold_delta: float = None):
+		threshold_range = torch.arange(
+			self.threshold_min if threshold_min is None else threshold_min,
+			self.threshold_max if threshold_max is None else threshold_max,
+			self.threshold_delta if threshold_delta is None else threshold_delta,
+			dtype=torch.float32,
+			requires_grad=False
+		)
+		return threshold_range
 
-	def get_range_predictions(self, scores):
+	def get_range_predictions(self, scores, threshold_min: float = None, threshold_max: float = None, threshold_delta: float = None):
 		if self.num_thresholds == 1:
-			t_preds = self.get_range_threshold_predictions(scores)
+			t_preds = self.get_range_threshold_predictions(scores, threshold_min, threshold_max, threshold_delta)
 			for threshold, preds in t_preds:
 				yield threshold, preds
 		else:
@@ -49,8 +49,8 @@ class ThresholdModule(torch.nn.Module):
 			# 	for t_threshold, t_preds in t_range_preds:
 			# 		yield t_threshold, t_preds
 
-	def get_range_threshold_predictions(self, scores):
-		for threshold in self.get_range():
+	def get_range_threshold_predictions(self, scores, threshold_min: float = None, threshold_max: float = None, threshold_delta: float = None):
+		for threshold in self.get_range(threshold_min, threshold_max, threshold_delta):
 			preds = self.predict(scores, threshold)
 			yield threshold, preds
 
