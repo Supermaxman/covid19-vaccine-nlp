@@ -80,7 +80,7 @@ class KbiBatchCollator(BatchCollator):
 			'token_type_ids': token_type_ids,
 			'direction_mask': direction_mask,
 			'labels': labels,
-			'stage': stages,
+			'stages': stages,
 			'relation_mask': relation_mask
 		}
 
