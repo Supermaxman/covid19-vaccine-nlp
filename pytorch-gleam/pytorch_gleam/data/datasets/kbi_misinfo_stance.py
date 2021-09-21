@@ -92,12 +92,12 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 		# 1 is contradict
 		# TODO could sample positive relations too
 		tmp_relation = self._sample_relation()
-		pm_stance = self.tmp_stance(tmp_relation, tm_stance)
+		pm_stance = tmp_stance(tmp_relation, tm_stance)
 		pos_examples = self.label_examples[m_id][pm_stance]
 		# if pos_examples is empty then flip tmp_relation
 		if len(pos_examples) == 0:
-			tmp_relation = self.flip_relation(tmp_relation)
-			pm_stance = self.tmp_stance(tmp_relation, tm_stance)
+			tmp_relation = flip_relation(tmp_relation)
+			pm_stance = tmp_stance(tmp_relation, tm_stance)
 			pos_examples = self.label_examples[m_id][pm_stance]
 
 		# t - tmp_relation -> p
@@ -145,34 +145,6 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 
 		return ex
 
-	def tmp_stance(self, tmp_relation, tm_stance):
-		# 0 (entail) + 1 = 1 % 2 = 1
-		# 1 (contradict) + 1 = 2 % 2 = 0
-		r_mod = (tmp_relation + 1) % 2
-		# 1 % 2 = 1 + 1 = 2
-		# 2 % 2 = 0 + 1 = 1
-		# r_mod is 1 when entail, so flipping (tm_stance + 1) % 2 to get 1 is same as tm_stance
-		# r_mod is 0 when contradict, so flipping tm_stance is correct
-		return (tm_stance + r_mod) % 2 + 1
-
-	def flip_tm_stance(self, tm_stance):
-		# 0 is no_stance
-		# 1 is accept
-		# 2 is reject
-		# 0 -> 0
-		# 1 -> 2
-		# 2 -> 1
-		# 0 % 2 = 0 + 0 = 0
-		# 1 % 2 = 1 + 1 = 2
-		# 2 % 2 = 0 + 1 = 1
-		tm_flip_stance = (tm_stance % 2) + min(1, tm_stance)
-		return tm_flip_stance
-
-	def flip_relation(self, tmp_relation):
-		# 0 -> 1
-		# 1 -> 0
-		return (tmp_relation + 1) % 2
-
 	def _negative_sample(self, m_id, tmp_relation, pm_stance, pos_samples, sample_count):
 		possible_permutations = [
 			permutation
@@ -191,7 +163,7 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 
 	def flip_polarity(self, m_id, tmp_relation, pm_stance, pos_samples):
 		# (flip polarity): a -> a to a -> r
-		flip_pm_stance = self.flip_tm_stance(pm_stance)
+		flip_pm_stance = flip_tm_stance(pm_stance)
 		m_examples = self.label_examples[m_id][flip_pm_stance]
 		if len(m_examples) == 0:
 			return None
@@ -204,7 +176,7 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 
 	def flip_rel(self, m_id, tmp_relation, pm_stance, pos_samples):
 		# (flip rel) a -> a to a \-> a
-		flip_tmp_relation = self.flip_relation(tmp_relation)
+		flip_tmp_relation = flip_relation(tmp_relation)
 		s_example = self._sample(
 			pos_samples,
 			m_count=1,
@@ -380,3 +352,34 @@ class KbiMisinfoStanceDataModule(BaseDataModule):
 			max_seq_len=self.max_seq_len,
 			use_tpus=self.use_tpus,
 		)
+
+
+def tmp_stance(tmp_relation, tm_stance):
+	# 0 (entail) + 1 = 1 % 2 = 1
+	# 1 (contradict) + 1 = 2 % 2 = 0
+	r_mod = (tmp_relation + 1) % 2
+	# 1 % 2 = 1 + 1 = 2
+	# 2 % 2 = 0 + 1 = 1
+	# r_mod is 1 when entail, so flipping (tm_stance + 1) % 2 to get 1 is same as tm_stance
+	# r_mod is 0 when contradict, so flipping tm_stance is correct
+	return (tm_stance + r_mod) % 2 + 1
+
+
+def flip_tm_stance(tm_stance):
+	# 0 is no_stance
+	# 1 is accept
+	# 2 is reject
+	# 0 -> 0
+	# 1 -> 2
+	# 2 -> 1
+	# 0 % 2 = 0 + 0 = 0
+	# 1 % 2 = 1 + 1 = 2
+	# 2 % 2 = 0 + 1 = 1
+	tm_flip_stance = (tm_stance % 2) + min(1, tm_stance)
+	return tm_flip_stance
+
+
+def flip_relation(tmp_relation):
+	# 0 -> 1
+	# 1 -> 0
+	return (tmp_relation + 1) % 2

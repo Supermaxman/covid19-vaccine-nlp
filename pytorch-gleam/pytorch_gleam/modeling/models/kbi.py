@@ -3,7 +3,10 @@ from collections import defaultdict
 import torch
 
 from pytorch_gleam.modeling.base_models import BaseLanguageModel
+from pytorch_gleam.modeling.thresholds.multi_class import MultiClassCallableThresholdModule
+from pytorch_gleam.modeling.metrics.multi_class_f1 import F1PRMultiClassMetric
 from pytorch_gleam.modeling.knowledge_embedding import *
+from pytorch_gleam.inference import *
 
 
 # noinspection PyAbstractClass
@@ -51,13 +54,16 @@ class KbiLanguageModel(BaseLanguageModel):
 			p=self.hidden_dropout_prob
 		)
 		# TODO build multi-class multi-label threshold module
-		# self.threshold = MultiClassThresholdModule()
+		self.threshold = MultiClassCallableThresholdModule(
+			threshold_min=-20.0,
+			threshold_max=20.0,
+			threshold_delta=1.0
+		)
 		# TODO select based on metric
-		# self.metric = F1PRMultiClassMetric(
-		# 	num_classes=self.num_classes,
-		# 	mode=metric_mode
-		# )
-	# TODO
+		self.metric = F1PRMultiClassMetric(
+			num_classes=self.num_classes,
+			mode=metric_mode
+		)
 
 	def eval_epoch_end(self, outputs, stage):
 		triplet_eval_outputs, infer_eval_outputs = outputs
@@ -66,6 +72,7 @@ class KbiLanguageModel(BaseLanguageModel):
 		self.log(f'{stage}_loss', loss)
 		self.log(f'{stage}_accuracy', accuracy)
 
+		self.threshold.cpu()
 		# [count]
 		t_ids = flatten([x['ids'] for x in infer_eval_outputs])
 		# [count]
@@ -73,16 +80,16 @@ class KbiLanguageModel(BaseLanguageModel):
 		# [count, num_pairs]
 		p_ids = flatten([x['p_ids'] for x in infer_eval_outputs])
 		# [count, num_pairs + 1]
-		labels = torch.cat([x['labels'] for x in infer_eval_outputs], dim=0)
+		labels = torch.cat([x['labels'] for x in infer_eval_outputs], dim=0).cpu()
 		# [count]
 		t_label = labels[:, 0]
 		# [count, num_pairs]
 		p_labels = labels[:, 1:]
 		# [count, num_pairs, num_relations]
-		t_energies = torch.cat([x['energies'] for x in infer_eval_outputs], dim=0)
+		t_energies = torch.cat([x['energies'] for x in infer_eval_outputs], dim=0).cpu()
 
 		m_adj_list = defaultdict(list)
-		m_labels = {}
+		m_labels = defaultdict(dict)
 		for ex_t_id, ex_m_id, ex_p_ids, ex_t_label, ex_p_labels, ex_t_energies in zip(
 				t_ids,
 				m_ids,
@@ -91,12 +98,62 @@ class KbiLanguageModel(BaseLanguageModel):
 				p_labels,
 				t_energies
 		):
-			m_labels[ex_t_id] = ex_t_label
+			m_labels[ex_m_id][ex_t_id] = ex_t_label
 			for ex_p_id, ex_p_label, ex_tmp_energy in zip(ex_p_ids, ex_p_labels, ex_t_energies):
 				m_adj_list[ex_m_id].append((ex_t_id, ex_p_id, ex_tmp_energy))
-				m_labels[ex_p_id] = ex_p_label
+				m_labels[ex_m_id][ex_p_id] = ex_p_label
+
+		m_s_labels = []
+		m_m_ids = []
+		m_t_ids = []
+		for m_id, m_t_labels in m_labels.items():
+			for m_t_id, m_t_label in m_t_labels.items():
+				m_t_ids.append(m_t_id)
+				m_m_ids.append(m_id)
+				m_s_labels.append(m_t_label)
 
 		# TODO use adj list for inference
+		def predict(c_threshold):
+			preds = []
+			# TODO thresholding here
+			for m_id, m_t_labels in m_labels.items():
+				m_i_adj = m_adj_list[m_id]
+				# TODO map cluster to stance?
+				m_s_i_preds = infer_clusters(m_i_adj, c_threshold)
+				for ex_id in m_t_labels:
+					ex_pred = m_s_i_preds[ex_id]
+					preds.append(ex_pred)
+			preds = torch.tensor(preds, dtype=torch.long)
+			return preds
+
+		m_s_labels = torch.tensor(m_s_labels, dtype=torch.long)
+
+		if stage == 'val':
+			# select max f1 threshold
+			max_threshold, max_metrics = self.metric.best(
+				m_s_labels,
+				predict,
+				self.threshold
+			)
+			self.threshold.update_thresholds(max_threshold)
+		m_s_preds = self.threshold(predict)
+
+		f1, p, r, cls_f1, cls_p, cls_r, cls_indices = self.metric(
+			m_s_labels,
+			m_s_preds
+		)
+		self.log(f'{stage}_loss', loss)
+		self.log(f'{stage}_f1', f1)
+		self.log(f'{stage}_p', p)
+		self.log(f'{stage}_r', r)
+		for t_idx, threshold in enumerate(self.threshold.thresholds):
+			self.log(f'{stage}_threshold_{t_idx}', threshold)
+		for cls_index, c_f1, c_p, c_r in zip(cls_indices, cls_f1, cls_p, cls_r):
+			self.log(f'{stage}_{cls_index}_f1', c_f1)
+			self.log(f'{stage}_{cls_index}_p', c_p)
+			self.log(f'{stage}_{cls_index}_r', c_r)
+
+		self.threshold.to(self.device)
 
 	def eval_step(self, batch, batch_idx, dataloader_idx=None):
 		if dataloader_idx is None or dataloader_idx == 0:

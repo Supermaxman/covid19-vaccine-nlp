@@ -1,4 +1,4 @@
-
+import torch
 
 from pytorch_gleam.modeling.base_thresholds import ThresholdModule
 
@@ -26,3 +26,13 @@ class MultiClassThresholdModule(ThresholdModule):
 		# [bsize]
 		predictions = pos_predictions * pos_any_above
 		return predictions
+
+
+class MultiClassCallableThresholdModule(MultiClassThresholdModule):
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+
+	def predict(self, scores, thresholds):
+		predictions = scores(thresholds.numpy()[0])
+		return predictions
+
