@@ -105,7 +105,7 @@ class KbiLanguageModel(BaseLanguageModel):
 		for ex_idx in range(len(t_ids)):
 			ex_t_id = t_ids[ex_idx]
 			ex_m_id = m_ids[ex_idx]
-			ex_p_ids = p_ids[ex_idx]
+			ex_p_ids = [p_ids[ex_idx]]
 			ex_t_label = t_label[ex_idx]
 			ex_t_stage = int(t_stage[ex_idx])
 			ex_stage[ex_t_id] = ex_t_stage
