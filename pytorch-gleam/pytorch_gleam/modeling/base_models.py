@@ -56,6 +56,8 @@ class BaseLanguageModel(pl.LightningModule, ABC):
 		if stage == 'fit':
 			total_devices = self.trainer.num_nodes * self.trainer.num_gpus
 			train_batches = len(self.train_dataloader()) // total_devices
+			# need to figure out how many batches will actually have gradient updates
+			train_batches = train_batches // self.trainer.accumulate_grad_batches
 			self.train_steps = (self.trainer.max_epochs * train_batches)
 
 	def configure_optimizers(self):
