@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
-config=experiments/kbi/kbi-v53.yaml
+config="$@"
+num_gpus=1
+
 config_name=`basename ${config}`
 run_id=${config_name::-5}
-num_gpus=1
 
 
 export TOKENIZERS_PARALLELISM=true
