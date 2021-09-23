@@ -2,10 +2,10 @@ from collections import defaultdict
 
 import torch
 
-from pytorch_gleam.modeling.base_models import BaseLanguageModel
-from pytorch_gleam.modeling.thresholds.multi_class import MultiClassCallableThresholdModule
-from pytorch_gleam.modeling.metrics.multi_class_f1 import F1PRMultiClassMetric
-from pytorch_gleam.modeling.knowledge_embedding import *
+from pytorch_gleam.modeling.models.base_models import BaseLanguageModel
+from pytorch_gleam.modeling.thresholds import ThresholdModule
+from pytorch_gleam.modeling.knowledge_embedding import KnowledgeEmbedding
+from pytorch_gleam.modeling.metrics import Metric
 from pytorch_gleam.inference import *
 
 
@@ -13,78 +13,37 @@ from pytorch_gleam.inference import *
 class KbiLanguageModel(BaseLanguageModel):
 	def __init__(
 			self,
-			ke_model: str = 'transms',
-			ke_emb_size: int = 8,
-			ke_hidden_size: int = 32,
-			ke_gamma: float = 1.0,
-			ke_loss_norm: int = 1,
+			ke: KnowledgeEmbedding,
+			threshold: ThresholdModule,
+			metric: Metric,
 			num_relations: int = 2,
 			num_classes: int = 3,
-			metric: str = 'f1',
-			metric_mode: str = 'macro',
 			*args,
 			**kwargs
 	):
 		super().__init__(*args, **kwargs)
 		self.num_relations = num_relations
 		self.num_classes = num_classes
-		self.ke_model = ke_model
-		self.ke_emb_size = ke_emb_size
-		self.ke_hidden_size = ke_hidden_size
-		self.ke_gamma = ke_gamma
-		self.ke_loss_norm = ke_loss_norm
+		self.ke = ke
+		# TODO build multi-class multi-label threshold module
+		self.threshold = threshold
 		self.ke_rel_layers = torch.nn.ModuleList(
 			[
 				torch.nn.Linear(
 					in_features=self.hidden_size,
-					out_features=self.ke_hidden_size
+					out_features=self.ke.hidden_size
 				) for _ in range(self.num_relations)
 			]
 		)
 		self.ke_entity_layer = torch.nn.Linear(
 			in_features=self.hidden_size,
-			out_features=self.ke_hidden_size
+			out_features=self.ke.hidden_size
 		)
-		if self.ke_model == 'transms':
-			self.ke = TransMSEmbedding(
-				hidden_size=self.ke_hidden_size,
-				emb_size=self.ke_emb_size,
-				gamma=self.ke_gamma,
-				loss_norm=self.ke_loss_norm
-			)
-		elif self.ke_model == 'transe':
-			self.ke = TransEEmbedding(
-				hidden_size=self.ke_hidden_size,
-				emb_size=self.ke_emb_size,
-				gamma=self.ke_gamma,
-				loss_norm=self.ke_loss_norm
-			)
-		elif self.ke_model == 'transd':
-			self.ke = TransDEmbedding(
-				hidden_size=self.ke_hidden_size,
-				emb_size=self.ke_emb_size,
-				gamma=self.ke_gamma,
-				loss_norm=self.ke_loss_norm
-			)
-		else:
-			raise ValueError(f'Unknown ke_model: {self.ke_model}')
 		self.f_dropout = torch.nn.Dropout(
 			p=self.hidden_dropout_prob
 		)
-		# TODO build multi-class multi-label threshold module
-		self.threshold = MultiClassCallableThresholdModule(
-			threshold_min=-30.0,
-			threshold_max=0.0,
-			threshold_delta=0.1
-		)
-
-		if metric == 'f1':
-			self.metric = F1PRMultiClassMetric(
-				num_classes=self.num_classes,
-				mode=metric_mode
-			)
-		else:
-			raise ValueError(f'Unknown metric: {metric}')
+		
+		self.metric = metric
 
 	def _eval_build_adj(self, outputs):
 		# [count]
@@ -276,7 +235,7 @@ class KbiLanguageModel(BaseLanguageModel):
 		# [bsize, num_relations, ke_hidden_size]
 		r_projections = torch.stack(r_projections, dim=1)
 		# [bsize * num_relations, ke_hidden_size]
-		r_projections = r_projections.view(num_examples * self.num_relations, self.ke_hidden_size)
+		r_projections = r_projections.view(num_examples * self.num_relations, r_projections.shape[-1])
 		# [bsize * num_relations, ke_emb_size]
 		r_embs = self.ke(r_projections, 'rel')
 		# [bsize, num_relations, ke_emb_size]

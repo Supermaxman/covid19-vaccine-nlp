@@ -1,20 +1,18 @@
 
 from torch import nn
 import torch
+from pytorch_gleam.modeling.knowledge_embedding.base_emb import KnowledgeEmbedding
 
 
-class TransMSEmbedding(nn.Module):
-	def __init__(self, hidden_size, emb_size, gamma, loss_norm=2):
-		super().__init__()
-		self.gamma = gamma
-		self.emb_size = emb_size
-		self.loss_norm = loss_norm
+class TransMSEmbedding(KnowledgeEmbedding):
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
 		self.e_emb_layer = nn.Linear(
-			hidden_size,
+			self.hidden_size,
 			self.emb_size
 		)
 		self.r_emb_layer = nn.Linear(
-			hidden_size,
+			self.hidden_size,
 			self.emb_size + 1
 		)
 
@@ -42,25 +40,7 @@ class TransMSEmbedding(nn.Module):
 		t_p = torch.tanh(head * rel) * tail
 
 		h_r_t_diff = h_p + r_p - t_p
-		if self.loss_norm == 1:
-			h_r_t_energy = torch.norm(h_r_t_diff, p=1, dim=-1, keepdim=False)
-		elif self.loss_norm == 2:
-			h_r_t_energy = (h_r_t_diff * h_r_t_diff).sum(dim=-1)
-		else:
-			raise ValueError(f'Unknown loss norm: {self.loss_norm}')
-		return h_r_t_energy
+		return self.diff_energy(h_r_t_diff)
 
 	def loss(self, pos_energy, neg_energy):
-		# [bsize, pos_samples]
-		# pos_energy
-		# [bsize, neg_samples]
-		# neg_energy
-		# [bsize, 1, pos_samples]
-		pos_energy = pos_energy.unsqueeze(dim=-2)
-		# [bsize, neg_samples, 1]
-		neg_energy = neg_energy.unsqueeze(dim=-1)
-		# [bsize, neg_samples, pos_samples]
-		margin = pos_energy - neg_energy
-		loss = torch.clamp(self.gamma + margin, min=0.0)
-		accuracy = (pos_energy.lt(neg_energy)).float()
-		return loss, accuracy
+		return self.margin_loss(pos_energy, neg_energy)

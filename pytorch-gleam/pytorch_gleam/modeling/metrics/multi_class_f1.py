@@ -1,5 +1,5 @@
 
-from pytorch_gleam.modeling.base_metrics import Metric
+from pytorch_gleam.modeling.metrics.base_metrics import Metric
 from sklearn.metrics import precision_recall_fscore_support
 
 

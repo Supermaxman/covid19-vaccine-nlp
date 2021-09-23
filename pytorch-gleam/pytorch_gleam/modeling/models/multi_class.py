@@ -1,7 +1,7 @@
 
 import torch
 
-from pytorch_gleam.modeling.base_models import BaseLanguageModel
+from pytorch_gleam.modeling.models.base_models import BaseLanguageModel
 from pytorch_gleam.modeling.thresholds.multi_class import MultiClassThresholdModule
 from pytorch_gleam.modeling.metrics.multi_class_f1 import F1PRMultiClassMetric
 
