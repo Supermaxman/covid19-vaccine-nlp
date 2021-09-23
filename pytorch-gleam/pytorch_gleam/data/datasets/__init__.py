@@ -1,3 +1,4 @@
 
 from pytorch_gleam.data.datasets.multi_class_misinfo_stance import MultiClassMisinfoStanceDataModule
 from pytorch_gleam.data.datasets.kbi_misinfo_stance import KbiMisinfoStanceDataModule
+from pytorch_gleam.data.datasets.base_datasets import BaseDataModule

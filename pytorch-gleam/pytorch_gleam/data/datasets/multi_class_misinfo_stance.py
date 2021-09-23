@@ -1,6 +1,6 @@
 
 from pytorch_gleam.data.datasets.misinfo_stance import MisinfoStanceDataset
-from pytorch_gleam.data.base_datasets import BaseDataModule
+from pytorch_gleam.data.datasets.base_datasets import BaseDataModule
 from pytorch_gleam.data.collators import MultiSequenceBatchCollator
 
 

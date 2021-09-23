@@ -1,7 +1,7 @@
 
 import torch
 
-from pytorch_gleam.data.base_collators import BatchCollator
+from pytorch_gleam.data.collators.base_collators import BatchCollator
 
 
 class MultiSequenceBatchCollator(BatchCollator):

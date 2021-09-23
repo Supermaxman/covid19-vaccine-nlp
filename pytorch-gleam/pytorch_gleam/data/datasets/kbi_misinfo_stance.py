@@ -2,7 +2,7 @@
 import torch
 from collections import defaultdict
 
-from pytorch_gleam.data.base_datasets import BaseDataModule
+from pytorch_gleam.data.datasets.base_datasets import BaseDataModule
 from pytorch_gleam.data.datasets.misinfo_stance import MisinfoStanceDataset
 from pytorch_gleam.data.collators import KbiBatchCollator
 import itertools
