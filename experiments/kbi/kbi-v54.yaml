@@ -9,7 +9,7 @@ model:
       init_args:
         emb_size: 8
         hidden_size: 32
-        gamma: 1.0
+        gamma: 1.5
         loss_norm: 1
     threshold:
       class_path: pytorch_gleam.modeling.thresholds.MultiClassCallableThresholdModule
@@ -23,6 +23,11 @@ trainer:
   accumulate_grad_batches: 8
   check_val_every_n_epoch: 4
   deterministic: true
+  callbacks:
+    - class_path: pytorch_gleam.callbacks.FitCheckpointCallback
+      init_args:
+    - class_path: pytorch_gleam.callbacks.CopyConfigCallback
+      init_args:
 data:
   class_path: pytorch_gleam.data.datasets.KbiMisinfoStanceDataModule
   init_args:
