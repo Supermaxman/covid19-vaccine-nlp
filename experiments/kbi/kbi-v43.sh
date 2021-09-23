@@ -46,7 +46,7 @@ python kbi/train.py \
   --model.ke_hidden_size 32 \
   --model.ke_gamma 1.5 \
   --model.ke_loss_norm 1 \
-  --model.learning_rate 5e-5 \
+  --model.learning_rate 1e-5 \
   --trainer.max_epochs 40 \
   --data.batch_size 4 \
   --trainer.accumulate_grad_batches 8 \
