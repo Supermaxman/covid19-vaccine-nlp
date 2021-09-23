@@ -45,10 +45,10 @@ python kbi/train.py \
   --seed_everything ${seed} \
   --trainer.gpus ${gpus} \
   --trainer.default_root_dir models/${run_id} \
-  --data.train_path ${train_path} \
-  --data.train_misinfo_path ${train_misinfo_path} \
-  --data.val_path ${val_path} \
-  --data.val_misinfo_path ${val_misinfo_path}
+  --data.init_args.train_path ${train_path} \
+  --data.init_args.train_misinfo_path ${train_misinfo_path} \
+  --data.init_args.val_path ${val_path} \
+  --data.init_args.val_misinfo_path ${val_misinfo_path}
 
 
 echo "Freeing ${num_gpus} GPUs: ${gpus}"
