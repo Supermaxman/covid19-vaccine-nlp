@@ -36,7 +36,7 @@ export TOKENIZERS_PARALLELISM=true
 echo "Starting experiment ${run_id}"
 echo "Reserving ${num_gpus} GPU(s)..."
 
-gpus=`request-gpus.py -r ${num_gpus}`
+gpus=`request-gpus -r ${num_gpus}`
 if [[ ${gpus} -eq -1 ]]; then
     echo "Unable to reserve ${num_gpus} GPU(s), exiting."
     exit -1
