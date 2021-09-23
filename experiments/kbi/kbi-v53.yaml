@@ -33,8 +33,8 @@ data:
     tokenizer_name: digitalepidemiologylab/covid-twitter-bert-v2
     num_workers: 8
     train_path: /users/max/code/covid19-vaccine-twitter/data/v1/train.jsonl
-    train_misinfo_path: /users/max/code/covid19-vaccine-twitter/data/v1/misinfo.jsonl
+    train_misinfo_path: /users/max/code/covid19-vaccine-twitter/data/v1/misinfo.json
     val_path: /users/max/code/covid19-vaccine-twitter/data/v1/dev.jsonl
-    val_misinfo_path: /users/max/code/covid19-vaccine-twitter/data/v1/misinfo.jsonl
+    val_misinfo_path: /users/max/code/covid19-vaccine-twitter/data/v1/misinfo.json
     test_path: /users/max/code/covid19-vaccine-twitter/data/v1/test.jsonl
-    test_misinfo_path: /users/max/code/covid19-vaccine-twitter/data/v1/misinfo.jsonl
+    test_misinfo_path: /users/max/code/covid19-vaccine-twitter/data/v1/misinfo.json
