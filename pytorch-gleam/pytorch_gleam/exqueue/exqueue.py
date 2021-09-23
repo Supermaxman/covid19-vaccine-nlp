@@ -35,8 +35,6 @@ def main():
 		'current_status': status,
 		'status_history': [status]
 	}
-	if not os.path.exists(experiment):
-		raise FileNotFoundError(f'Could not find experiment! {experiment}')
 
 	ex_queue_path = os.path.join(submitted_path, ex_id)
 	with FileLock(os.path.join(queue_path, '.lock')):
