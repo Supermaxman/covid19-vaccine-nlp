@@ -14,8 +14,6 @@ model:
         loss_norm: 1
     threshold:
       class_path: pytorch_gleam.modeling.thresholds.MultiClassCallableThresholdModule
-      init_args:
-        num_thresholds: 1
     metric:
       class_path: pytorch_gleam.modeling.metrics.F1PRMultiClassMetric
       init_args:
