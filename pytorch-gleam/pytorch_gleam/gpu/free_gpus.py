@@ -12,8 +12,7 @@ def free_gpus(gpu_ids, res_path):
 				os.remove(gpu_res_path)
 
 
-if __name__ == '__main__':
-
+def main():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-i', '--gpu_ids', required=True)
 	parser.add_argument('-rp', '--res_path', default='~/.gpu_availability')
@@ -24,3 +23,5 @@ if __name__ == '__main__':
 	free_gpus(gpu_ids, full_res_path)
 
 
+if __name__ == '__main__':
+	main()

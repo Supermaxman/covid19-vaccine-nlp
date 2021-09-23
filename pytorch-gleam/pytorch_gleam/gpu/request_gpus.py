@@ -5,7 +5,7 @@ import argparse
 from filelock import FileLock
 
 
-def reserve_gpus(request_count, gpu_mem_threshold, res_path):
+def reserve_gpus(request_count, gpu_mem_threshold, res_path, output):
 	with FileLock(os.path.join(res_path, '.lock')):
 		available_gpus = []
 		for line in output:
@@ -26,8 +26,7 @@ def reserve_gpus(request_count, gpu_mem_threshold, res_path):
 	return reserved_gpus
 
 
-if __name__ == '__main__':
-
+def main():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-r', '--request_count', required=True, type=int)
 	parser.add_argument('-m', '--gpu_mem_threshold', default=200, type=int)
@@ -48,10 +47,17 @@ if __name__ == '__main__':
 			request_count=args.request_count,
 			gpu_mem_threshold=args.gpu_mem_threshold,
 			res_path=res_path,
+			output=output
 		)
 
 		if len(gpu_ids) > 0:
-			print(','.join(gpu_ids), end='')
+			if len(gpu_ids) == 0:
+				print(','.join(gpu_ids) + ',', end='')
+			else:
+				print(','.join(gpu_ids), end='')
 		else:
 			print('-1', end='')
 
+
+if __name__ == '__main__':
+	main()

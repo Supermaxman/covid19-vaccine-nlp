@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-python pytorch_gleam/gpu/free_gpus.py "$@"

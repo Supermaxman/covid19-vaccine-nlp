@@ -9,7 +9,8 @@ import base64
 
 time_format = '%Y%m%d%H%M%S'
 
-if __name__ == '__main__':
+
+def main():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-ex', '--experiment', required=True)
 	parser.add_argument('-qp', '--queue_path', default='~/.default_queue')
@@ -47,3 +48,5 @@ if __name__ == '__main__':
 			print(f'Experiment successfully added to queue.')
 
 
+if __name__ == '__main__':
+	main()

@@ -57,8 +57,7 @@ def get_experiments(queue_path, status):
 	return ex_list
 
 
-if __name__ == '__main__':
-
+def main():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-qp', '--queue_path', default='~/.default_queue')
 	parser.add_argument('-mex', '--max_experiments', default=1, type=int)
@@ -125,4 +124,6 @@ if __name__ == '__main__':
 		time.sleep(refresh_seconds)
 
 
+if __name__ == '__main__':
+	main()
 

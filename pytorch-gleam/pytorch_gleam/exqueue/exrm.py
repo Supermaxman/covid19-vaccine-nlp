@@ -1,2 +1,10 @@
 #!/usr/bin/env python
-raise NotImplementedError('Not yet implemented')
+
+
+def main():
+	raise NotImplementedError('Not yet implemented')
+
+
+if __name__ == '__main__':
+	main()
+

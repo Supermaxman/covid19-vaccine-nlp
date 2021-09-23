@@ -53,12 +53,14 @@ setup(
 		"Programming Language :: Python :: 3",
 		"Programming Language :: Python :: 3.9",
 	],
-	scripts=[
-		# 'pytorch_gleam/exqueue/exqueue',
-		# 'pytorch_gleam/exqueue/exstart',
-		# 'pytorch_gleam/exqueue/exstat',
-		# 'pytorch_gleam/exqueue/exrm',
-		# 'pytorch_gleam/gpu/free_gpus',
-		'bin/free_gpus',
-	],
+	entry_points={
+		"console_scripts": [
+			"free-gpus=pytorch_gleam.gpu.free_gpus:main",
+			"request-gpus=pytorch_gleam.gpu.request_gpus:main",
+			"ex-queue=pytorch_gleam.exqueue.exqueue:main",
+			"ex-start=pytorch_gleam.exqueue.exstart:main",
+			"ex-stat=pytorch_gleam.exqueue.exstat:main",
+			"ex-rm=pytorch_gleam.exqueue.exrm:main",
+		],
+	},
 )

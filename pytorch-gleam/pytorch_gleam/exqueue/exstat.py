@@ -39,8 +39,7 @@ def get_experiments(queue_path, status):
 	return ex_list
 
 
-if __name__ == '__main__':
-
+def main():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-qp', '--queue_path', default='~/.default_queue')
 	parser.add_argument('-c', '--completed', default=False, action='store_true')
@@ -61,4 +60,5 @@ if __name__ == '__main__':
 				print(f'{ex_format(ex)}')
 
 
-
+if __name__ == '__main__':
+	main()
