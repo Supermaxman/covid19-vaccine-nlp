@@ -9,7 +9,7 @@ model:
       init_args:
         emb_size: 8
         hidden_size: 32
-        gamma: 1.5
+        gamma: 1.0
         loss_norm: 1
     threshold:
       class_path: pytorch_gleam.modeling.thresholds.MultiClassCallableThresholdModule
