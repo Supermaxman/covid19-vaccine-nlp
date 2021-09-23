@@ -65,7 +65,8 @@ class BaseDataModule(pl.LightningDataModule, ABC):
 				collate_fn=self.create_collator(),
 				worker_init_fn=ds.worker_init_fn,
 				# ensures same samples because rng will get assigned during worker creation
-				persistent_workers=False
+				persistent_workers=False,
+				pin_memory=True
 			)
 			for ds in datasets
 		]
@@ -83,7 +84,8 @@ class BaseDataModule(pl.LightningDataModule, ABC):
 				worker_init_fn=ds.worker_init_fn,
 				# ensures different samples across epochs from rng generator
 				# seeded on creation with worker seed
-				persistent_workers=True
+				persistent_workers=True,
+				pin_memory=True
 			)
 			for ds in datasets
 		]
