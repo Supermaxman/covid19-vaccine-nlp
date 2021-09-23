@@ -1,4 +1,3 @@
-
 model:
   class_path: pytorch_gleam.modeling.models.KbiLanguageModel
   init_args:
@@ -14,16 +13,18 @@ model:
         loss_norm: 1
     threshold:
       class_path: pytorch_gleam.modeling.thresholds.MultiClassCallableThresholdModule
+      init_args:
+        num_thresholds: 1
     metric:
       class_path: pytorch_gleam.modeling.metrics.F1PRMultiClassMetric
       init_args:
         mode: macro
         num_classes: 3
 trainer:
-  deterministic: true
-  check_val_every_n_epoch: 4
   max_epochs: 48
   accumulate_grad_batches: 8
+  check_val_every_n_epoch: 4
+  deterministic: true
 data:
   class_path: pytorch_gleam.data.datasets.KbiMisinfoStanceDataModule
   init_args:

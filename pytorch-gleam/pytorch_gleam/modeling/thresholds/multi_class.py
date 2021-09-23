@@ -1,11 +1,10 @@
-import torch
 
 from pytorch_gleam.modeling.thresholds.base_thresholds import ThresholdModule
 
 
 class MultiClassThresholdModule(ThresholdModule):
 	def __init__(self, *args, **kwargs):
-		super().__init__(*args, num_thresholds=1, **kwargs)
+		super().__init__(*args, **kwargs)
 
 	def predict(self, scores, thresholds):
 		# zero class is idx 0
