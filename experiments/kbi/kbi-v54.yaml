@@ -25,9 +25,7 @@ trainer:
   deterministic: true
   callbacks:
     - class_path: pytorch_gleam.callbacks.FitCheckpointCallback
-      init_args:
     - class_path: pytorch_gleam.callbacks.CopyConfigCallback
-      init_args:
 data:
   class_path: pytorch_gleam.data.datasets.KbiMisinfoStanceDataModule
   init_args:
