@@ -56,11 +56,7 @@ trap handler SIGINT
 #echo "Training model..."
 python kbi/train.py \
   --seed_everything ${seed} \
-  --model.ke ${ke_model} \
-  --model.ke.emb_size ${ke_emb_size} \
-  --model.ke.hidden_size ${ke_hidden_size} \
-  --model.ke.gamma ${ke_gamma} \
-  --model.ke.loss_norm ${ke_loss_norm} \
+  --model.ke {"class_path": ${ke_model}, "init_args": {"emb_size": ${ke_emb_size}, "hidden_size": ${ke_hidden_size}, "gamma": ${ke_gamma}, "loss_norm": ${ke_loss_norm}}} \
   --model.threshold pytorch_gleam.modeling.thresholds.MultiClassCallableThresholdModule \
   --model.metric pytorch_gleam.modeling.metrics.F1PRMultiClassMetric \
   --model.metric.mode macro \
