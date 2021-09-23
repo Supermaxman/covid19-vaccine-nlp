@@ -46,6 +46,7 @@ class KbiBatchCollator(BatchCollator):
 		m_ids = []
 		p_ids = []
 		n_ids = []
+		has_token_type_ids = True
 		for ex_idx, ex in enumerate(examples):
 			ids.append(ex['t_ex']['t_id'])
 			m_ids.append(ex['m_ex']['m_id'])
@@ -60,7 +61,10 @@ class KbiBatchCollator(BatchCollator):
 			for seq_idx, seq in enumerate(ex_seqs):
 				self.pad_and_apply_seq(seq['input_ids'], input_ids, ex_idx, seq_idx)
 				self.pad_and_apply_seq(seq['attention_mask'], attention_mask, ex_idx, seq_idx)
-				self.pad_and_apply_seq(seq['token_type_ids'], token_type_ids, ex_idx, seq_idx)
+				if 'token_type_ids' in seq:
+					self.pad_and_apply_seq(seq['token_type_ids'], token_type_ids, ex_idx, seq_idx)
+				else:
+					has_token_type_ids = False
 			for p_ex in ex['p_samples']:
 				p_ids.append(p_ex['t_id'])
 			for n_ex in ex['n_samples']:
@@ -77,13 +81,13 @@ class KbiBatchCollator(BatchCollator):
 			'num_sequences': num_sequences,
 			'input_ids': input_ids,
 			'attention_mask': attention_mask,
-			'token_type_ids': token_type_ids,
 			'direction_mask': direction_mask,
 			'labels': labels,
 			'stages': stages,
 			'relation_mask': relation_mask
 		}
-
+		if has_token_type_ids:
+			batch['token_type_ids'] = token_type_ids
 		return batch
 
 	def pad_and_apply_seq(self, id_list, id_tensor, ex_idx, seq_idx):

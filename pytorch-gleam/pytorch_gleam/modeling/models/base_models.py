@@ -43,12 +43,18 @@ class BaseLanguageModel(pl.LightningModule, ABC):
 		# noinspection PyUnresolvedReferences
 		self.hidden_dropout_prob = self.lm.config.hidden_dropout_prob
 
-	def lm_step(self, input_ids, attention_mask, token_type_ids):
-		outputs = self.lm(
-			input_ids=input_ids,
-			attention_mask=attention_mask,
-			token_type_ids=token_type_ids
-		)
+	def lm_step(self, input_ids, attention_mask, token_type_ids=None):
+		if token_type_ids is not None:
+			outputs = self.lm(
+				input_ids=input_ids,
+				attention_mask=attention_mask,
+				token_type_ids=token_type_ids
+			)
+		else:
+			outputs = self.lm(
+				input_ids=input_ids,
+				attention_mask=attention_mask,
+			)
 		contextualized_embeddings = outputs[0]
 		return contextualized_embeddings
 

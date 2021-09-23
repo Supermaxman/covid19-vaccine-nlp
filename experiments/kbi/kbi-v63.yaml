@@ -1,0 +1,44 @@
+model:
+  class_path: pytorch_gleam.modeling.models.KbiLanguageModel
+  init_args:
+    learning_rate: 5e-5
+    pre_model_name: digitalepidemiologylab/covid-twitter-bert
+    load_pre_model: true
+    ke:
+      class_path: pytorch_gleam.modeling.knowledge_embedding.TransMSEmbedding
+      init_args:
+        emb_size: 8
+        hidden_size: 32
+        gamma: 1.5
+        loss_norm: 1
+    threshold:
+      class_path: pytorch_gleam.modeling.thresholds.MultiClassCallableThresholdModule
+    metric:
+      class_path: pytorch_gleam.modeling.metrics.F1PRMultiClassMetric
+      init_args:
+        mode: macro
+        num_classes: 3
+trainer:
+  max_epochs: 48
+  accumulate_grad_batches: 8
+  check_val_every_n_epoch: 4
+  deterministic: true
+  callbacks:
+    - class_path: pytorch_gleam.callbacks.FitCheckpointCallback
+    - class_path: pytorch_gleam.callbacks.CopyConfigCallback
+data:
+  class_path: pytorch_gleam.data.datasets.KbiMisinfoStanceDataModule
+  init_args:
+    batch_size: 4
+    pos_samples: 1
+    neg_samples: 1
+    max_seq_len: 96
+    tokenizer_name: digitalepidemiologylab/covid-twitter-bert
+    num_workers: 8
+    train_path: /users/max/code/covid19-vaccine-twitter/data/v1/train.jsonl
+    train_misinfo_path: /users/max/code/covid19-vaccine-twitter/data/v1/misinfo.json
+    val_path: /users/max/code/covid19-vaccine-twitter/data/v1/dev.jsonl
+    val_misinfo_path: /users/max/code/covid19-vaccine-twitter/data/v1/misinfo.json
+    test_path: /users/max/code/covid19-vaccine-twitter/data/v1/test.jsonl
+    test_misinfo_path: /users/max/code/covid19-vaccine-twitter/data/v1/misinfo.json
+seed_everything: 0

@@ -42,7 +42,7 @@ class KbiLanguageModel(BaseLanguageModel):
 		self.f_dropout = torch.nn.Dropout(
 			p=self.hidden_dropout_prob
 		)
-		
+
 		self.metric = metric
 
 	def _eval_build_adj(self, outputs):
@@ -204,8 +204,10 @@ class KbiLanguageModel(BaseLanguageModel):
 		# [bsize, num_seq, seq_len] -> [bsize * num_seq, seq_len]
 		input_ids = batch['input_ids'].view(num_examples * num_sequences_per_example, pad_seq_len)
 		attention_mask = batch['attention_mask'].view(num_examples * num_sequences_per_example, pad_seq_len)
-		token_type_ids = batch['token_type_ids'].view(num_examples * num_sequences_per_example, pad_seq_len)
-
+		if 'token_type_ids' in batch:
+			token_type_ids = batch['token_type_ids'].view(num_examples * num_sequences_per_example, pad_seq_len)
+		else:
+			token_type_ids = None
 		# [bsize * num_seq, seq_len, hidden_size]
 		contextualized_embeddings = self.lm_step(
 			input_ids,
