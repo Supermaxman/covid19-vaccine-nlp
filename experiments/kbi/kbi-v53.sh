@@ -5,7 +5,7 @@ run_id=${filename::-3}
 
 seed=0
 num_gpus=1
-config=${run_id}.yaml
+config=experiments/kbi/${run_id}.yaml
 
 data_path=/users/max/code/covid19-vaccine-twitter/data/v1
 train_path=${data_path}/train.jsonl
