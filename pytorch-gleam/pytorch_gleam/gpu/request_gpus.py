@@ -51,7 +51,7 @@ def main():
 		)
 
 		if len(gpu_ids) > 0:
-			if len(gpu_ids) == 0:
+			if len(gpu_ids) == 1:
 				print(','.join(gpu_ids) + ',', end='')
 			else:
 				print(','.join(gpu_ids), end='')
