@@ -2,6 +2,9 @@
 model:
   class_path: pytorch_gleam.modeling.models.KbiLanguageModel
   init_args:
+    learning_rate: 5e-5
+    pre_model_name: digitalepidemiologylab/covid-twitter-bert-v2
+    load_pre_model: true
     ke:
       class_path: pytorch_gleam.modeling.knowledge_embedding.TransMSEmbedding
       init_args:
@@ -18,9 +21,6 @@ model:
       init_args:
         mode: macro
         num_classes: 3
-  learning_rate: 5e-5
-  pre_model_name: digitalepidemiologylab/covid-twitter-bert-v2
-  load_pre_model: true
 trainer:
   deterministic: true
   check_val_every_n_epoch: 4
