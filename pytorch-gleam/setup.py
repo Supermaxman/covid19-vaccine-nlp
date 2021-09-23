@@ -52,5 +52,13 @@ setup(
 		"Operating System :: OS Independent",
 		"Programming Language :: Python :: 3",
 		"Programming Language :: Python :: 3.9",
-	]
+	],
+	scripts=[
+		'pytorch_gleam/exqueue/exqueue.py',
+		'pytorch_gleam/exqueue/exstart.py',
+		'pytorch_gleam/exqueue/exstat.py',
+		'pytorch_gleam/exqueue/exrm.py',
+		'pytorch_gleam/gpu/free_gpus.py',
+		'pytorch_gleam/gpu/request_gpus.py',
+	],
 )
