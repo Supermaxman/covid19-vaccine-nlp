@@ -20,9 +20,10 @@ class MultiClassMisinfoStanceDataset(MisinfoStanceDataset):
 				'ids': f'{ex_id}|{m_id}',
 				'labels': ex['m_label'],
 				'input_ids': token_data['input_ids'],
-				'token_type_ids': token_data['token_type_ids'],
 				'attention_mask': token_data['attention_mask'],
 			}
+			if 'token_type_ids' in token_data:
+				p_ex['token_type_ids'] = token_data['token_type_ids']
 			self.examples.append(p_ex)
 
 

@@ -50,9 +50,10 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 					'm_id': m_id,
 					'm_text': pair_ex['m_text'],
 					'input_ids': m['token_data']['input_ids'],
-					'token_type_ids': m['token_data']['token_type_ids'],
 					'attention_mask': m['token_data']['attention_mask'],
 				}
+				if 'token_type_ids' in m['token_data']:
+					m_ex['token_type_ids'] = m['token_data']['token_type_ids']
 				self.m_exs[m_id] = m_ex
 			t_ex = {
 				't_id': ex_id,
@@ -63,6 +64,8 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 				'm_label': m_label,
 				'stage': pair_ex['stage']
 			}
+			if 'token_type_ids' in token_data:
+				t_ex['token_type_ids'] = token_data['token_type_ids']
 			ex = {
 				't_ex': t_ex,
 				'm_ex': m_ex,
