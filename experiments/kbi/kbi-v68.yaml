@@ -27,7 +27,6 @@ trainer:
   callbacks:
     - class_path: pytorch_lightning.callbacks.StochasticWeightAveraging
     - class_path: pytorch_gleam.callbacks.FitCheckpointCallback
-    - class_path: pytorch_gleam.callbacks.CopyConfigCallback
 data:
   class_path: pytorch_gleam.data.datasets.KbiMisinfoStanceDataModule
   init_args:

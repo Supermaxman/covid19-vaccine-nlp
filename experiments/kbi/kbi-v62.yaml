@@ -1,3 +1,4 @@
+seed_everything: 0
 model:
   class_path: pytorch_gleam.modeling.models.KbiLanguageModel
   init_args:
@@ -25,7 +26,6 @@ trainer:
   deterministic: true
   callbacks:
     - class_path: pytorch_gleam.callbacks.FitCheckpointCallback
-    - class_path: pytorch_gleam.callbacks.CopyConfigCallback
 data:
   class_path: pytorch_gleam.data.datasets.KbiMisinfoStanceDataModule
   init_args:
@@ -41,4 +41,3 @@ data:
     val_misinfo_path: /users/max/code/covid19-vaccine-twitter/data/v1/misinfo.json
     test_path: /users/max/code/covid19-vaccine-twitter/data/v1/test.jsonl
     test_misinfo_path: /users/max/code/covid19-vaccine-twitter/data/v1/misinfo.json
-seed_everything: 0
