@@ -43,16 +43,13 @@ class MisinfoStanceDataset(Dataset):
 			ex_id = ex['id']
 			ex_text = ex['full_text'] if 'full_text' in ex else ex['text']
 			ex_text = ex_text.strip().replace('\r', ' ').replace('\n', ' ')
-			if 'labels' in ex:
-				ex_labels = ex['labels']
-			elif 'misinfo' in ex:
-				ex_labels = ex['misinfo']
-			else:
-				raise ValueError()
+			ex_labels = ex['misinfo']
 			for m_id, m_label in ex_labels.items():
 				if m_id not in self.misinfo:
+					print(f'MISSING M_ID: {m_id}')
 					continue
 				if m_label not in self.label_map:
+					print(f'MISSING M_LABEL: {m_label}')
 					continue
 				m_label_idx = self.label_map[m_label]
 				m = self.misinfo[m_id]
