@@ -22,4 +22,4 @@ class CopyConfigCallback(Callback):
 			root_config_path = os.path.join(trainer.default_root_dir, 'config.yaml')
 			print(config_path)
 			print(root_config_path)
-			shutil.copyfile(config_path, root_config_path)
+			shutil.copy(config_path, root_config_path)
