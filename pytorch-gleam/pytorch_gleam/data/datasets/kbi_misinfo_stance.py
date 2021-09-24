@@ -59,7 +59,6 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 				't_id': ex_id,
 				't_text': pair_ex['ex_text'],
 				'input_ids': token_data['input_ids'],
-				'token_type_ids': token_data['token_type_ids'],
 				'attention_mask': token_data['attention_mask'],
 				'm_label': m_label,
 				'stage': pair_ex['stage']
