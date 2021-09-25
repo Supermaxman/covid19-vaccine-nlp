@@ -99,6 +99,7 @@ def infer_seed_clusters(
 		threshold: float,
 		node_labels: Dict[str, int]
 ):
+	assert len(node_labels) > 0
 	seed_node_labels = node_labels.copy()
 	node_labels = node_labels.copy()
 	g = nx.Graph()
@@ -128,7 +129,7 @@ def infer_seed_clusters(
 				key=lambda x: x[0]
 			)
 			node_scores[node].append(max_score)
-
+	assert first_node is not None
 	node_avg_scores = {}
 	for node, scores in node_scores.items():
 		node_avg_scores[node] = np.mean(scores)
