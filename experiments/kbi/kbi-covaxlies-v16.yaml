@@ -21,7 +21,7 @@ model:
         num_classes: 3
 trainer:
   max_epochs: 80
-  accumulate_grad_batches: 8
+  accumulate_grad_batches: 4
   check_val_every_n_epoch: 4
   deterministic: true
   callbacks:
