@@ -20,7 +20,7 @@ echo "Starting experiment ${run_id}"
 echo "Reserving ${num_gpus} GPU(s)..."
 
 gpus=`request-gpus -r ${num_gpus}`
-if [[ ${gpus} -eq -1 ]]; then
+if [[ ${gpus} == "-1" ]]; then
     echo "Unable to reserve ${num_gpus} GPU(s), exiting."
     exit -1
 fi
