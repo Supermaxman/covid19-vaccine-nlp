@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-filename=$(basename -- "$0")
-run_id=${filename::-3}
+run_id=mc-covaxlies-v1
 
 pre_model_name=digitalepidemiologylab/covid-twitter-bert-v2
 num_gpus=1
