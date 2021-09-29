@@ -29,7 +29,7 @@ handler()
 }
 trap handler SIGINT
 
-echo "Training ${run_id} model..."
+echo "Validating ${run_id} model..."
 python kbi/validate.py \
   --config ${config} \
   --trainer.gpus ${gpus} \
