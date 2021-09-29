@@ -40,7 +40,7 @@ class MultiClassCallableThresholdModule(MultiClassThresholdModule):
 class MultiClassMultiLabelCallableThresholdModule(MultiClassCallableThresholdModule, nn.ModuleDict):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		self.thresholds = [x.thresholds for x in self.values()]
+		self.thresholds = (x.thresholds for x in self.values())
 
 
 
