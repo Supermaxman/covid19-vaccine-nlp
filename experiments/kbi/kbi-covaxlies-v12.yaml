@@ -5,6 +5,7 @@ model:
     learning_rate: 1e-4
     pre_model_name: digitalepidemiologylab/covid-twitter-bert-v2
     load_pre_model: false
+    num_val_seeds: 1
     ke:
       class_path: pytorch_gleam.modeling.knowledge_embedding.TransMSEmbedding
       init_args:
@@ -12,6 +13,8 @@ model:
         hidden_size: 32
         gamma: 1.5
         loss_norm: 1
+    infer:
+      class_path: pytorch_gleam.inference.CountConsistencyInference
     threshold:
       class_path: pytorch_gleam.modeling.thresholds.MultiClassCallableThresholdModule
     metric:

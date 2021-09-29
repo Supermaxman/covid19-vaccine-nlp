@@ -1,5 +1,6 @@
 
-from pytorch_gleam.inference.clustering import infer_clusters
-from pytorch_gleam.inference.clustering import infer_seed_clusters
-from pytorch_gleam.inference.clustering import infer_seed_only_clusters
-from pytorch_gleam.inference.clustering import infer_seed_min_clusters
+from pytorch_gleam.inference.consistency import ConsistencyInference
+from pytorch_gleam.inference.consistency import CountConsistencyInference
+from pytorch_gleam.inference.consistency import ScoreConsistencyInference
+from pytorch_gleam.inference.consistency import ScoreSeedConsistencyInference
+from pytorch_gleam.inference.consistency import MaxScoreConsistencyInference

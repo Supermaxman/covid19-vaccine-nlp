@@ -14,10 +14,12 @@ class KbiLanguageModel(BaseLanguageModel):
 	def __init__(
 			self,
 			ke: KnowledgeEmbedding,
+			infer: ConsistencyInference,
 			threshold: ThresholdModule,
 			metric: Metric,
 			num_relations: int = 2,
 			num_classes: int = 3,
+			num_val_seeds: int = 1,
 			*args,
 			**kwargs
 	):
@@ -25,6 +27,8 @@ class KbiLanguageModel(BaseLanguageModel):
 		self.num_relations = num_relations
 		self.num_classes = num_classes
 		self.ke = ke
+		self.infer = infer
+		self.num_val_seeds = num_val_seeds
 		# TODO build multi-class multi-label threshold module
 		self.threshold = threshold
 		self.ke_rel_layers = torch.nn.ModuleList(
@@ -127,17 +131,9 @@ class KbiLanguageModel(BaseLanguageModel):
 				m_t_rel_labels = [(m_t_id, m_t_label) for (m_t_id, m_t_label) in m_t_labels.items() if m_t_label != 0]
 
 				if stage == 'val':
-					num_seeds = 1
-					m_t_rel_labels = m_t_rel_labels[:num_seeds]
+					m_t_rel_labels = m_t_rel_labels[:self.num_val_seeds]
 				m_t_rel_labels = {m_t_id: m_t_label for (m_t_id, m_t_label) in m_t_rel_labels}
-
-				# TODO make model argument
-				# infer_clusters
-				# infer_seed_clusters
-				# infer_seed_only_clusters
-				# infer_seed_min_clusters
-				# infer_seed_clusters vs infer_seed_only_clusters
-				m_s_i_preds = infer_seed_clusters(m_i_adj, m_thresholds, m_t_rel_labels)
+				m_s_i_preds = self.infer(m_i_adj, m_thresholds, m_t_rel_labels)
 				if stage != 'val':
 					# use test label ordering
 					m_t_labels = m_s_t_labels[1]
