@@ -1,9 +1,11 @@
+
 from collections import defaultdict
+from functools import partial
 
 import torch
 
 from pytorch_gleam.modeling.models.base_models import BaseLanguageModel
-from pytorch_gleam.modeling.thresholds import ThresholdModule
+from pytorch_gleam.modeling.thresholds import ThresholdModule, MultiClassCallableThresholdModule
 from pytorch_gleam.modeling.knowledge_embedding import KnowledgeEmbedding
 from pytorch_gleam.modeling.metrics import Metric
 from pytorch_gleam.inference import *
@@ -17,9 +19,12 @@ class KbiLanguageModel(BaseLanguageModel):
 			infer: ConsistencyInference,
 			threshold: ThresholdModule,
 			metric: Metric,
+			m_metric: Metric,
 			num_relations: int = 2,
 			num_classes: int = 3,
 			num_val_seeds: int = 1,
+			num_threshold_steps: int = 100,
+			update_threshold: bool = True,
 			*args,
 			**kwargs
 	):
@@ -31,6 +36,10 @@ class KbiLanguageModel(BaseLanguageModel):
 		self.num_val_seeds = num_val_seeds
 		# TODO build multi-class multi-label threshold module
 		self.threshold = threshold
+		self.m_metric = m_metric
+		self.num_threshold_steps = num_threshold_steps
+		self.update_threshold = update_threshold
+
 		self.ke_rel_layers = torch.nn.ModuleList(
 			[
 				torch.nn.Linear(
@@ -49,64 +58,6 @@ class KbiLanguageModel(BaseLanguageModel):
 
 		self.metric = metric
 
-	def _eval_build_adj(self, outputs):
-		# [count]
-		t_ids = flatten([x['ids'] for x in outputs])
-		# [count]
-		m_ids = flatten([x['m_ids'] for x in outputs])
-		# [count]
-		p_ids = flatten([x['p_ids'] for x in outputs])
-		# [count, 2]
-		labels = torch.cat([x['labels'] for x in outputs], dim=0).cpu()
-		stages = torch.cat([x['stages'] for x in outputs], dim=0).cpu()
-		# [count]
-		t_label = labels[:, 0]
-		# [count]
-		t_stage = stages[:, 0]
-		# [count, 1]
-		p_labels = labels[:, 1:]
-		# [count, 1]
-		p_stage = stages[:, 1:]
-
-		# [count, 1, num_relations]
-		t_energies = torch.cat([x['energies'] for x in outputs], dim=0).cpu()
-		max_score = -torch.min(t_energies).item()
-		min_score = -torch.max(t_energies).item()
-
-		m_adj_list = defaultdict(list)
-		m_labels = defaultdict(lambda: defaultdict(dict))
-		for ex_idx in range(len(t_ids)):
-			ex_t_id = t_ids[ex_idx]
-			ex_m_id = m_ids[ex_idx]
-			ex_p_ids = [p_ids[ex_idx]]
-			ex_t_label = t_label[ex_idx]
-			ex_t_stage = int(t_stage[ex_idx])
-			ex_p_labels = p_labels[ex_idx]
-			ex_p_stage = p_stage[ex_idx]
-			ex_t_energies = t_energies[ex_idx]
-			m_labels[ex_m_id][ex_t_stage][ex_t_id] = ex_t_label
-			for p_idx in range(len(ex_p_ids)):
-				ex_p_id = ex_p_ids[p_idx]
-				ex_p_label = ex_p_labels[p_idx]
-				ex_p_stage = int(ex_p_stage[p_idx])
-				ex_tmp_energy = ex_t_energies[p_idx]
-				m_adj_list[ex_m_id].append((ex_t_id, ex_p_id, ex_tmp_energy))
-				m_labels[ex_m_id][ex_p_stage][ex_p_id] = ex_p_label
-
-		return m_adj_list, m_labels, max_score, min_score
-
-	def _eval_build_stage_labels(self, m_labels):
-		m_s_labels = defaultdict(list)
-		m_m_ids = defaultdict(list)
-		m_t_ids = defaultdict(list)
-		for m_id, m_t_labels in m_labels.items():
-			for stage_idx, stage_labels in m_t_labels.items():
-				for m_t_id, m_t_label in stage_labels.items():
-					m_t_ids[stage_idx].append(m_t_id)
-					m_m_ids[stage_idx].append(m_id)
-					m_s_labels[stage_idx].append(m_t_label)
-		return m_s_labels, m_m_ids, m_t_ids
-
 	def eval_epoch_end(self, outputs, stage):
 		triplet_eval_outputs, infer_eval_outputs = outputs
 		loss = torch.cat([x['loss'] for x in triplet_eval_outputs], dim=0).mean()
@@ -117,30 +68,85 @@ class KbiLanguageModel(BaseLanguageModel):
 		self.threshold.cpu()
 		# stage 0 is validation
 		# stage 1 is test
-		m_adj_list, m_labels, max_score, min_score = self._eval_build_adj(infer_eval_outputs)
+		m_adj_list, m_labels, max_score, min_score = build_adj_list(infer_eval_outputs)
+		m_s_labels, m_m_ids, m_t_ids = build_stage_labels(m_labels)
 
-		m_s_labels, m_m_ids, m_t_ids = self._eval_build_stage_labels(m_labels)
+		num_val_seeds = self.num_val_seeds
+		infer = self.infer
+		for m_id in m_labels:
+			if m_id not in self.threshold:
+				self.threshold[m_id] = MultiClassCallableThresholdModule()
 
-		def _infer_predict(m_thresholds):
-			m_thresholds = m_thresholds.item()
+		def m_predict(m_id, m_threshold):
+			m_i_adj = m_adj_list[m_id]
+			m_s_t_labels = m_labels[m_id]
+			# always use stage 0 (val) for seeds
+			m_t_labels = m_s_t_labels[0]
+			m_t_rel_labels = [(m_t_id, m_t_label) for (m_t_id, m_t_label) in m_t_labels.items() if m_t_label != 0]
+			if stage == 'val':
+				m_t_rel_labels = m_t_rel_labels[:num_val_seeds]
+				m_i_adj = [
+					(u_id, v_id, uv_scores) for (u_id, v_id, uv_scores) in m_i_adj
+					if u_id in m_t_labels and v_id in m_t_labels
+				]
+			m_t_rel_labels = {m_t_id: m_t_label for (m_t_id, m_t_label) in m_t_rel_labels}
+
+			if len(m_i_adj) == 0:
+				m_s_i_preds = m_t_rel_labels
+			else:
+				m_s_i_preds = infer(m_i_adj, m_threshold, m_t_rel_labels)
+			if stage != 'val':
+				m_t_labels = m_s_t_labels[1]
+			m_preds = []
+			for ex_id, ex_l in m_t_labels.items():
+				ex_pred = m_s_i_preds[ex_id]
+				m_preds.append(ex_pred)
+			m_preds = torch.tensor(m_preds, dtype=torch.long)
+
+			return m_preds
+
+		num_threshold_steps = self.num_threshold_steps
+		m_metric = self.m_metric
+		update_threshold = self.update_threshold
+		threshold = self.threshold
+
+		def infer_predict():
 			preds = []
 			for m_id, m_s_t_labels in m_labels.items():
-				m_i_adj = m_adj_list[m_id]
-				# always use stage 0 (val) for seeds
-				m_t_labels = m_s_t_labels[0]
-				m_t_rel_labels = [(m_t_id, m_t_label) for (m_t_id, m_t_label) in m_t_labels.items() if m_t_label != 0]
-
-				if stage == 'val':
-					m_t_rel_labels = m_t_rel_labels[:self.num_val_seeds]
-				m_t_rel_labels = {m_t_id: m_t_label for (m_t_id, m_t_label) in m_t_rel_labels}
-				m_s_i_preds = self.infer(m_i_adj, m_thresholds, m_t_rel_labels)
+				m_threshold = threshold[m_id]
+				m_ls = []
 				if stage != 'val':
-					# use test label ordering
 					m_t_labels = m_s_t_labels[1]
-				for ex_id in m_t_labels:
-					ex_pred = m_s_i_preds[ex_id]
-					preds.append(ex_pred)
-			preds = torch.tensor(preds, dtype=torch.long)
+				else:
+					m_t_labels = m_s_t_labels[0]
+				for ex_id, ex_l in m_t_labels.items():
+					m_ls.append(ex_l)
+				m_ls = torch.tensor(m_ls, dtype=torch.long)
+				m_a_list = m_adj_list[m_id]
+				if len(m_a_list) == 0:
+					continue
+				if update_threshold:
+					m_scores = torch.cat([-dists for (_, _, dists) in m_a_list], dim=0)
+					m_min_score = torch.min(m_scores).item()
+					m_max_score = torch.max(m_scores).item()
+					# check 100 values between min and max
+					m_delta = (m_max_score - m_min_score) / num_threshold_steps
+
+					max_threshold, max_metrics = m_metric.best(
+						m_ls,
+						partial(m_predict, m_id),
+						m_threshold,
+						threshold_min=m_min_score,
+						threshold_max=m_max_score,
+						threshold_delta=m_delta,
+					)
+					m_threshold.update_thresholds(max_threshold)
+
+				m_t = m_threshold.thresholds.item()
+				m_preds = m_predict(m_id, m_t)
+				preds.append(m_preds)
+
+			preds = torch.cat(preds, dim=0)
 			return preds
 
 		if stage == 'val':
@@ -149,19 +155,7 @@ class KbiLanguageModel(BaseLanguageModel):
 			m_s_labels = m_s_labels[1]
 		m_s_labels = torch.tensor(m_s_labels, dtype=torch.long)
 
-		if stage == 'val':
-			# select max f1 threshold
-			max_threshold, max_metrics = self.metric.best(
-				m_s_labels,
-				_infer_predict,
-				self.threshold,
-				threshold_min=min_score,
-				threshold_max=max_score,
-				threshold_delta=0.1,
-			)
-			self.threshold.update_thresholds(max_threshold)
-		m_s_preds = self.threshold(_infer_predict)
-
+		m_s_preds = infer_predict()
 		f1, p, r, cls_f1, cls_p, cls_r, cls_indices = self.metric(
 			m_s_labels,
 			m_s_preds
@@ -371,3 +365,63 @@ class KbiLanguageModel(BaseLanguageModel):
 
 def flatten(l):
 	return [item for sublist in l for item in sublist]
+
+
+def build_adj_list(outputs):
+	# [count]
+	t_ids = flatten([x['ids'] for x in outputs])
+	# [count]
+	m_ids = flatten([x['m_ids'] for x in outputs])
+	# [count]
+	p_ids = flatten([x['p_ids'] for x in outputs])
+	# [count, 2]
+	labels = torch.cat([x['labels'] for x in outputs], dim=0).cpu()
+	stages = torch.cat([x['stages'] for x in outputs], dim=0).cpu()
+	# [count]
+	t_label = labels[:, 0]
+	# [count]
+	t_stage = stages[:, 0]
+	# [count, 1]
+	p_labels = labels[:, 1:]
+	# [count, 1]
+	p_stage = stages[:, 1:]
+
+	# [count, 1, num_relations]
+	t_energies = torch.cat([x['energies'] for x in outputs], dim=0).cpu()
+	max_score = -torch.min(t_energies).item()
+	min_score = -torch.max(t_energies).item()
+
+	m_adj_list = defaultdict(list)
+	m_labels = defaultdict(lambda: defaultdict(dict))
+	for ex_idx in range(len(t_ids)):
+		ex_t_id = t_ids[ex_idx]
+		ex_m_id = m_ids[ex_idx]
+		ex_p_ids = [p_ids[ex_idx]]
+		ex_t_label = t_label[ex_idx]
+		ex_t_stage = int(t_stage[ex_idx])
+		ex_p_labels = p_labels[ex_idx]
+		ex_p_stage = p_stage[ex_idx]
+		ex_t_energies = t_energies[ex_idx]
+		m_labels[ex_m_id][ex_t_stage][ex_t_id] = ex_t_label
+		for p_idx in range(len(ex_p_ids)):
+			ex_p_id = ex_p_ids[p_idx]
+			ex_p_label = ex_p_labels[p_idx]
+			ex_p_stage = int(ex_p_stage[p_idx])
+			ex_tmp_energy = ex_t_energies[p_idx]
+			m_adj_list[ex_m_id].append((ex_t_id, ex_p_id, ex_tmp_energy))
+			m_labels[ex_m_id][ex_p_stage][ex_p_id] = ex_p_label
+
+	return m_adj_list, m_labels, max_score, min_score
+
+
+def build_stage_labels(m_labels):
+	m_s_labels = defaultdict(list)
+	m_m_ids = defaultdict(list)
+	m_t_ids = defaultdict(list)
+	for m_id, m_t_labels in m_labels.items():
+		for stage_idx, stage_labels in m_t_labels.items():
+			for m_t_id, m_t_label in stage_labels.items():
+				m_t_ids[stage_idx].append(m_t_id)
+				m_m_ids[stage_idx].append(m_id)
+				m_s_labels[stage_idx].append(m_t_label)
+	return m_s_labels, m_m_ids, m_t_ids

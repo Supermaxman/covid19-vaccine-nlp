@@ -1,4 +1,4 @@
-
+import torch
 from abc import abstractmethod, ABC
 from collections import defaultdict
 from typing import Dict, List, Tuple
@@ -334,6 +334,99 @@ class MaxScoreConsistencyInference(ConsistencyInference):
 				heapq.heappush(edge_heap, (min_weight, (node, next_node, min_relation)))
 
 		for node in g.nodes():
+			if node not in node_labels:
+				node_labels[node] = 0
+
+		return node_labels
+
+
+class SortedScoreConsistencyInference(ConsistencyInference):
+	def __init__(self):
+		super().__init__()
+
+	def forward(
+			self,
+			adj_list: List[Tuple[str, str, Tuple[float, float]]],
+			threshold: float,
+			node_labels: Dict[str, int]
+	) -> Dict[str, int]:
+		assert len(node_labels) > 0
+		if isinstance(threshold, torch.Tensor):
+			threshold = threshold.item()
+		seed_node_labels = node_labels.copy()
+		node_labels = node_labels.copy()
+		g = nx.Graph()
+		# list of (ex_t_id, ex_p_id, ex_tmp_energy)
+		# 0 - entail
+		# 1 - contradict
+		nodes = set()
+		for t_id, p_id, tp_r_dists in adj_list:
+			nodes.add(t_id)
+			nodes.add(p_id)
+			entail_weight, contradict_weight = tp_r_dists
+			if isinstance(entail_weight, torch.Tensor):
+				entail_weight = -entail_weight.item()
+			if isinstance(contradict_weight, torch.Tensor):
+				contradict_weight = -contradict_weight.item()
+			g.add_edge(t_id, p_id, entail_weight=entail_weight, contradict_weight=contradict_weight)
+
+		node_scores = defaultdict(list)
+		first_node = None
+		# apply labels in order of highest entail edges
+		for node in g.nodes():
+			if node in seed_node_labels:
+				continue
+			first_node = node
+			for other_node in g.neighbors(node):
+				if other_node not in seed_node_labels:
+					continue
+				edge = g.get_edge_data(node, other_node)
+				max_score, max_label = max(
+					(edge['entail_weight'], 'entail'),
+					(edge['contradict_weight'], 'contradict'),
+					key=lambda x: x[0]
+				)
+				node_scores[node].append(max_score)
+		assert first_node is not None
+		node_avg_scores = {}
+		for node, scores in node_scores.items():
+			node_avg_scores[node] = np.mean(scores)
+		# loop over nodes and label in order of max avg relation score to labeled nodes.
+		node_list = sorted(list(node_avg_scores.keys()), key=lambda x: -node_avg_scores[x])
+		# assume the node with the most entailments is stance 1
+		for node in node_list:
+			#       print(f'{node}')
+			# No need to re-label labeled nodes
+			node_label_scores = defaultdict(list)
+			for other_node in g.neighbors(node):
+				if other_node in node_labels:
+					other_pred = node_labels[other_node]
+					if isinstance(other_pred, torch.Tensor):
+						other_pred = other_pred.item()
+					# entailment, contradiction, or neither does not mean anything if we know
+					# the label of the other node
+					if other_pred == 0:
+						continue
+					edge = g.get_edge_data(node, other_node)
+					entail_score = edge['entail_weight']
+					entail_label = other_pred
+					contradict_score = edge['contradict_weight']
+					contradict_label = flip_tm_stance(other_pred)
+					node_label_scores[entail_label].append(entail_score)
+					node_label_scores[contradict_label].append(contradict_score)
+			#           print(f'  {other_node} ({other_pred})')
+
+			label_avg_scores = {}
+			for node_label, scores in node_label_scores.items():
+				label_avg_scores[node_label] = np.mean(scores)
+			label_avg_scores[0] = threshold
+			max_label, max_score = max(
+				label_avg_scores.items(),
+				key=lambda x: x[1],
+			)
+			#       print(f'{node}: {max_label} {max_score:.2f}')
+			node_labels[node] = max_label
+		for node in nodes:
 			if node not in node_labels:
 				node_labels[node] = 0
 
