@@ -1,5 +1,6 @@
 import json
 import os
+import torch
 from collections import defaultdict
 from typing import Any, List
 
@@ -33,6 +34,8 @@ class JsonlWriter(BasePredictionWriter):
 		rows = defaultdict(dict)
 		for key, values in prediction.items():
 			for ex_idx, ex_value in enumerate(values):
+				if isinstance(ex_value, torch.Tensor):
+					ex_value = ex_value.tolist()
 				rows[ex_idx][key] = ex_value
 		rows = rows.values()
 		with open(pred_file, 'a') as f:
