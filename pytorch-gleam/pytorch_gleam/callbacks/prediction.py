@@ -1,5 +1,6 @@
-
+import json
 import os
+from collections import defaultdict
 from typing import Any, List
 
 from pytorch_lightning.callbacks import BasePredictionWriter
@@ -7,8 +8,36 @@ import pytorch_lightning as pl
 
 
 class JsonlWriter(BasePredictionWriter):
-	def __init__(self, write_interval: str):
+	def __init__(self, write_interval: str = 'batch'):
 		super().__init__(write_interval)
+
+	def _write(self, trainer, prediction):
+		predictions_dir = os.path.join(trainer.default_root_dir, 'predictions')
+		if not os.path.exists(predictions_dir):
+			os.mkdir(predictions_dir)
+		# results = {
+		# 	# [bsize]
+		# 	'ids': batch['ids'],
+		# 	# [bsize]
+		# 	'm_ids': batch['m_ids'],
+		# 	# [bsize, num_pairs]
+		# 	'p_ids': batch['p_ids'],
+		# 	# [bsize, num_pairs+1]
+		# 	'labels': batch['labels'],
+		# 	# [bsize, num_pairs+1]
+		# 	'stages': batch['stages'],
+		# 	# [bsize, num_pairs, num_relations]
+		# 	'energies': pair_rel_energy
+		# }
+		pred_file = os.path.join(predictions_dir, 'predictions.jsonl')
+		rows = defaultdict(dict)
+		for key, values in prediction.items():
+			for ex_idx, ex_value in enumerate(values):
+				rows[ex_idx][key] = ex_value
+		rows = rows.values()
+		with open(pred_file, 'a') as f:
+			for row in rows:
+				f.write(json.dumps(row) + '\n')
 
 	def write_on_batch_end(
 			self,
@@ -20,9 +49,8 @@ class JsonlWriter(BasePredictionWriter):
 			batch_idx: int,
 			dataloader_idx: int
 	):
-		predictions_dir = os.path.join(trainer.default_root_dir, 'predictions')
-		if not os.path.exists(predictions_dir):
-			os.mkdir(predictions_dir)
+		# TODO get node id
+		self._write(trainer, prediction)
 
 	def write_on_epoch_end(
 			self,
@@ -31,6 +59,6 @@ class JsonlWriter(BasePredictionWriter):
 			predictions: List[Any],
 			batch_indices: List[Any]
 	):
-		predictions_dir = os.path.join(trainer.default_root_dir, 'predictions')
-		if not os.path.exists(predictions_dir):
-			os.mkdir(predictions_dir)
+		# TODO get node id
+		for prediction in predictions:
+			self._write(trainer, prediction)

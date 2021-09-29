@@ -345,7 +345,7 @@ class KbiMisinfoStanceDataModule(BaseDataModule):
 				pos_samples=self.pos_samples,
 				neg_samples=self.neg_samples,
 				tokenizer=self.tokenizer,
-				data_path=self.val_path,
+				data_path=self.test_path,
 				misinfo_path=self.test_misinfo_path
 			)
 			test_infer_dataset = KbiMisinfoInferStanceDataset(
@@ -361,10 +361,11 @@ class KbiMisinfoStanceDataModule(BaseDataModule):
 				test_infer_dataset
 			]
 		if self.predict_path is not None and self.predict_misinfo_path is not None:
-			# TODO infer
-			self.predict_dataset = KbiMisinfoStanceDataset(
+			self.predict_dataset = KbiMisinfoInferStanceDataset(
+				pos_samples=1,
+				neg_samples=1,
 				tokenizer=self.tokenizer,
-				data_path=self.predict_path,
+				data_path=[self.val_path, self.predict_path],
 				misinfo_path=self.predict_misinfo_path
 			)
 

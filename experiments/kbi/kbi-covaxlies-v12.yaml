@@ -30,6 +30,9 @@ trainer:
   callbacks:
     - class_path: pytorch_lightning.callbacks.StochasticWeightAveraging
     - class_path: pytorch_gleam.callbacks.FitCheckpointCallback
+    - class_path: pytorch_gleam.callbacks.JsonlWriter
+      init_args:
+        write_interval: batch
 data:
   class_path: pytorch_gleam.data.datasets.KbiMisinfoStanceDataModule
   init_args:
@@ -45,3 +48,5 @@ data:
     val_misinfo_path: data/misinfo.json
     test_path: data/test.jsonl
     test_misinfo_path: data/misinfo.json
+    predict_path: data/test.jsonl
+    predict_misinfo_path: data/misinfo.json
