@@ -75,7 +75,7 @@ class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 			if m_label != 0:
 				self.examples.append(ex)
 			self.full_examples.append(ex)
-		self.examples = self.examples[:100]
+
 	def __getitem__(self, idx):
 		if torch.is_tensor(idx):
 			idx = idx.tolist()
