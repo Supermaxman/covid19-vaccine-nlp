@@ -11,10 +11,14 @@ class ThresholdModule(torch.nn.Module):
 		self.threshold_max = threshold_max
 		self.threshold_delta = threshold_delta
 
-		self.thresholds = torch.nn.Parameter(
+		self._thresholds = torch.nn.Parameter(
 			torch.zeros(num_thresholds, dtype=torch.float32),
 			requires_grad=False
 		)
+
+	@property
+	def thresholds(self):
+		return self._thresholds
 
 	def forward(self, scores):
 		return self.predict(scores, self.thresholds)
