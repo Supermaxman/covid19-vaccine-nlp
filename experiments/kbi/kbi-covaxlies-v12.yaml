@@ -14,7 +14,7 @@ model:
         gamma: 1.5
         loss_norm: 1
     infer:
-      class_path: pytorch_gleam.inference.ScoreSeedConsistencyInference
+      class_path: pytorch_gleam.inference.MaxScoreConsistencyInference
     threshold:
       class_path: pytorch_gleam.modeling.thresholds.MultiClassCallableThresholdModule
     metric:
