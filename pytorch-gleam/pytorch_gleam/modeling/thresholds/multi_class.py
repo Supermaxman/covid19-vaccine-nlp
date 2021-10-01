@@ -46,3 +46,12 @@ class MultiClassMultiLabelCallableThresholdModule(MultiClassCallableThresholdMod
 		return [x.thresholds for x in self.values()]
 
 
+class MultiClassMultiLabelThresholdModule(MultiClassThresholdModule, nn.ModuleDict):
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+
+	@property
+	def thresholds(self):
+		return [x.thresholds for x in self.values()]
+
+
