@@ -38,7 +38,6 @@ trainer:
   deterministic: true
   num_sanity_val_steps: 0
   callbacks:
-    - class_path: pytorch_lightning.callbacks.StochasticWeightAveraging
     - class_path: pytorch_gleam.callbacks.FitCheckpointCallback
     - class_path: pytorch_gleam.callbacks.JsonlWriter
       init_args:
