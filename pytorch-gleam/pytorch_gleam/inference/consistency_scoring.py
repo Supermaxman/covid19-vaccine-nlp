@@ -24,10 +24,10 @@ class ConsistencyScoring(nn.Module, ABC):
 
 
 class MultiHopConsistencyScoring(ConsistencyScoring):
-	def __init__(self, num_steps: int = 1, num_labels: int = 3):
+	def __init__(self, num_steps: int = 1, num_classes: int = 3):
 		super().__init__()
 		self.num_steps = num_steps
-		self.num_labels = num_labels
+		self.num_classes = num_classes
 
 	def initialize(self, adj_list, seed_node_labels):
 		g = nx.Graph()
@@ -117,8 +117,8 @@ class MultiHopConsistencyScoring(ConsistencyScoring):
 			num_steps = 0
 
 		# [num_nodes, num_labels, num_steps]
-		nls = np.zeros([len(node_idx), self.num_labels, num_steps + 1], dtype=np.float32)
-		nlc = np.zeros([len(node_idx), self.num_labels, num_steps + 1], dtype=np.float32)
+		nls = np.zeros([len(node_idx), self.num_classes, num_steps + 1], dtype=np.float32)
+		nlc = np.zeros([len(node_idx), self.num_classes, num_steps + 1], dtype=np.float32)
 		nlc[:, 0, :] = 1.0
 		for node in labeled_nodes:
 			n_idx = node_idx[node]
