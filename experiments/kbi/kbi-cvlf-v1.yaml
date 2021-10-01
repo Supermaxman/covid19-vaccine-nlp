@@ -36,6 +36,7 @@ trainer:
   accumulate_grad_batches: 4
   check_val_every_n_epoch: 4
   deterministic: true
+  num_sanity_val_steps: -1
   callbacks:
     - class_path: pytorch_lightning.callbacks.StochasticWeightAveraging
     - class_path: pytorch_gleam.callbacks.FitCheckpointCallback
