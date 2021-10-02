@@ -75,8 +75,8 @@ class KbiLanguageModel(BaseLanguageModel):
 		misinfo = data_loader.dataset.misinfo
 		print([m_id for m_id in misinfo])
 		for m_id, m in misinfo.items():
-			if m_id in {'CVL-17' 'CVF-F112'}:
-				continue
+			# if m_id in {'CVL-17' 'CVF-F112'}:
+			# 	continue
 			if m_id not in self.threshold:
 				self.threshold[m_id] = MultiClassThresholdModule()
 
