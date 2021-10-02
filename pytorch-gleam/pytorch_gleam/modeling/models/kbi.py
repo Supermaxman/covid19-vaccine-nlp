@@ -73,8 +73,11 @@ class KbiLanguageModel(BaseLanguageModel):
 		else:
 			raise ValueError(f'Unknown stage: {stage}')
 		misinfo = data_loader.dataset.misinfo
+		print([m_id for m_id in misinfo])
 		for m_id, m in misinfo.items():
-			if m_id not in self.threshold and m_id not in {'CVL-17' 'CVF-F112'}:
+			if m_id in {'CVL-17' 'CVF-F112'}:
+				continue
+			if m_id not in self.threshold:
 				self.threshold[m_id] = MultiClassThresholdModule()
 
 	def infer_m_scores(self, adj_list, stage_labels, stage):
