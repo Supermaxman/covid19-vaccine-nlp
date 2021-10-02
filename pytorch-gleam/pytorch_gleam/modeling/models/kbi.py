@@ -61,7 +61,6 @@ class KbiLanguageModel(BaseLanguageModel):
 
 	def setup(self, stage: Optional[str] = None):
 		super().setup(stage)
-		data_loader = None
 		if stage == 'fit':
 			data_loader = self.train_dataloader()
 		elif stage == 'test':
@@ -73,10 +72,7 @@ class KbiLanguageModel(BaseLanguageModel):
 		else:
 			raise ValueError(f'Unknown stage: {stage}')
 		misinfo = data_loader.dataset.misinfo
-		print([m_id for m_id in misinfo])
 		for m_id, m in misinfo.items():
-			# if m_id in {'CVL-17' 'CVF-F112'}:
-			# 	continue
 			if m_id not in self.threshold:
 				self.threshold[m_id] = MultiClassThresholdModule()
 
@@ -175,14 +171,18 @@ class KbiLanguageModel(BaseLanguageModel):
 				m_threshold.update_thresholds(max_threshold)
 
 			m_ex_preds = m_threshold(m_ex_scores)
-			m_f1, m_p, m_r, _, _, _, _ = self.m_metric(
+			m_f1, m_p, m_r, m_cls_f1, m_cls_p, m_cls_r, m_cls_indices = self.m_metric(
 				m_ex_labels,
 				m_ex_preds
 			)
-			self.log(f'{stage}_{m_id}_f1', m_f1)
-			self.log(f'{stage}_{m_id}_p', m_p)
-			self.log(f'{stage}_{m_id}_r', m_r)
+			self.log(f'{stage}_{m_id}_micro_f1', m_f1)
+			self.log(f'{stage}_{m_id}_micro_p', m_p)
+			self.log(f'{stage}_{m_id}_micro_r', m_r)
 			self.log(f'{stage}_{m_id}_threshold', m_threshold.thresholds.item())
+			for cls_index, c_f1, c_p, c_r in zip(m_cls_indices, m_cls_f1, m_cls_p, m_cls_r):
+				self.log(f'{stage}_{m_id}_{cls_index}_f1', c_f1)
+				self.log(f'{stage}_{m_id}_{cls_index}_p', c_p)
+				self.log(f'{stage}_{m_id}_{cls_index}_r', c_r)
 			m_s_ids.extend(m_ex_ids)
 			m_s_m_ids.extend(m_ex_m_ids)
 			m_s_labels.append(m_ex_labels)
@@ -194,10 +194,17 @@ class KbiLanguageModel(BaseLanguageModel):
 			m_s_labels,
 			m_s_preds
 		)
+		micro_f1, micro_p, micro_r, _, _, _, _ = self.m_metric(
+			m_s_labels,
+			m_s_preds
+		)
 		self.log(f'{stage}_loss', loss)
 		self.log(f'{stage}_f1', f1)
 		self.log(f'{stage}_p', p)
 		self.log(f'{stage}_r', r)
+		self.log(f'{stage}_micro_f1', micro_f1)
+		self.log(f'{stage}_micro_p', micro_p)
+		self.log(f'{stage}_micro_r', micro_r)
 		for cls_index, c_f1, c_p, c_r in zip(cls_indices, cls_f1, cls_p, cls_r):
 			self.log(f'{stage}_{cls_index}_f1', c_f1)
 			self.log(f'{stage}_{cls_index}_p', c_p)

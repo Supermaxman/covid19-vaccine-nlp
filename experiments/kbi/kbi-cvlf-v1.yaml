@@ -42,6 +42,7 @@ trainer:
     - class_path: pytorch_gleam.callbacks.JsonlWriter
       init_args:
         write_interval: batch
+    - class_path: pytorch_gleam.callbacks.JsonlWriter
 data:
   class_path: pytorch_gleam.data.datasets.KbiMisinfoStanceDataModule
   init_args:

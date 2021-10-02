@@ -5,6 +5,7 @@ import torch
 from pytorch_lightning.callbacks import Callback
 import pytorch_lightning as pl
 from pytorch_lightning.trainer.states import TrainerFn
+from pytorch_lightning.utilities import rank_zero_only
 
 
 class FitCheckpointCallback(Callback):
@@ -15,12 +16,12 @@ class FitCheckpointCallback(Callback):
 		checkpoint_path = os.path.join(trainer.default_root_dir, 'pytorch_model.bin')
 		return checkpoint_path
 
+	@rank_zero_only
 	def on_fit_end(self, trainer: pl.Trainer, pl_module: pl.LightningModule):
-		if trainer.should_rank_save_checkpoint:
-			checkpoint_path = self._get_checkpoint_path(trainer)
-			print(f'Saving checkpoint...')
-			pl_module.to('cpu')
-			torch.save(pl_module.state_dict(), checkpoint_path)
+		checkpoint_path = self._get_checkpoint_path(trainer)
+		print(f'Saving checkpoint...')
+		pl_module.to('cpu')
+		torch.save(pl_module.state_dict(), checkpoint_path)
 
 	def _load_fit_checkpoint(self, trainer: pl.Trainer, pl_module: pl.LightningModule):
 		print(f'Loading checkpoint...')
