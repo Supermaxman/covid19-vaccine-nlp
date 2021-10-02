@@ -16,7 +16,7 @@ model:
     infer:
       class_path: pytorch_gleam.inference.MultiHopConsistencyScoring
       init_args:
-        num_steps: 64
+        num_steps: 16
         num_classes: 3
     threshold:
       class_path: pytorch_gleam.modeling.thresholds.MultiClassMultiLabelThresholdModule
