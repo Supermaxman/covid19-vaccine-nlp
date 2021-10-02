@@ -61,6 +61,7 @@ class KbiLanguageModel(BaseLanguageModel):
 
 	def setup(self, stage: Optional[str] = None):
 		super().setup(stage)
+		data_loader = None
 		if stage == 'fit':
 			data_loader = self.train_dataloader()
 		elif stage == 'test':
@@ -73,7 +74,7 @@ class KbiLanguageModel(BaseLanguageModel):
 			raise ValueError(f'Unknown stage: {stage}')
 		misinfo = data_loader.dataset.misinfo
 		for m_id, m in misinfo.items():
-			if m_id not in self.threshold:
+			if m_id not in self.threshold and m_id not in {'CVL-17' 'CVF-F112'}:
 				self.threshold[m_id] = MultiClassThresholdModule()
 
 	def infer_m_scores(self, adj_list, stage_labels, stage):
@@ -126,6 +127,10 @@ class KbiLanguageModel(BaseLanguageModel):
 		# stage 0 is validation
 		# stage 1 is test
 		m_adj_lists, m_stage_labels = build_adj_list(infer_eval_outputs)
+
+		for m_id in m_stage_labels:
+			if m_id not in self.threshold:
+				self.threshold[m_id] = MultiClassThresholdModule()
 
 		m_s_ids = []
 		m_s_m_ids = []
