@@ -40,8 +40,6 @@ trainer:
   callbacks:
     - class_path: pytorch_gleam.callbacks.FitCheckpointCallback
     - class_path: pytorch_gleam.callbacks.JsonlWriter
-      init_args:
-        write_interval: batch
     - class_path: pytorch_gleam.callbacks.JsonSaveResultsCallback
 data:
   class_path: pytorch_gleam.data.datasets.KbiMisinfoStanceDataModule
