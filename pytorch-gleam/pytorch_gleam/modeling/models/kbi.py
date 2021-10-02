@@ -1,5 +1,6 @@
 
 from collections import defaultdict
+from typing import Optional
 
 import torch
 import numpy as np
@@ -58,6 +59,23 @@ class KbiLanguageModel(BaseLanguageModel):
 
 		self.metric = metric
 
+	def setup(self, stage: Optional[str] = None):
+		super().setup(stage)
+		if stage == 'fit':
+			data_loader = self.train_dataloader()
+		elif stage == 'test':
+			data_loader = self.test_dataloader()[0]
+		elif stage == 'val':
+			data_loader = self.val_dataloader()[0]
+		elif stage == 'predict':
+			data_loader = self.predict_dataloader()
+		else:
+			raise ValueError(f'Unknown stage: {stage}')
+		misinfo = data_loader.dataset.misinfo
+		for m_id, m in misinfo.items():
+			if m_id not in self.threshold:
+				self.threshold[m_id] = MultiClassThresholdModule()
+
 	def infer_m_scores(self, adj_list, stage_labels, stage):
 		# always use stage 0 (val) for seeds
 		seed_labels = stage_labels[0]
@@ -108,10 +126,6 @@ class KbiLanguageModel(BaseLanguageModel):
 		# stage 0 is validation
 		# stage 1 is test
 		m_adj_lists, m_stage_labels = build_adj_list(infer_eval_outputs)
-
-		for m_id in m_stage_labels:
-			if m_id not in self.threshold:
-				self.threshold[m_id] = MultiClassThresholdModule()
 
 		m_s_ids = []
 		m_s_m_ids = []
