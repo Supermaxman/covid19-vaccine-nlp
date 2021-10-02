@@ -25,7 +25,7 @@ class FitCheckpointCallback(Callback):
 	def _load_fit_checkpoint(self, trainer: pl.Trainer, pl_module: pl.LightningModule):
 		print(f'Loading checkpoint...')
 		checkpoint_path = self._get_checkpoint_path(trainer)
-		pl_module.load_state_dict(torch.load(checkpoint_path))
+		pl_module.load_state_dict(torch.load(checkpoint_path), strict=False)
 
 	def on_test_start(self, trainer: pl.Trainer, pl_module: pl.LightningModule):
 		if trainer.state.fn != TrainerFn.FITTING:
