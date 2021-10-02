@@ -29,11 +29,11 @@ handler()
 }
 trap handler SIGINT
 
-echo "Testing ${run_id} model..."
-python kbi/test.py \
+echo "Training ${run_id} model..."
+python kbi/train.py \
   --config ${config} \
   --trainer.gpus ${gpus} \
-  --trainer.default_root_dir models/${run_id}
+  --trainer.default_root_dir models/${run_id} \
 
 
 echo "Freeing ${num_gpus} GPUs: ${gpus}"

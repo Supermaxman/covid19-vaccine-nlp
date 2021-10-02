@@ -11,8 +11,8 @@ model:
       init_args:
         emb_size: 8
         hidden_size: 32
-        gamma: 1.5
-        loss_norm: 1
+        gamma: 2.25
+        loss_norm: 2
     infer:
       class_path: pytorch_gleam.inference.MultiHopConsistencyScoring
       init_args:
@@ -32,8 +32,8 @@ model:
         num_classes: 3
 
 trainer:
-  max_epochs: 48
-  accumulate_grad_batches: 4
+  max_epochs: 36
+  accumulate_grad_batches: 8
   check_val_every_n_epoch: 4
   deterministic: true
   num_sanity_val_steps: 0
