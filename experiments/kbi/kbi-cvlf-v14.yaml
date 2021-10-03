@@ -9,9 +9,9 @@ model:
     ke:
       class_path: pytorch_gleam.modeling.knowledge_embedding.TransMSEmbedding
       init_args:
-        emb_size: 8
+        emb_size: 16
         hidden_size: 32
-        gamma: 1.5
+        gamma: 1.2
         loss_norm: 1
     infer:
       class_path: pytorch_gleam.inference.MultiHopConsistencyScoring

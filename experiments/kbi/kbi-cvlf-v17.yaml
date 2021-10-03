@@ -11,7 +11,7 @@ model:
       init_args:
         emb_size: 8
         hidden_size: 32
-        gamma: 1.5
+        gamma: 1.0
         loss_norm: 1
     infer:
       class_path: pytorch_gleam.inference.MultiHopConsistencyScoring
