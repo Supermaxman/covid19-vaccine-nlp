@@ -24,9 +24,9 @@ model:
         mode: micro
         num_classes: 3
 trainer:
-  max_epochs: 40
-  accumulate_grad_batches: 2
-  check_val_every_n_epoch: 1
+  max_epochs: 36
+  accumulate_grad_batches: 8
+  check_val_every_n_epoch: 4
   deterministic: true
   num_sanity_val_steps: 0
   callbacks:
