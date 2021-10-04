@@ -64,14 +64,14 @@ class NliMisinfoLanguageModel(BaseLanguageModelForSequenceClassification):
 		labels = labels.cpu()
 		self.threshold.cpu()
 
-		# if stage == 'val':
+		if stage == 'val':
 			# select max f1 threshold
-		max_threshold, max_metrics = self.metric.best(
-			labels,
-			scores,
-			self.threshold
-		)
-		self.threshold.update_thresholds(max_threshold)
+			max_threshold, max_metrics = self.metric.best(
+				labels,
+				scores,
+				self.threshold
+			)
+			self.threshold.update_thresholds(max_threshold)
 		preds = self.threshold(scores)
 
 		f1, p, r, cls_f1, cls_p, cls_r, cls_indices = self.metric(
