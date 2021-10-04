@@ -15,7 +15,7 @@ class NliTextMisinfoStanceDataset(KbiMisinfoStanceDataset):
 		t_ex = ex['t_ex']
 		p_ex = ex['p_samples'][0]
 		p_label, _ = ex['relations']
-		direction = ex['directions']
+		direction = ex['direction']
 		n_ex = ex['n_samples'][0]
 
 		label = self._sample_label()
