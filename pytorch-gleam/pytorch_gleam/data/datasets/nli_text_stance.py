@@ -11,7 +11,7 @@ class NliTextMisinfoStanceDataset(KbiMisinfoStanceDataset):
 		super().__init__(*args, **kwargs)
 
 	def __getitem__(self, idx):
-		ex = super()[idx]
+		ex = super().__getitem__(idx)
 		t_ex = ex['t_ex']
 		p_ex = ex['p_samples'][0]
 		p_label, _ = ex['relations']

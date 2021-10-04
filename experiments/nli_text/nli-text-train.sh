@@ -29,7 +29,7 @@ handler()
 }
 trap handler SIGINT
 
-echo "Testing ${run_id} model..."
+echo "Training ${run_id} model..."
 python nli_text/train.py \
   --config ${config} \
   --trainer.gpus ${gpus} \
