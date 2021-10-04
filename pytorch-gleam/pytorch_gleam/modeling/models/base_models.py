@@ -141,9 +141,9 @@ class BaseLanguageModelForSequenceClassification(BasePreModel, ABC):
 		super().__init__(pre_model_name, pre_model_type, *args, **kwargs)
 		# TODO check for these, not all models may have them
 		# noinspection PyUnresolvedReferences
-		self.id2label = self.lm.id2label
+		self.id2label = self.lm.config.id2label
 		# noinspection PyUnresolvedReferences
-		self.label2id = self.lm.label2id
+		self.label2id = self.lm.config.label2id
 		# 0 - contradiction
 		# 1 - neutral
 		# 2 - entailment
