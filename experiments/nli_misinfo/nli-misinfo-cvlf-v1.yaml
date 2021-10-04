@@ -1,0 +1,30 @@
+seed_everything: 0
+model:
+  class_path: pytorch_gleam.modeling.models.NliMisinfoLanguageModel
+  init_args:
+    learning_rate: 5e-5
+    pre_model_name: roberta-large-mnli
+    load_pre_model: true
+trainer:
+  max_epochs: 10
+  accumulate_grad_batches: 1
+  check_val_every_n_epoch: 1
+  deterministic: true
+  num_sanity_val_steps: 0
+  callbacks:
+    - class_path: pytorch_gleam.callbacks.JsonlWriter
+data:
+  class_path: pytorch_gleam.data.datasets.MultiClassMisinfoStanceDataModule
+  init_args:
+    batch_size: 8
+    max_seq_len: 128
+    tokenizer_name: roberta-large-mnli
+    num_workers: 8
+    train_path: data/train.jsonl
+    train_misinfo_path: data/misinfo.json
+    val_path: data/dev.jsonl
+    val_misinfo_path: data/misinfo.json
+    test_path: data/test.jsonl
+    test_misinfo_path: data/misinfo.json
+    predict_path: data/test.jsonl
+    predict_misinfo_path: data/misinfo.json

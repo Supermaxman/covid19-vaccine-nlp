@@ -1,17 +1,19 @@
+
 from abc import abstractmethod, ABC
-from typing import Optional, Union, Callable
+from typing import Optional, Union, Callable, Type
 
 import pytorch_lightning as pl
-from transformers import AutoModel, AutoConfig
+from transformers import AutoModel, AutoConfig, AutoModelForSequenceClassification
 from transformers import AdamW, get_linear_schedule_with_warmup
 
 
-class BaseLanguageModel(pl.LightningModule, ABC):
+class BasePreModel(pl.LightningModule, ABC):
 	lm: Union[Callable]
 
 	def __init__(
 			self,
 			pre_model_name: str,
+			pre_model_type: Type[Union[AutoModel, AutoModelForSequenceClassification]] = AutoModel,
 			learning_rate: float = 5e-5,
 			weight_decay: float = 0.0,
 			lr_warm_up: float = 0.1,
@@ -20,6 +22,7 @@ class BaseLanguageModel(pl.LightningModule, ABC):
 	):
 		super().__init__()
 		self.pre_model_name = pre_model_name
+		self.pre_model_type = pre_model_type
 		self.learning_rate = learning_rate
 		self.weight_decay = weight_decay
 		self.lr_warm_up = lr_warm_up
@@ -28,7 +31,7 @@ class BaseLanguageModel(pl.LightningModule, ABC):
 		self.torch_cache_dir = torch_cache_dir
 
 		if load_pre_model:
-			self.lm = AutoModel.from_pretrained(
+			self.lm = self.pre_model_type.from_pretrained(
 				pre_model_name,
 				cache_dir=torch_cache_dir
 			)
@@ -37,26 +40,7 @@ class BaseLanguageModel(pl.LightningModule, ABC):
 				pre_model_name,
 				cache_dir=torch_cache_dir
 			)
-			self.lm = AutoModel.from_config(config)
-		# noinspection PyUnresolvedReferences
-		self.hidden_size = self.lm.config.hidden_size
-		# noinspection PyUnresolvedReferences
-		self.hidden_dropout_prob = self.lm.config.hidden_dropout_prob
-
-	def lm_step(self, input_ids, attention_mask, token_type_ids=None):
-		if token_type_ids is not None:
-			outputs = self.lm(
-				input_ids=input_ids,
-				attention_mask=attention_mask,
-				token_type_ids=token_type_ids
-			)
-		else:
-			outputs = self.lm(
-				input_ids=input_ids,
-				attention_mask=attention_mask,
-			)
-		contextualized_embeddings = outputs[0]
-		return contextualized_embeddings
+			self.lm = self.pre_model_type.from_config(config)
 
 	def setup(self, stage: Optional[str] = None):
 		if stage == 'fit':
@@ -108,3 +92,82 @@ class BaseLanguageModel(pl.LightningModule, ABC):
 	@abstractmethod
 	def eval_epoch_end(self, outputs, stage):
 		pass
+
+	@abstractmethod
+	def lm_step(self, input_ids, attention_mask, token_type_ids=None):
+		pass
+
+
+class BaseLanguageModel(BasePreModel, ABC):
+	def __init__(
+			self,
+			*args,
+			**kwargs
+	):
+		super().__init__(*args, **kwargs, pre_model_type=AutoModel)
+
+		# TODO check for these, not all models may have them
+		# noinspection PyUnresolvedReferences
+		self.hidden_size = self.lm.config.hidden_size
+		# noinspection PyUnresolvedReferences
+		self.hidden_dropout_prob = self.lm.config.hidden_dropout_prob
+
+	def lm_step(self, input_ids, attention_mask, token_type_ids=None):
+		if token_type_ids is not None:
+			outputs = self.lm(
+				input_ids=input_ids,
+				attention_mask=attention_mask,
+				token_type_ids=token_type_ids
+			)
+		else:
+			outputs = self.lm(
+				input_ids=input_ids,
+				attention_mask=attention_mask,
+			)
+		contextualized_embeddings = outputs[0]
+		return contextualized_embeddings
+
+
+class BaseLanguageModelForSequenceClassification(BasePreModel, ABC):
+	def __init__(
+			self,
+			*args,
+			**kwargs
+	):
+		super().__init__(*args, **kwargs, pre_model_type=AutoModelForSequenceClassification)
+		# TODO check for these, not all models may have them
+		# noinspection PyUnresolvedReferences
+		self.id2label = self.lm.id2label
+		# noinspection PyUnresolvedReferences
+		self.label2id = self.lm.label2id
+		# 0 - contradiction
+		# 1 - neutral
+		# 2 - entailment
+		# want
+		# 0 - neutral
+		# 1 - entailment
+		# 2 - contradiction
+		# map
+		# 1 -> 0
+		# 2 -> 1
+		# 0 -> 2
+		# TODO build automatically
+		self.label_list = [1, 2, 0]
+
+	def lm_step(self, input_ids, attention_mask, token_type_ids=None):
+		if token_type_ids is not None:
+			outputs = self.lm(
+				input_ids=input_ids,
+				attention_mask=attention_mask,
+				token_type_ids=token_type_ids
+			)
+		else:
+			outputs = self.lm(
+				input_ids=input_ids,
+				attention_mask=attention_mask,
+			)
+
+		logits = outputs[0]
+		# re-arrange logits
+		logits = logits[:, self.label_list]
+		return logits
