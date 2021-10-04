@@ -14,10 +14,7 @@ if __name__ == '__main__':
 		subclass_mode_data=True,
 		save_config_callback=None
 	)
-	cli.trainer.validate(
-		cli.model,
-		datamodule=cli.datamodule
-	)
+
 	cli.trainer.test(
 		cli.model,
 		datamodule=cli.datamodule
