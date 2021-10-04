@@ -101,10 +101,12 @@ class BasePreModel(pl.LightningModule, ABC):
 class BaseLanguageModel(BasePreModel, ABC):
 	def __init__(
 			self,
+			pre_model_name: str,
+			pre_model_type: Type[Union[AutoModel, AutoModelForSequenceClassification]] = AutoModel,
 			*args,
 			**kwargs
 	):
-		super().__init__(*args, **kwargs, pre_model_type=AutoModel)
+		super().__init__(pre_model_name, pre_model_type, *args, **kwargs)
 
 		# TODO check for these, not all models may have them
 		# noinspection PyUnresolvedReferences
