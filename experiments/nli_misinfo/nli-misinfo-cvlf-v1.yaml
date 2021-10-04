@@ -1,5 +1,4 @@
 seed_everything: 0
-save_config_overwrite: true
 model:
   class_path: pytorch_gleam.modeling.models.NliMisinfoLanguageModel
   init_args:
