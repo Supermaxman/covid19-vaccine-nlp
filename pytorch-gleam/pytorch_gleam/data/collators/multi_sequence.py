@@ -28,19 +28,23 @@ class MultiSequenceBatchCollator(BatchCollator):
 			labels[ex_idx] = ex['labels']
 
 		ids = []
+		has_token_type_ids = True
 		for ex_idx, ex in enumerate(examples):
 			ids.append(ex['ids'])
 			self.pad_and_apply(ex['input_ids'], input_ids, ex_idx)
 			self.pad_and_apply(ex['attention_mask'], attention_mask, ex_idx)
-			self.pad_and_apply(ex['token_type_ids'], token_type_ids, ex_idx)
-
+			if 'token_type_ids' in ex:
+				self.pad_and_apply(ex['token_type_ids'], token_type_ids, ex_idx)
+			else:
+				has_token_type_ids = False
 		batch = {
 			'ids': ids,
 			'input_ids': input_ids,
 			'attention_mask': attention_mask,
-			'token_type_ids': token_type_ids,
 			'labels': labels,
 		}
+		if has_token_type_ids:
+			batch['token_type_ids'] = token_type_ids
 
 		return batch
 
