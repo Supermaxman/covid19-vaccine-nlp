@@ -7,21 +7,18 @@ import numpy as np
 
 from pytorch_gleam.modeling.models.base_models import BaseLanguageModel
 from pytorch_gleam.modeling.thresholds import ThresholdModule, MultiClassThresholdModule
-from pytorch_gleam.modeling.knowledge_embedding import KnowledgeEmbedding
 from pytorch_gleam.modeling.metrics import Metric
 from pytorch_gleam.inference import ConsistencyScoring
 
 
 # noinspection PyAbstractClass
-class KbiLanguageModel(BaseLanguageModel):
+class NliTextLanguageModel(BaseLanguageModel):
 	def __init__(
 			self,
-			ke: KnowledgeEmbedding,
 			infer: ConsistencyScoring,
 			threshold: ThresholdModule,
 			metric: Metric,
 			m_metric: Metric,
-			num_relations: int = 2,
 			num_classes: int = 3,
 			num_val_seeds: int = 1,
 			num_threshold_steps: int = 100,
@@ -30,9 +27,7 @@ class KbiLanguageModel(BaseLanguageModel):
 			**kwargs
 	):
 		super().__init__(*args, **kwargs)
-		self.num_relations = num_relations
 		self.num_classes = num_classes
-		self.ke = ke
 		self.infer = infer
 		self.num_val_seeds = num_val_seeds
 		self.threshold = threshold
@@ -40,17 +35,15 @@ class KbiLanguageModel(BaseLanguageModel):
 		self.num_threshold_steps = num_threshold_steps
 		self.update_threshold = update_threshold
 
-		self.ke_rel_layers = torch.nn.ModuleList(
-			[
-				torch.nn.Linear(
-					in_features=self.hidden_size,
-					out_features=self.ke.hidden_size
-				) for _ in range(self.num_relations)
-			]
-		)
-		self.ke_entity_layer = torch.nn.Linear(
+		self.cls_layer = torch.nn.Linear(
 			in_features=self.hidden_size,
-			out_features=self.ke.hidden_size
+			out_features=self.num_classes
+		)
+		self.criterion = torch.nn.CrossEntropyLoss(
+			reduction='none'
+		)
+		self.score_func = torch.nn.Softmax(
+			dim=-1
 		)
 		self.f_dropout = torch.nn.Dropout(
 			p=self.hidden_dropout_prob
@@ -117,9 +110,7 @@ class KbiLanguageModel(BaseLanguageModel):
 	def eval_epoch_end(self, outputs, stage):
 		triplet_eval_outputs, infer_eval_outputs = outputs
 		loss = torch.cat([x['loss'] for x in triplet_eval_outputs], dim=0).mean()
-		accuracy = torch.cat([x['accuracy'] for x in triplet_eval_outputs], dim=0).mean()
 		self.log(f'{stage}_loss', loss)
-		self.log(f'{stage}_accuracy', accuracy)
 
 		self.threshold.cpu()
 		# stage 0 is validation
@@ -213,10 +204,10 @@ class KbiLanguageModel(BaseLanguageModel):
 
 	def eval_step(self, batch, batch_idx, dataloader_idx=None):
 		if dataloader_idx is None or dataloader_idx == 0:
-			loss, accuracy = self.triplet_step(batch)
+			logits, scores = self(batch)
+			loss = self.loss(logits, batch['relations'])
 			result = {
 				'loss': loss,
-				'accuracy': accuracy,
 			}
 		else:
 			result = self.predict_step(batch, batch_idx, dataloader_idx)
@@ -224,178 +215,61 @@ class KbiLanguageModel(BaseLanguageModel):
 		return result
 
 	def forward(self, batch):
-		num_examples = batch['num_examples']
-		num_sequences_per_example = batch['num_sequences_per_example']
-		num_entities = num_sequences_per_example - 1
-		pad_seq_len = batch['pad_seq_len']
-
-		# [bsize, num_seq, seq_len] -> [bsize * num_seq, seq_len]
-		input_ids = batch['input_ids'].view(num_examples * num_sequences_per_example, pad_seq_len)
-		attention_mask = batch['attention_mask'].view(num_examples * num_sequences_per_example, pad_seq_len)
+		input_ids = batch['input_ids']
+		attention_mask = batch['attention_mask']
 		if 'token_type_ids' in batch:
-			token_type_ids = batch['token_type_ids'].view(num_examples * num_sequences_per_example, pad_seq_len)
+			token_type_ids = batch['token_type_ids']
 		else:
 			token_type_ids = None
-		# [bsize * num_seq, seq_len, hidden_size]
+		# [bsize, seq_len, hidden_size]
 		contextualized_embeddings = self.lm_step(
 			input_ids,
 			attention_mask=attention_mask,
 			token_type_ids=token_type_ids
 		)
-		# [bsize * num_seq, hidden_size]
+		# [bsize, hidden_size]
 		lm_output = contextualized_embeddings[:, 0]
 		lm_output = self.f_dropout(lm_output)
-		lm_output = lm_output.view(num_examples, num_sequences_per_example, self.hidden_size)
-		# [bsize, hidden_size]
-		r_lm_output = lm_output[:, 0]
-		# [bsize * num_entities, hidden_size]
-		e_lm_output = lm_output[:, 1:].reshape(num_examples * num_entities, self.hidden_size)
-		e_proj = self.ke_entity_layer(e_lm_output)
-		e_embs = self.ke(e_proj, 'entity')
-		# [bsize, num_entities, emb_size]
-		e_embs = e_embs.view(num_examples, num_entities, e_embs.shape[-1])
-		# num_samples = batch['pos_samples'] + batch['neg_samples']
-		# [bsize, num_samples, num_relations]
-		# relation_mask = batch['relation_mask']
-		r_projections = []
-		for r_layer in self.ke_rel_layers:
-			r_proj = r_layer(r_lm_output)
-			r_projections.append(r_proj)
-		# [bsize, num_relations, ke_hidden_size]
-		r_projections = torch.stack(r_projections, dim=1)
-		# [bsize * num_relations, ke_hidden_size]
-		r_projections = r_projections.view(num_examples * self.num_relations, r_projections.shape[-1])
-		# [bsize * num_relations, ke_emb_size]
-		r_embs = self.ke(r_projections, 'rel')
-		# [bsize, num_relations, ke_emb_size]
-		r_embs = r_embs.view(num_examples, self.num_relations, r_embs.shape[-1])
-		# [bsize, num_entities, emb_size]
-		return e_embs, r_embs
+		logits = self.cls_layer(lm_output)
+		scores = self.score_func(logits)
+		return logits, scores
 
-	@staticmethod
-	def split_embeddings(embs, batch):
-		t_ex_embs = embs[:, 0]
-		pos_samples = batch['pos_samples']
-		if pos_samples > 0:
-			pos_embs = embs[:, 1:1+pos_samples]
-		else:
-			pos_embs = None
-		neg_samples = batch['neg_samples']
-		if neg_samples > 0:
-			neg_embs = embs[:, 1+pos_samples:1+pos_samples+neg_samples]
-		else:
-			neg_embs = None
-		return t_ex_embs, pos_embs, neg_embs
+	def loss(self, logits, labels):
+		loss = self.criterion(
+			logits,
+			labels
+		)
 
-	def predict_energy(self, e_embs, m_embs, batch):
-		# convert m_embs to both relation types
-		# [bsize, 1, num_relations, emb_size]
-		m_embs = m_embs.unsqueeze(dim=-3)
-		# [bsize, pos_samples, num_relations, 1]
-		rel_mask = batch['relation_mask'].unsqueeze(dim=-1)
-		# [bsize, pos_samples, num_relations, emb_size]
-		m_embs = m_embs * rel_mask
-
-		# t_ex_embs: [bsize, emb_size],
-		# pos_embs: [bsize, pos_samples, emb_size]
-		t_ex_embs, pos_embs, _ = self.split_embeddings(e_embs, batch)
-		# [bsize, 1, 1, emb_size]
-		t_ex_embs = t_ex_embs.unsqueeze(dim=-2).unsqueeze(dim=-2)
-		# [bsize, pos_samples, 1, emb_size]
-		pos_embs = pos_embs.unsqueeze(dim=-2)
-		# [bsize, 1, 1, 2]
-		d_mask = batch['direction_mask'].unsqueeze(dim=-2).unsqueeze(dim=-2)
-		# [bsize, pos_samples, num_relations]
-		pos_energy = self._energy(t_ex_embs, m_embs, pos_embs, d_mask)
-		return pos_energy
-
-	def triplet_energy(self, e_embs, m_embs, batch):
-		# convert m_embs to only one relation type
-		# [bsize, 1, num_relations, emb_size]
-		m_embs = m_embs.unsqueeze(dim=-3)
-		# [bsize, pos_samples + neg_samples, num_relations, 1]
-		rel_mask = batch['relation_mask'].unsqueeze(dim=-1)
-		# [bsize, pos_samples + neg_samples, num_relations, emb_size]
-		m_embs = m_embs * rel_mask
-		# using the rel_mask we are able to sum over m_embs that are zero'd
-		m_embs = m_embs.sum(dim=-2)
-
-		# t_ex_embs: [bsize, emb_size],
-		# pos_embs: [bsize, pos_samples, emb_size],
-		# neg_embs: [bsize, pos_samples, emb_size],
-		t_ex_embs, pos_embs, neg_embs = self.split_embeddings(e_embs, batch)
-		# [bsize, 1, emb_size]
-		t_ex_embs = t_ex_embs.unsqueeze(dim=-2)
-		pos_samples = batch['pos_samples']
-		neg_samples = batch['neg_samples']
-		# [bsize, pos_samples + neg_samples, emb_size]
-		# [bsize, pos_samples, emb_size]
-		pos_m_embs = m_embs[..., :pos_samples, :]
-		# [bsize, neg_samples, emb_size]
-		neg_m_embs = m_embs[..., pos_samples:pos_samples+neg_samples, :]
-
-		# [bsize, 1, 2]
-		d_mask = batch['direction_mask'].unsqueeze(dim=-2)
-		# [bsize, pos_samples]
-		pos_energy = self._energy(t_ex_embs, pos_m_embs, pos_embs, d_mask)
-		# [bsize, neg_samples]
-		neg_energy = self._energy(t_ex_embs, neg_m_embs, neg_embs, d_mask)
-
-		return pos_energy, neg_energy
-
-	def _energy(self, t_embs, m_embs, e_embs, direction_mask):
-		# [bsize, pos_samples]
-		forward_energy = self.ke.energy(t_embs, m_embs, e_embs)
-		# [bsize, pos_samples]
-		backward_energy = self.ke.energy(e_embs, m_embs, t_embs)
-		# [bsize, pos_samples, 2]
-		tme_energy = torch.stack([forward_energy, backward_energy], dim=-1)
-		# [bsize, 1]
-		d_sum = direction_mask.sum(dim=-1)
-		# [bsize, pos_samples, 2] x [bsize, 1, 2] sum
-		# -> [bsize, pos_samples] / [bsize, 1]
-		# [bsize, pos_samples]
-		tme_energy = (tme_energy * direction_mask).sum(dim=-1) / d_sum
-		return tme_energy
-
-	def loss(self, pos_energy, neg_energy):
-		loss, accuracy = self.ke.loss(pos_energy, neg_energy)
-		return loss, accuracy
-
-	def triplet_step(self, batch):
-		e_embs, r_embs = self(batch)
-		pos_energy, neg_energy = self.triplet_energy(e_embs, r_embs, batch)
-		loss, accuracy = self.loss(pos_energy, neg_energy)
-		return loss, accuracy
+		return loss
 
 	def training_step(self, batch, batch_idx):
-		loss, accuracy = self.triplet_step(batch)
-		accuracy = accuracy.mean()
+		logits, scores = self(batch)
+		loss = self.loss(logits, batch['relations'])
+
 		loss = loss.mean()
 		self.log('train_loss', loss)
-		self.log('train_accuracy', accuracy)
 		result = {
 			'loss': loss
 		}
 		return result
 
 	def predict_step(self, batch, batch_idx, dataloader_idx=None):
-		e_embs, r_embs = self(batch)
-		# [bsize, num_pairs, num_relations]
-		pair_rel_energy = self.predict_energy(e_embs, r_embs, batch)
+		logits, scores = self(batch)
+
 		results = {
 			# [bsize]
 			'ids': batch['ids'],
 			# [bsize]
 			'm_ids': batch['m_ids'],
-			# [bsize, num_pairs]
+			# [bsize]
 			'p_ids': batch['p_ids'],
-			# [bsize, num_pairs+1]
+			# [bsize, 2]
 			'labels': batch['labels'],
-			# [bsize, num_pairs+1]
+			# [bsize, 2]
 			'stages': batch['stages'],
-			# [bsize, num_pairs, num_relations]
-			'energies': pair_rel_energy
+			# [bsize, num_relations]
+			# only keep energies of entail and contradict relations, drop no relation
+			'energies': -logits[:, [0, 1]]
 		}
 		return results
 
@@ -419,11 +293,11 @@ def build_adj_list(outputs):
 	# [count]
 	t_stage = stages[:, 0]
 	# [count, 1]
-	p_labels = labels[:, 1:]
+	p_labels = labels[:, 1]
 	# [count, 1]
-	p_stage = stages[:, 1:]
+	p_stage = stages[:, 1]
 
-	# [count, 1, num_relations]
+	# [count, 1, num_classes]
 	t_energies = torch.cat([x['energies'] for x in outputs], dim=0).cpu()
 
 	m_adj_list = defaultdict(list)
@@ -431,20 +305,15 @@ def build_adj_list(outputs):
 	for ex_idx in range(len(t_ids)):
 		ex_t_id = t_ids[ex_idx]
 		ex_m_id = m_ids[ex_idx]
-		ex_p_ids = [p_ids[ex_idx]]
+		ex_p_id = p_ids[ex_idx]
 		ex_t_label = t_label[ex_idx]
 		ex_t_stage = int(t_stage[ex_idx])
-		ex_p_labels = p_labels[ex_idx]
+		ex_p_label = p_labels[ex_idx]
 		ex_p_stage = p_stage[ex_idx]
-		ex_t_energies = t_energies[ex_idx]
+		ex_tmp_energy = t_energies[ex_idx]
 		m_labels[ex_m_id][ex_t_stage][ex_t_id] = ex_t_label
-		for p_idx in range(len(ex_p_ids)):
-			ex_p_id = ex_p_ids[p_idx]
-			ex_p_label = ex_p_labels[p_idx]
-			ex_p_stage = int(ex_p_stage[p_idx])
-			ex_tmp_energy = ex_t_energies[p_idx]
-			m_adj_list[ex_m_id].append((ex_t_id, ex_p_id, ex_tmp_energy))
-			m_labels[ex_m_id][ex_p_stage][ex_p_id] = ex_p_label
+		m_adj_list[ex_m_id].append((ex_t_id, ex_p_id, ex_tmp_energy))
+		m_labels[ex_m_id][ex_p_stage][ex_p_id] = ex_p_label
 
 	return m_adj_list, m_labels
 

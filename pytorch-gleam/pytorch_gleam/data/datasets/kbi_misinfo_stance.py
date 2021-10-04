@@ -11,6 +11,7 @@ import itertools
 class KbiMisinfoStanceDataset(MisinfoStanceDataset):
 	def __init__(self, tokenizer, pos_samples: int = 1, neg_samples: int = 1, *args, **kwargs):
 		super().__init__(*args, **kwargs)
+		self.tokenizer = tokenizer
 		self.pos_samples = pos_samples
 		self.neg_samples = neg_samples
 		self.permutations = [

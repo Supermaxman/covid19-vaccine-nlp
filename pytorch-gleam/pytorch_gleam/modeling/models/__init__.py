@@ -5,3 +5,4 @@ from pytorch_gleam.modeling.models.base_models import BaseLanguageModelForSequen
 from pytorch_gleam.modeling.models.multi_class import MultiClassLanguageModel
 from pytorch_gleam.modeling.models.kbi import KbiLanguageModel
 from pytorch_gleam.modeling.models.nli_misinfo import NliMisinfoLanguageModel
+from pytorch_gleam.modeling.models.nli_text import NliTextLanguageModel
