@@ -292,12 +292,12 @@ def build_adj_list(outputs):
 	t_label = labels[:, 0]
 	# [count]
 	t_stage = stages[:, 0]
-	# [count, 1]
+	# [count]
 	p_labels = labels[:, 1]
-	# [count, 1]
+	# [count]
 	p_stage = stages[:, 1]
 
-	# [count, 1, num_classes]
+	# [count, num_relations]
 	t_energies = torch.cat([x['energies'] for x in outputs], dim=0).cpu()
 
 	m_adj_list = defaultdict(list)
@@ -309,7 +309,7 @@ def build_adj_list(outputs):
 		ex_t_label = t_label[ex_idx]
 		ex_t_stage = int(t_stage[ex_idx])
 		ex_p_label = p_labels[ex_idx]
-		ex_p_stage = p_stage[ex_idx]
+		ex_p_stage = int(p_stage[ex_idx])
 		ex_tmp_energy = t_energies[ex_idx]
 		m_labels[ex_m_id][ex_t_stage][ex_t_id] = ex_t_label
 		m_adj_list[ex_m_id].append((ex_t_id, ex_p_id, ex_tmp_energy))
