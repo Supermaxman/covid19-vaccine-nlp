@@ -1,12 +1,14 @@
 
 from torch import nn
 import torch
+
 from pytorch_gleam.modeling.knowledge_embedding.base_emb import KnowledgeEmbedding
 
 
 class TransMSEmbedding(KnowledgeEmbedding):
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
+
 		self.e_emb_layer = nn.Linear(
 			self.hidden_size,
 			self.emb_size

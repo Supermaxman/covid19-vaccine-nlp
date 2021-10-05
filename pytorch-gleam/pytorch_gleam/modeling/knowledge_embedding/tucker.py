@@ -3,27 +3,25 @@ from torch import nn
 import torch
 import numpy as np
 
+from pytorch_gleam.modeling.knowledge_embedding.base_emb import KnowledgeEmbedding
 
-class TuckEREmbedding(nn.Module):
-	def __init__(self, hidden_size, emb_size, gamma, loss_norm=2):
-		super().__init__()
-		self.gamma = gamma
-		self.emb_size = emb_size
-		self.loss_norm = loss_norm
+
+class TuckEREmbedding(KnowledgeEmbedding):
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
 
 		self.weight = nn.parameter.Parameter(
 			torch.tensor(np.random.uniform(-1, 1, (self.emb_size, self.emb_size, self.emb_size)))
 		)
 
 		self.e_emb_layer = nn.Linear(
-			hidden_size,
+			self.hidden_size,
 			self.emb_size
 		)
 		self.r_emb_layer = nn.Linear(
-			hidden_size,
+			self.hidden_size,
 			self.emb_size
 		)
-		# self.score_func = nn.LogSigmoid()
 
 	def forward(self, source_embeddings, emb_type):
 		if emb_type == 'entity':
@@ -58,7 +56,6 @@ class TuckEREmbedding(nn.Module):
 		return h_r_t_energy
 
 	def loss(self, pos_energy, neg_energy):
-
 		pos_loss = -torch.log(torch.sigmoid(-pos_energy) + 1e-6)
 		neg_loss = -torch.log(1.0 - torch.sigmoid(-neg_energy) + 1e-6)
 		loss = pos_loss + neg_loss

@@ -2,28 +2,28 @@
 from torch import nn
 import torch
 
+from pytorch_gleam.modeling.knowledge_embedding.base_emb import KnowledgeEmbedding
 
-class TransDEmbedding(nn.Module):
-	def __init__(self, hidden_size, emb_size, gamma, loss_norm=2):
-		super().__init__()
-		self.gamma = gamma
-		self.emb_size = emb_size
-		self.loss_norm = loss_norm
+
+class TransDEmbedding(KnowledgeEmbedding):
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+
 		self.td_emb_size = self.emb_size // 2
 		self.e_emb_layer = nn.Linear(
-			hidden_size,
+			self.hidden_size,
 			self.td_emb_size
 		)
 		self.e_proj_layer = nn.Linear(
-			hidden_size,
+			self.hidden_size,
 			self.td_emb_size
 		)
 		self.r_emb_layer = nn.Linear(
-			hidden_size,
+			self.hidden_size,
 			self.td_emb_size
 		)
 		self.r_proj_layer = nn.Linear(
-			hidden_size,
+			self.hidden_size,
 			self.td_emb_size
 		)
 
@@ -64,19 +64,8 @@ class TransDEmbedding(nn.Module):
 		h_p = self.project(h, h_proj, r_proj)
 		t_p = self.project(t, t_proj, r_proj)
 		h_r_t_diff = h_p + r - t_p
-		# h_r_t_energy = torch.norm(h_r_t_diff, p=2, dim=-1, keepdim=False)
-		# l2 norm squared = sum of squares
-		if self.loss_norm == 1:
-			h_r_t_energy = torch.norm(h_r_t_diff, p=1, dim=-1, keepdim=False)
-		elif self.loss_norm == 2:
-			h_r_t_energy = (h_r_t_diff * h_r_t_diff).sum(dim=-1)
-		else:
-			raise ValueError(f'Unknown loss norm: {self.loss_norm}')
-		return h_r_t_energy
+		return self.diff_energy(h_r_t_diff)
 
 	def loss(self, pos_energy, neg_energy):
-		margin = pos_energy - neg_energy
-		loss = torch.clamp(self.gamma + margin, min=0.0)
-		accuracy = (pos_energy.lt(neg_energy)).float()
-		return loss, accuracy
+		return self.margin_loss(pos_energy, neg_energy)
 
