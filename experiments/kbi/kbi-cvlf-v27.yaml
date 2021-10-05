@@ -7,7 +7,7 @@ model:
     load_pre_model: true
     num_val_seeds: 1
     ke:
-      class_path: pytorch_gleam.modeling.knowledge_embedding.TransEEmbedding
+      class_path: pytorch_gleam.modeling.knowledge_embedding.TransDEmbedding
       init_args:
         emb_size: 8
         hidden_size: 32
