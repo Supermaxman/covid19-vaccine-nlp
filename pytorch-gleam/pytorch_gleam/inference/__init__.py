@@ -7,3 +7,4 @@ from pytorch_gleam.inference.consistency import MaxScoreConsistencyInference
 from pytorch_gleam.inference.consistency import SortedScoreConsistencyInference
 from pytorch_gleam.inference.consistency_scoring import ConsistencyScoring
 from pytorch_gleam.inference.consistency_scoring import MultiHopConsistencyScoring
+from pytorch_gleam.inference.consistency_scoring import MultiHopLogConsistencyScoring

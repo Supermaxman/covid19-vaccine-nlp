@@ -133,3 +133,39 @@ class MultiHopConsistencyScoring(ConsistencyScoring):
 		nls[:, 0] = nls[:, 1:].min()
 
 		return nls, node_idx
+
+
+class MultiHopLogConsistencyScoring(MultiHopConsistencyScoring):
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+
+	def initialize(self, adj_list, seed_node_labels):
+		g = nx.Graph()
+		# list of (ex_t_id, ex_p_id, ex_tmp_energy)
+		# 0 - entail
+		# 1 - contradict
+		nodes = set()
+		unlabeled_nodes = []
+		labeled_nodes = []
+		node_idx = {}
+		for t_id, p_id, tp_r_dists in adj_list:
+			if t_id not in nodes:
+				node_idx[t_id] = len(node_idx)
+				if t_id in seed_node_labels:
+					labeled_nodes.append(t_id)
+				else:
+					unlabeled_nodes.append(t_id)
+			if p_id not in nodes:
+				node_idx[p_id] = len(node_idx)
+				if p_id in seed_node_labels:
+					labeled_nodes.append(p_id)
+				else:
+					unlabeled_nodes.append(p_id)
+
+			nodes.add(t_id)
+			nodes.add(p_id)
+			entail_weight, contradict_weight = tp_r_dists
+			entail_weight = -np.log(entail_weight.item())
+			contradict_weight = -np.log(contradict_weight.item())
+			g.add_edge(t_id, p_id, entail_weight=entail_weight, contradict_weight=contradict_weight)
+		return g, unlabeled_nodes, labeled_nodes, node_idx

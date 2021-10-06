@@ -14,9 +14,9 @@ model:
         gamma: 4.0
         loss_norm: 1
     infer:
-      class_path: pytorch_gleam.inference.MultiHopConsistencyScoring
+      class_path: pytorch_gleam.inference.MultiHopLogConsistencyScoring
       init_args:
-        num_steps: 0
+        num_steps: 32
         num_classes: 3
     threshold:
       class_path: pytorch_gleam.modeling.thresholds.MultiClassMultiLabelThresholdModule
