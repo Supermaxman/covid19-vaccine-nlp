@@ -123,7 +123,7 @@ class KbiLanguageModel(BaseLanguageModel):
 
 		self.threshold.cpu()
 
-		infer_eval_results = self.eval_infer(
+		infer_eval_results, labels, preds, t_ids, m_ids = self.eval_infer(
 			infer_eval_outputs,
 			stage,
 			self.infer,
@@ -138,7 +138,6 @@ class KbiLanguageModel(BaseLanguageModel):
 			self.log(val_name, val)
 
 		self.threshold.to(self.device)
-
 
 	@staticmethod
 	def eval_infer(
@@ -233,7 +232,7 @@ class KbiLanguageModel(BaseLanguageModel):
 			results[f'{stage}_{cls_index}_p'] = c_p
 			results[f'{stage}_{cls_index}_r'] = c_r
 
-		return results
+		return results, m_s_labels, m_s_preds, m_s_ids, m_s_m_ids
 
 	@staticmethod
 	def eval_triplet(triplet_eval_outputs, stage):
