@@ -148,7 +148,7 @@ class KbiLanguageModel(BaseLanguageModel):
 		results = {}
 		# stage 0 is validation
 		# stage 1 is test
-		m_adj_lists, m_stage_labels = build_adj_list(infer_eval_outputs)
+		m_adj_lists, m_stage_labels = KbiLanguageModel.build_adj_list(infer_eval_outputs)
 
 		for m_id in m_stage_labels:
 			if m_id not in threshold:
@@ -175,7 +175,8 @@ class KbiLanguageModel(BaseLanguageModel):
 				m_ex_ids.append(ex_id)
 				m_ex_m_ids.append(m_id)
 			m_ex_labels = torch.tensor(m_ex_labels, dtype=torch.long)
-			m_ex_scores = infer_m_scores(infer, m_adj_list, stage_labels, stage, num_val_seeds)
+			m_ex_scores = KbiLanguageModel.infer_m_scores(
+				infer, m_adj_list, stage_labels, stage, num_val_seeds)
 			if update_threshold:
 				m_min_score = torch.min(m_ex_scores).item()
 				m_max_score = torch.max(m_ex_scores).item()
@@ -439,11 +440,11 @@ class KbiLanguageModel(BaseLanguageModel):
 	@staticmethod
 	def build_adj_list(outputs):
 		# [count]
-		t_ids = flatten([x['ids'] for x in outputs])
+		t_ids = KbiLanguageModel.flatten([x['ids'] for x in outputs])
 		# [count]
-		m_ids = flatten([x['m_ids'] for x in outputs])
+		m_ids = KbiLanguageModel.flatten([x['m_ids'] for x in outputs])
 		# [count]
-		p_ids = flatten([x['p_ids'] for x in outputs])
+		p_ids = KbiLanguageModel.flatten([x['p_ids'] for x in outputs])
 		# [count, 2]
 		labels = torch.cat([x['labels'] for x in outputs], dim=0).cpu()
 		stages = torch.cat([x['stages'] for x in outputs], dim=0).cpu()
