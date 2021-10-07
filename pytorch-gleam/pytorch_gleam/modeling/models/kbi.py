@@ -75,7 +75,8 @@ class KbiLanguageModel(BaseLanguageModel):
 			if m_id not in self.threshold:
 				self.threshold[m_id] = MultiClassThresholdModule()
 
-	def infer_m_scores(self, adj_list, stage_labels, stage):
+	@staticmethod
+	def infer_m_scores(infer, adj_list, stage_labels, stage, num_val_seeds=1):
 		# always use stage 0 (val) for seeds
 		seed_labels = stage_labels[0]
 		seed_examples = [
@@ -86,7 +87,7 @@ class KbiLanguageModel(BaseLanguageModel):
 		# if the stage is val then we have no test set, so pick
 		# some number of seed examples from val and test on remaining val
 		if stage == 'val':
-			seed_examples = seed_examples[:self.num_val_seeds]
+			seed_examples = seed_examples[:num_val_seeds]
 			# make sure adj list only has val labeled data
 			adj_list = [
 				(u_id, v_id, uv_scores) for (u_id, v_id, uv_scores) in adj_list
@@ -100,7 +101,7 @@ class KbiLanguageModel(BaseLanguageModel):
 			node_scores = np.zeros([len(seed_labels), 3], dtype=np.float32)
 			node_idx_map = {node: idx for (idx, node) in enumerate(seed_labels)}
 		else:
-			node_scores, node_idx_map = self.infer(adj_list, seed_examples)
+			node_scores, node_idx_map = infer(adj_list, seed_examples)
 		if stage == 'test':
 			eval_labels = stage_labels[1]
 		else:
@@ -116,19 +117,42 @@ class KbiLanguageModel(BaseLanguageModel):
 
 	def eval_epoch_end(self, outputs, stage):
 		triplet_eval_outputs, infer_eval_outputs = outputs
-		loss = torch.cat([x['loss'] for x in triplet_eval_outputs], dim=0).mean()
-		accuracy = torch.cat([x['accuracy'] for x in triplet_eval_outputs], dim=0).mean()
-		self.log(f'{stage}_loss', loss)
-		self.log(f'{stage}_accuracy', accuracy)
+		triplet_eval_results = self.eval_triplet(triplet_eval_outputs, stage)
+		for val_name, val in triplet_eval_results.items():
+			self.log(val_name, val)
 
 		self.threshold.cpu()
+
+		infer_eval_results = self.eval_infer(
+			infer_eval_outputs,
+			stage,
+			self.infer,
+			self.threshold,
+			self.m_metric,
+			self.metric,
+			self.num_threshold_steps,
+			self.update_threshold,
+			self.num_val_seeds
+		)
+		for val_name, val in infer_eval_results.items():
+			self.log(val_name, val)
+
+		self.threshold.to(self.device)
+
+
+	@staticmethod
+	def eval_infer(
+			infer_eval_outputs, stage, infer, threshold, m_metric, metric,
+			num_threshold_steps=100, update_threshold=True, num_val_seeds=1
+	):
+		results = {}
 		# stage 0 is validation
 		# stage 1 is test
 		m_adj_lists, m_stage_labels = build_adj_list(infer_eval_outputs)
 
 		for m_id in m_stage_labels:
-			if m_id not in self.threshold:
-				self.threshold[m_id] = MultiClassThresholdModule()
+			if m_id not in threshold:
+				threshold[m_id] = MultiClassThresholdModule()
 
 		m_s_ids = []
 		m_s_m_ids = []
@@ -136,7 +160,7 @@ class KbiLanguageModel(BaseLanguageModel):
 		m_s_preds = []
 		for m_id, stage_labels in m_stage_labels.items():
 			m_adj_list = m_adj_lists[m_id]
-			m_threshold = self.threshold[m_id]
+			m_threshold = threshold[m_id]
 			if len(m_adj_list) == 0:
 				continue
 			m_ex_ids = []
@@ -151,15 +175,15 @@ class KbiLanguageModel(BaseLanguageModel):
 				m_ex_ids.append(ex_id)
 				m_ex_m_ids.append(m_id)
 			m_ex_labels = torch.tensor(m_ex_labels, dtype=torch.long)
-			m_ex_scores = self.infer_m_scores(m_adj_list, stage_labels, stage)
-			if self.update_threshold:
+			m_ex_scores = infer_m_scores(infer, m_adj_list, stage_labels, stage, num_val_seeds)
+			if update_threshold:
 				m_min_score = torch.min(m_ex_scores).item()
 				m_max_score = torch.max(m_ex_scores).item()
 				# check 100 values between min and max
 				if m_min_score == m_max_score:
 					m_max_score += 1
-				m_delta = (m_max_score - m_min_score) / self.num_threshold_steps
-				max_threshold, max_metrics = self.m_metric.best(
+				m_delta = (m_max_score - m_min_score) / num_threshold_steps
+				max_threshold, max_metrics = m_metric.best(
 					m_ex_labels,
 					m_ex_scores,
 					m_threshold,
@@ -170,18 +194,18 @@ class KbiLanguageModel(BaseLanguageModel):
 				m_threshold.update_thresholds(max_threshold)
 
 			m_ex_preds = m_threshold(m_ex_scores)
-			m_f1, m_p, m_r, m_cls_f1, m_cls_p, m_cls_r, m_cls_indices = self.m_metric(
+			m_f1, m_p, m_r, m_cls_f1, m_cls_p, m_cls_r, m_cls_indices = m_metric(
 				m_ex_labels,
 				m_ex_preds
 			)
-			self.log(f'{stage}_{m_id}_micro_f1', m_f1)
-			self.log(f'{stage}_{m_id}_micro_p', m_p)
-			self.log(f'{stage}_{m_id}_micro_r', m_r)
-			self.log(f'{stage}_{m_id}_threshold', m_threshold.thresholds.item())
+			results[f'{stage}_{m_id}_micro_f1'] = m_f1
+			results[f'{stage}_{m_id}_micro_p'] = m_p
+			results[f'{stage}_{m_id}_micro_r'] = m_r
+			results[f'{stage}_{m_id}_threshold'] = m_threshold.thresholds.item()
 			for cls_index, c_f1, c_p, c_r in zip(m_cls_indices, m_cls_f1, m_cls_p, m_cls_r):
-				self.log(f'{stage}_{m_id}_{cls_index}_f1', c_f1)
-				self.log(f'{stage}_{m_id}_{cls_index}_p', c_p)
-				self.log(f'{stage}_{m_id}_{cls_index}_r', c_r)
+				results[f'{stage}_{m_id}_{cls_index}_f1'] = c_f1
+				results[f'{stage}_{m_id}_{cls_index}_p'] = c_p
+				results[f'{stage}_{m_id}_{cls_index}_r'] = c_r
 			m_s_ids.extend(m_ex_ids)
 			m_s_m_ids.extend(m_ex_m_ids)
 			m_s_labels.append(m_ex_labels)
@@ -189,27 +213,36 @@ class KbiLanguageModel(BaseLanguageModel):
 
 		m_s_labels = torch.cat(m_s_labels, dim=0)
 		m_s_preds = torch.cat(m_s_preds, dim=0)
-		f1, p, r, cls_f1, cls_p, cls_r, cls_indices = self.metric(
+		f1, p, r, cls_f1, cls_p, cls_r, cls_indices = metric(
 			m_s_labels,
 			m_s_preds
 		)
-		micro_f1, micro_p, micro_r, _, _, _, _ = self.m_metric(
+		micro_f1, micro_p, micro_r, _, _, _, _ = m_metric(
 			m_s_labels,
 			m_s_preds
 		)
-		self.log(f'{stage}_loss', loss)
-		self.log(f'{stage}_f1', f1)
-		self.log(f'{stage}_p', p)
-		self.log(f'{stage}_r', r)
-		self.log(f'{stage}_micro_f1', micro_f1)
-		self.log(f'{stage}_micro_p', micro_p)
-		self.log(f'{stage}_micro_r', micro_r)
+		results[f'{stage}_f1'] = f1
+		results[f'{stage}_p'] = p
+		results[f'{stage}_r'] = r
+		results[f'{stage}_micro_f1'] = micro_f1
+		results[f'{stage}_micro_p'] = micro_p
+		results[f'{stage}_micro_r'] = micro_r
 		for cls_index, c_f1, c_p, c_r in zip(cls_indices, cls_f1, cls_p, cls_r):
-			self.log(f'{stage}_{cls_index}_f1', c_f1)
-			self.log(f'{stage}_{cls_index}_p', c_p)
-			self.log(f'{stage}_{cls_index}_r', c_r)
+			results[f'{stage}_{cls_index}_f1'] = c_f1
+			results[f'{stage}_{cls_index}_p'] = c_p
+			results[f'{stage}_{cls_index}_r'] = c_r
 
-		self.threshold.to(self.device)
+		return results
+
+	@staticmethod
+	def eval_triplet(triplet_eval_outputs, stage):
+		loss = torch.cat([x['loss'] for x in triplet_eval_outputs], dim=0).mean()
+		accuracy = torch.cat([x['accuracy'] for x in triplet_eval_outputs], dim=0).mean()
+		results = {
+			f'{stage}_loss': loss,
+			f'{stage}_accuracy': accuracy
+		}
+		return results
 
 	def eval_step(self, batch, batch_idx, dataloader_idx=None):
 		if dataloader_idx is None or dataloader_idx == 0:
@@ -399,64 +432,64 @@ class KbiLanguageModel(BaseLanguageModel):
 		}
 		return results
 
+	@staticmethod
+	def flatten(l):
+		return [item for sublist in l for item in sublist]
 
-def flatten(l):
-	return [item for sublist in l for item in sublist]
+	@staticmethod
+	def build_adj_list(outputs):
+		# [count]
+		t_ids = flatten([x['ids'] for x in outputs])
+		# [count]
+		m_ids = flatten([x['m_ids'] for x in outputs])
+		# [count]
+		p_ids = flatten([x['p_ids'] for x in outputs])
+		# [count, 2]
+		labels = torch.cat([x['labels'] for x in outputs], dim=0).cpu()
+		stages = torch.cat([x['stages'] for x in outputs], dim=0).cpu()
+		# [count]
+		t_label = labels[:, 0]
+		# [count]
+		t_stage = stages[:, 0]
+		# [count, 1]
+		p_labels = labels[:, 1:]
+		# [count, 1]
+		p_stage = stages[:, 1:]
 
+		# [count, 1, num_relations]
+		t_energies = torch.cat([x['energies'] for x in outputs], dim=0).cpu()
 
-def build_adj_list(outputs):
-	# [count]
-	t_ids = flatten([x['ids'] for x in outputs])
-	# [count]
-	m_ids = flatten([x['m_ids'] for x in outputs])
-	# [count]
-	p_ids = flatten([x['p_ids'] for x in outputs])
-	# [count, 2]
-	labels = torch.cat([x['labels'] for x in outputs], dim=0).cpu()
-	stages = torch.cat([x['stages'] for x in outputs], dim=0).cpu()
-	# [count]
-	t_label = labels[:, 0]
-	# [count]
-	t_stage = stages[:, 0]
-	# [count, 1]
-	p_labels = labels[:, 1:]
-	# [count, 1]
-	p_stage = stages[:, 1:]
+		m_adj_list = defaultdict(list)
+		m_labels = defaultdict(lambda: defaultdict(dict))
+		for ex_idx in range(len(t_ids)):
+			ex_t_id = t_ids[ex_idx]
+			ex_m_id = m_ids[ex_idx]
+			ex_p_ids = [p_ids[ex_idx]]
+			ex_t_label = t_label[ex_idx]
+			ex_t_stage = int(t_stage[ex_idx])
+			ex_p_labels = p_labels[ex_idx]
+			ex_p_stage = p_stage[ex_idx]
+			ex_t_energies = t_energies[ex_idx]
+			m_labels[ex_m_id][ex_t_stage][ex_t_id] = ex_t_label
+			for p_idx in range(len(ex_p_ids)):
+				ex_p_id = ex_p_ids[p_idx]
+				ex_p_label = ex_p_labels[p_idx]
+				ex_p_stage = int(ex_p_stage[p_idx])
+				ex_tmp_energy = ex_t_energies[p_idx]
+				m_adj_list[ex_m_id].append((ex_t_id, ex_p_id, ex_tmp_energy))
+				m_labels[ex_m_id][ex_p_stage][ex_p_id] = ex_p_label
 
-	# [count, 1, num_relations]
-	t_energies = torch.cat([x['energies'] for x in outputs], dim=0).cpu()
+		return m_adj_list, m_labels
 
-	m_adj_list = defaultdict(list)
-	m_labels = defaultdict(lambda: defaultdict(dict))
-	for ex_idx in range(len(t_ids)):
-		ex_t_id = t_ids[ex_idx]
-		ex_m_id = m_ids[ex_idx]
-		ex_p_ids = [p_ids[ex_idx]]
-		ex_t_label = t_label[ex_idx]
-		ex_t_stage = int(t_stage[ex_idx])
-		ex_p_labels = p_labels[ex_idx]
-		ex_p_stage = p_stage[ex_idx]
-		ex_t_energies = t_energies[ex_idx]
-		m_labels[ex_m_id][ex_t_stage][ex_t_id] = ex_t_label
-		for p_idx in range(len(ex_p_ids)):
-			ex_p_id = ex_p_ids[p_idx]
-			ex_p_label = ex_p_labels[p_idx]
-			ex_p_stage = int(ex_p_stage[p_idx])
-			ex_tmp_energy = ex_t_energies[p_idx]
-			m_adj_list[ex_m_id].append((ex_t_id, ex_p_id, ex_tmp_energy))
-			m_labels[ex_m_id][ex_p_stage][ex_p_id] = ex_p_label
-
-	return m_adj_list, m_labels
-
-
-def build_stage_labels(m_labels):
-	m_s_labels = defaultdict(list)
-	m_m_ids = defaultdict(list)
-	m_t_ids = defaultdict(list)
-	for m_id, m_t_labels in m_labels.items():
-		for stage_idx, stage_labels in m_t_labels.items():
-			for m_t_id, m_t_label in stage_labels.items():
-				m_t_ids[stage_idx].append(m_t_id)
-				m_m_ids[stage_idx].append(m_id)
-				m_s_labels[stage_idx].append(m_t_label)
-	return m_s_labels, m_m_ids, m_t_ids
+	@staticmethod
+	def build_stage_labels(m_labels):
+		m_s_labels = defaultdict(list)
+		m_m_ids = defaultdict(list)
+		m_t_ids = defaultdict(list)
+		for m_id, m_t_labels in m_labels.items():
+			for stage_idx, stage_labels in m_t_labels.items():
+				for m_t_id, m_t_label in stage_labels.items():
+					m_t_ids[stage_idx].append(m_t_id)
+					m_m_ids[stage_idx].append(m_id)
+					m_s_labels[stage_idx].append(m_t_label)
+		return m_s_labels, m_m_ids, m_t_ids
