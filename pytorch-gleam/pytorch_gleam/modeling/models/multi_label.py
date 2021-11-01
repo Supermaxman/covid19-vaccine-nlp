@@ -71,7 +71,7 @@ class MultiLabelLanguageModel(BaseLanguageModel):
 	def eval_outputs(self, outputs, stage, num_threshold_steps=100, update_threshold=True):
 		results = {}
 
-		t_ids = KbiLanguageModel.flatten([x['ids'] for x in outputs])
+		t_ids = self.flatten([x['ids'] for x in outputs])
 		# [count, num_labels]
 		labels = torch.cat([x['labels'] for x in outputs], dim=0).cpu()
 		# [count, num_labels, num_classes]
