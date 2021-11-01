@@ -4,7 +4,7 @@ from typing import List, Dict, Any, Union
 
 import torch
 from torch.utils.data import Dataset
-from pytorch_gleam.data.datasets import BaseDataModule
+from pytorch_gleam.data.datasets.base_datasets import BaseDataModule
 from pytorch_gleam.data.collators import MultiLabelBatchCollator
 
 
