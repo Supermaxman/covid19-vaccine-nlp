@@ -193,7 +193,6 @@ class MultiLabelLanguageModel(BaseLanguageModel):
 		logits = self(batch)
 		loss = self.loss(logits, batch['labels'])
 		scores = self.score_func(logits)
-		preds = self.threshold(scores)
 
 		results = {
 			# [bsize]
@@ -203,7 +202,6 @@ class MultiLabelLanguageModel(BaseLanguageModel):
 			'logits': logits,
 			'loss': loss,
 			'scores': scores,
-			'preds': preds
 		}
 		return results
 
