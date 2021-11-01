@@ -35,7 +35,7 @@ trainer:
   check_val_every_n_epoch: 4
   deterministic: true
   num_sanity_val_steps: 0
-  enable_checkpointing: false
+  checkpoint_callback: false
   callbacks:
     - class_path: pytorch_gleam.callbacks.FitCheckpointCallback
 data:
