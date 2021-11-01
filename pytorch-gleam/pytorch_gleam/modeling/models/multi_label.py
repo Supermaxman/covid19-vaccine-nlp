@@ -169,7 +169,6 @@ class MultiLabelLanguageModel(BaseLanguageModel):
 		# for the criterion for pytorch
 		if len(logits.shape) > 2:
 			logits = torch.swapaxes(logits, -1, 1)
-			print(logits.shape)
 		loss = self.criterion(
 			logits,
 			labels
@@ -179,7 +178,7 @@ class MultiLabelLanguageModel(BaseLanguageModel):
 	def training_step(self, batch, batch_idx):
 		batch_logits = self(batch)
 		batch_labels = batch['labels']
-		batch_loss = self.criterion(
+		batch_loss = self.loss(
 			batch_logits,
 			batch_labels
 		)
