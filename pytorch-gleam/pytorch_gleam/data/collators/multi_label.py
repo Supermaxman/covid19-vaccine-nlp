@@ -24,6 +24,7 @@ class MultiLabelBatchCollator(BatchCollator):
 
 		# [ex_count, num_classes]
 		labels = torch.zeros([batch_size, self.num_labels], dtype=torch.long)
+		stages = torch.zeros([batch_size], dtype=torch.long)
 		ids = []
 		has_token_type_ids = True
 		for ex_idx, ex in enumerate(examples):
@@ -37,11 +38,13 @@ class MultiLabelBatchCollator(BatchCollator):
 			if 'labels' in ex:
 				for l_idx in ex['labels']:
 					labels[ex_idx, l_idx] = 1
+			stages[ex_idx] = ex['stage']
 		batch = {
 			'ids': ids,
 			'input_ids': input_ids,
 			'attention_mask': attention_mask,
 			'labels': labels,
+			'stages': stages,
 		}
 		if has_token_type_ids:
 			batch['token_type_ids'] = token_type_ids
