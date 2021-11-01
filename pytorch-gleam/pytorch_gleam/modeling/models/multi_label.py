@@ -164,6 +164,11 @@ class MultiLabelLanguageModel(BaseLanguageModel):
 		return logits
 
 	def loss(self, logits, labels):
+		# if logits has [bsize, num_labels, ..., num_classes]
+		# then we swap the first num_labels axis with num_classes
+		# for the criterion for pytorch
+		if len(logits.shape) > 2:
+			logits = torch.swapaxes(logits, -1, 1)
 		loss = self.criterion(
 			logits,
 			labels
