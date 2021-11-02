@@ -1,0 +1,63 @@
+seed_everything: 0
+model:
+  class_path: pytorch_gleam.modeling.models.MultiLabelLanguageModel
+  init_args:
+    learning_rate: 1e-4
+    pre_model_name: digitalepidemiologylab/covid-twitter-bert-v2
+    load_pre_model: true
+    label_map:
+      subversion: 0
+      loyalty: 1
+      cheating: 2
+      care: 3
+      purity: 4
+      fairness: 5
+      harm: 6
+      betrayal: 7
+      authority: 8
+      degradation: 9
+    num_classes: 2
+    threshold:
+      class_path: pytorch_gleam.modeling.thresholds.MultiClassMultiLabelThresholdModule
+    metric:
+      class_path: pytorch_gleam.modeling.metrics.F1PRMultiClassMetric
+      init_args:
+        mode: micro
+        num_classes: 2
+    m_metric:
+      class_path: pytorch_gleam.modeling.metrics.F1PRMultiClassMetric
+      init_args:
+        mode: micro
+        num_classes: 2
+trainer:
+  max_epochs: 40
+  accumulate_grad_batches: 4
+  check_val_every_n_epoch: 1
+  deterministic: true
+  num_sanity_val_steps: 1
+  checkpoint_callback: false
+  callbacks:
+    - class_path: pytorch_gleam.callbacks.FitCheckpointCallback
+data:
+  class_path: pytorch_gleam.data.datasets.MultiLabelDataModule
+  init_args:
+    batch_size: 16
+    max_seq_len: 64
+    label_name: mf_labels
+    label_map:
+      subversion: 0
+      loyalty: 1
+      cheating: 2
+      care: 3
+      purity: 4
+      fairness: 5
+      harm: 6
+      betrayal: 7
+      authority: 8
+      degradation: 9
+    tokenizer_name: digitalepidemiologylab/covid-twitter-bert-v2
+    num_workers: 8
+    train_path: /users/max/data/corpora/mftc/mf-train.jsonl
+    val_path: /users/max/data/corpora/mftc/mf-dev.jsonl
+#    test_path: /users/max/data/corpora/mftc/mf-test.jsonl
+#    predict_path: /users/max/data/corpora/mftc/mf-test.jsonl
