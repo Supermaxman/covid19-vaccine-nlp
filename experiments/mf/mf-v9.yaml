@@ -17,6 +17,7 @@ model:
       authority: 8
       degradation: 9
     num_classes: 2
+    update_threshold: false
     threshold:
       class_path: pytorch_gleam.modeling.thresholds.MultiClassMultiLabelThresholdModule
     metric:
@@ -59,5 +60,5 @@ data:
     num_workers: 8
     train_path: /users/max/data/corpora/mftc/mf-train.jsonl
     val_path: /users/max/data/corpora/mftc/mf-dev.jsonl
-#    test_path: /users/max/data/corpora/mftc/mf-test.jsonl
+    test_path: /users/max/data/corpora/mftc/mf-test.jsonl
 #    predict_path: /users/max/data/corpora/mftc/mf-test.jsonl
