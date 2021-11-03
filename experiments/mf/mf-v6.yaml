@@ -4,7 +4,8 @@ model:
   init_args:
     learning_rate: 5e-5
     pre_model_name: digitalepidemiologylab/covid-twitter-bert-v2
-    load_pre_model: true
+    load_pre_model: false
+    update_threshold: false
     label_map:
       subversion: 0
       loyalty: 1
@@ -59,5 +60,5 @@ data:
     num_workers: 8
     train_path: /users/max/data/corpora/mftc/mf-train.jsonl
     val_path: /users/max/data/corpora/mftc/mf-dev.jsonl
-#    test_path: /users/max/data/corpora/mftc/mf-test.jsonl
+    test_path: /users/max/data/corpora/mftc/mf-test.jsonl
 #    predict_path: /users/max/data/corpora/mftc/mf-test.jsonl
