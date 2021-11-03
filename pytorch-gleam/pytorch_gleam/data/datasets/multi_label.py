@@ -101,21 +101,21 @@ class MultiLabelDataModule(BaseDataModule):
 		if self.val_path is not None:
 			self.val_dataset = MultiLabelDataset(
 				tokenizer=self.tokenizer,
-				data_path=self.train_path,
+				data_path=self.val_path,
 				label_name=self.label_name,
 				label_map=self.label_map
 			)
 		if self.test_path is not None:
 			self.test_dataset = MultiLabelDataset(
 				tokenizer=self.tokenizer,
-				data_path=self.train_path,
+				data_path=self.test_path,
 				label_name=self.label_name,
 				label_map=self.label_map
 			)
 		if self.predict_path is not None:
 			self.predict_dataset = MultiLabelDataset(
 				tokenizer=self.tokenizer,
-				data_path=self.train_path,
+				data_path=self.predict_path,
 				label_name=self.label_name,
 				label_map=self.label_map
 			)

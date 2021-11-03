@@ -5,6 +5,7 @@ model:
     learning_rate: 2e-4
     pre_model_name: digitalepidemiologylab/covid-twitter-bert-v2
     load_pre_model: true
+    update_threshold: true
     label_map:
       subversion: 0
       loyalty: 1
@@ -17,7 +18,6 @@ model:
       authority: 8
       degradation: 9
     num_classes: 2
-    update_threshold: false
     threshold:
       class_path: pytorch_gleam.modeling.thresholds.MultiClassMultiLabelThresholdModule
     metric:
