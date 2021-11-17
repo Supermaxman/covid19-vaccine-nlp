@@ -46,7 +46,9 @@ class MultiClassFrameDataset(Dataset):
 			for f_id, f_label in ex[self.label_name].items():
 				frame = self.frames[f_id]
 				frame_text = frame['text']
-				ex_label = self.label_map[f_label]
+				ex_label = 0
+				if f_label in self.label_map:
+					ex_label = self.label_map[f_label]
 				token_data = self.tokenizer(
 					frame_text,
 					ex_text
