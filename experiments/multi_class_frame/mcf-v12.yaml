@@ -20,7 +20,7 @@ model:
 #        num_classes: 4
 
 trainer:
-  max_epochs: 16
+  max_epochs: 10
   accumulate_grad_batches: 4
   check_val_every_n_epoch: 1
   deterministic: true
