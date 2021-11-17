@@ -15,7 +15,7 @@ echo "Reserving ${num_gpus} GPU(s)..."
 gpus=`request-gpus -r ${num_gpus}`
 if [[ ${gpus} == "-1" ]]; then
     echo "Unable to reserve ${num_gpus} GPU(s), exiting."
-    exit -1
+    exit 1
 fi
 echo "Reserved ${num_gpus} GPUs: ${gpus}"
 
@@ -25,7 +25,7 @@ handler()
     echo "Experiment ${run_id} aborted."
     echo "Freeing ${num_gpus} GPUs: ${gpus}"
     free-gpus -i ${gpus}
-    exit -1
+    exit 1
 }
 trap handler SIGINT
 

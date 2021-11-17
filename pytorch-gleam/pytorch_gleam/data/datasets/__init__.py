@@ -3,4 +3,5 @@ from pytorch_gleam.data.datasets.multi_class_misinfo_stance import MultiClassMis
 from pytorch_gleam.data.datasets.kbi_misinfo_stance import KbiMisinfoStanceDataModule
 from pytorch_gleam.data.datasets.nli_text_stance import NliTextMisinfoStanceDataModule
 from pytorch_gleam.data.datasets.multi_label import MultiLabelDataModule
+from pytorch_gleam.data.datasets.multi_class_frame import MultiClassFrameDataModule
 from pytorch_gleam.data.datasets.base_datasets import BaseDataModule
