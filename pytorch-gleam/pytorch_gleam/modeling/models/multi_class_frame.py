@@ -160,7 +160,6 @@ class MultiClassFrameLanguageModel(BaseLanguageModel):
 			# [bsize]
 			'ids': batch['ids'],
 			'labels': batch['labels'],
-			'stages': batch['stages'],
 			'logits': logits,
 			'loss': loss,
 			'scores': scores,
