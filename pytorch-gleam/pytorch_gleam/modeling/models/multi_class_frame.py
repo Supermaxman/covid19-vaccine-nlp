@@ -126,16 +126,11 @@ class MultiClassFrameLanguageModel(BaseLanguageModel):
 		# [bsize, hidden_size]
 		lm_output = contextualized_embeddings[:, 0]
 		lm_output = self.f_dropout(lm_output)
-		# [bsize, num_labels, num_classes]
-		logits = self.cls_layer(lm_output).view(-1, self.num_labels, self.num_classes)
+		# [bsize, num_classes]
+		logits = self.cls_layer(lm_output)
 		return logits
 
 	def loss(self, logits, labels):
-		# if logits has [bsize, num_labels, ..., num_classes]
-		# then we swap the first num_labels axis with num_classes
-		# for the criterion for pytorch
-		if len(logits.shape) > 2:
-			logits = torch.swapaxes(logits, -1, 1)
 		loss = self.criterion(
 			logits,
 			labels
