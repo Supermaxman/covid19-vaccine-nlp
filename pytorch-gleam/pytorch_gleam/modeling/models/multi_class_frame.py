@@ -167,5 +167,5 @@ class MultiClassFrameLanguageModel(BaseLanguageModel):
 		return results
 
 	@staticmethod
-	def flatten(l):
-		return [item for sublist in l for item in sublist]
+	def flatten(multi_list):
+		return [item for sub_list in multi_list for item in sub_list]
