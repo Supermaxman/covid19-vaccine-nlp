@@ -4,3 +4,4 @@ pytorch-lightning==1.5.0dev
 filelock
 spacy
 py_lex
+numpy
