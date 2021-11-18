@@ -6,7 +6,7 @@ import torch
 from pytorch_gleam.modeling.models.base_models import BaseLanguageModel
 from pytorch_gleam.modeling.thresholds import ThresholdModule
 from pytorch_gleam.modeling.metrics import Metric
-from gcn_layers import GraphAttention
+from pytorch_gleam.modeling.layers.gcn import GraphAttention
 
 
 # noinspection PyAbstractClass
