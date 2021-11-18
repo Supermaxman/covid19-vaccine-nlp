@@ -61,6 +61,7 @@ class MultiClassFrameDataset(Dataset):
 				}
 				if 'token_type_ids' in token_data:
 					example['token_type_ids'] = token_data['token_type_ids']
+
 				self.examples.append(example)
 
 	def __len__(self):

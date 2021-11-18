@@ -1,11 +1,12 @@
 
-from typing import Dict
+from typing import Dict, List
 
 import torch
 
 from pytorch_gleam.modeling.models.base_models import BaseLanguageModel
 from pytorch_gleam.modeling.thresholds import ThresholdModule
 from pytorch_gleam.modeling.metrics import Metric
+from gcn_layers import GraphAttention
 
 
 # noinspection PyAbstractClass
@@ -169,3 +170,87 @@ class MultiClassFrameLanguageModel(BaseLanguageModel):
 	@staticmethod
 	def flatten(multi_list):
 		return [item for sub_list in multi_list for item in sub_list]
+
+
+# noinspection PyAbstractClass
+class MultiClassFrameGraphLanguageModel(MultiClassFrameLanguageModel):
+	def __init__(
+			self,
+			graphs: List[str],
+			gcn_size: int,
+			gcn_depth: int,
+			*args,
+			**kwargs
+	):
+		super().__init__(*args, **kwargs)
+		self.graphs = graphs
+		self.gcn_size = gcn_size
+		self.gcn_depth = gcn_depth
+
+		if self.config.hidden_size != self.gcn_size:
+			self.gcn_projs = torch.nn.ModuleDict(
+				{
+					f'{graph}_proj': torch.nn.Linear(
+						self.config.hidden_size, self.gcn_size) for graph in self.graphs
+				}
+			)
+		else:
+			self.gcn_projs = None
+
+		self.gcns = torch.nn.ModuleDict()
+		for graph_name in self.graphs:
+			for d in range(self.gcn_depth):
+				layer_name = f'{graph_name}_{d}_gcn'
+				# first layer takes bert reduced output,
+				# further layers take previous graph outputs
+				in_features = gcn_size if d == 0 else gcn_size * len(self.graphs)
+				out_features = gcn_size
+				self.gcns[layer_name] = GraphAttention(
+					in_features=in_features,
+					out_features=out_features,
+					dropout=self.config.hidden_dropout_prob,
+					alpha=0.2,
+					concat=True,
+				)
+
+		self.cls_layer = torch.nn.Linear(
+			in_features=len(self.graphs) * gcn_size,
+			out_features=self.num_classes
+		)
+
+	def forward(self, batch):
+		input_ids = batch['input_ids']
+		attention_mask = batch['attention_mask']
+		if 'token_type_ids' in batch:
+			token_type_ids = batch['token_type_ids']
+		else:
+			token_type_ids = None
+		# [bsize, seq_len, hidden_size]
+		contextualized_embeddings = self.lm_step(
+			input_ids,
+			attention_mask=attention_mask,
+			token_type_ids=token_type_ids
+		)
+		# [bsize, seq_len, hidden_size]
+		graph_inputs = [contextualized_embeddings]
+		for d in range(self.gcn_depth):
+			graph_emb_inputs = torch.cat(graph_inputs, dim=-1)
+			graph_outputs = []
+			for graph_name in self.graphs:
+				gcn_edges = batch[f'{graph_name}_edges']
+				if d == 0 and self.gcn_projs is not None:
+					gcn_inputs = self.gcn_projs[f'{graph_name}_proj'](graph_emb_inputs)
+				else:
+					gcn_inputs = graph_emb_inputs
+				gcn_outputs = self.gcns[f'{graph_name}_{d}_gcn'](gcn_inputs, gcn_edges)
+				graph_outputs.append(gcn_outputs)
+			graph_inputs = graph_outputs
+		graph_outputs = torch.cat(graph_inputs, dim=-1)
+		# [bsize, seq_len] -> [bsize] -> [bsize, 1]
+		counts = attention_mask.float().sum(dim=-1).unsqueeze(dim=-1)
+		# [bsize, seq_len, hidden_size] -> [bsize, hidden_size] / [bsize, 1] -> [bsize, hidden_size]
+		graph_outputs_pooled = graph_outputs.sum(dim=-2) / counts
+		classifier_inputs = graph_outputs_pooled
+		classifier_inputs = self.f_dropout(classifier_inputs)
+		logits = self.cls_layer(classifier_inputs)
+		return logits
