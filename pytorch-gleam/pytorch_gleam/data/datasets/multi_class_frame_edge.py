@@ -46,6 +46,7 @@ def get_sentic(word_text):
 		'semantics': [s1, s2, s3, s4, s5],
 	}
 
+
 def add_sentic_token_features(token_data):
 	sentic = get_sentic(token_data['text'])
 	token_data['sentic'] = sentic
