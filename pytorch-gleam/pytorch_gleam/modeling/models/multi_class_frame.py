@@ -187,11 +187,11 @@ class MultiClassFrameGraphLanguageModel(MultiClassFrameLanguageModel):
 		self.gcn_size = gcn_size
 		self.gcn_depth = gcn_depth
 
-		if self.config.hidden_size != self.gcn_size:
+		if self.hidden_size != self.gcn_size:
 			self.gcn_projs = torch.nn.ModuleDict(
 				{
 					f'{graph}_proj': torch.nn.Linear(
-						self.config.hidden_size, self.gcn_size) for graph in self.graphs
+						self.hidden_size, self.gcn_size) for graph in self.graphs
 				}
 			)
 		else:
@@ -208,7 +208,7 @@ class MultiClassFrameGraphLanguageModel(MultiClassFrameLanguageModel):
 				self.gcns[layer_name] = GraphAttention(
 					in_features=in_features,
 					out_features=out_features,
-					dropout=self.config.hidden_dropout_prob,
+					dropout=self.hidden_dropout_prob,
 					alpha=0.2,
 					concat=True,
 				)
