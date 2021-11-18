@@ -46,7 +46,7 @@ data:
     tokenizer_name: digitalepidemiologylab/covid-twitter-bert-v2
     num_workers: 8
     emo_path: data/emolex.txt
-    frame_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-frames-parsed.json
+    frame_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-parsed-frames.json
     train_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-frames-parsed-train.jsonl
     val_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-frames-parsed-dev.jsonl
 #    test_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-frames-parsed-test.jsonl
