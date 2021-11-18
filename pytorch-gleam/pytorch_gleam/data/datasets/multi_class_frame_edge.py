@@ -5,7 +5,6 @@ from typing import List, Dict, Any, Union
 
 import numpy as np
 import senticnet5
-import spacy
 from py_lex import EmoLex
 import torch
 from torch.utils.data import Dataset
@@ -252,7 +251,6 @@ class MultiClassFrameEdgeDataset(Dataset):
 		self.emotion_type = emotion_type
 		self.lex_edge_expanded = lex_edge_expanded
 		self.emolex = EmoLex(emo_path)
-		self.frame_parse = {}
 
 		self.examples = []
 		with open(self.frame_path) as f:
@@ -328,7 +326,6 @@ class MultiClassFrameEdgeDataModule(BaseDataModule):
 			label_map: Dict[str, int],
 			frame_path: str,
 			emo_path: str,
-			spacy_model: str = 'en_core_web_sm',
 			num_semantic_hops: int = 3,
 			num_emotion_hops: int = 1,
 			num_lexical_hops: int = 1,
@@ -359,7 +356,6 @@ class MultiClassFrameEdgeDataModule(BaseDataModule):
 				label_name=self.label_name,
 				label_map=self.label_map,
 				emo_path=emo_path,
-				spacy_model=spacy_model,
 				num_semantic_hops=num_semantic_hops,
 				num_emotion_hops=num_emotion_hops,
 				num_lexical_hops=num_lexical_hops,
@@ -374,7 +370,6 @@ class MultiClassFrameEdgeDataModule(BaseDataModule):
 				label_name=self.label_name,
 				label_map=self.label_map,
 				emo_path=emo_path,
-				spacy_model=spacy_model,
 				num_semantic_hops=num_semantic_hops,
 				num_emotion_hops=num_emotion_hops,
 				num_lexical_hops=num_lexical_hops,
@@ -389,7 +384,6 @@ class MultiClassFrameEdgeDataModule(BaseDataModule):
 				label_name=self.label_name,
 				label_map=self.label_map,
 				emo_path=emo_path,
-				spacy_model=spacy_model,
 				num_semantic_hops=num_semantic_hops,
 				num_emotion_hops=num_emotion_hops,
 				num_lexical_hops=num_lexical_hops,
@@ -404,7 +398,6 @@ class MultiClassFrameEdgeDataModule(BaseDataModule):
 				label_name=self.label_name,
 				label_map=self.label_map,
 				emo_path=emo_path,
-				spacy_model=spacy_model,
 				num_semantic_hops=num_semantic_hops,
 				num_emotion_hops=num_emotion_hops,
 				num_lexical_hops=num_lexical_hops,
