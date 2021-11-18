@@ -4,7 +4,8 @@ model:
   init_args:
     learning_rate: 1e-4
     pre_model_name: digitalepidemiologylab/covid-twitter-bert-v2
-    load_pre_model: true
+    load_pre_model: false
+    update_threshold: false
     label_map:
       Not Relevant: 0
       Accept: 1
@@ -44,5 +45,5 @@ data:
     frame_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-frames.json
     train_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-frames-train.jsonl
     val_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-frames-dev.jsonl
-#    test_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-frames-test.jsonl
+    test_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-frames-test.jsonl
 #    predict_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-frames-test.jsonl
