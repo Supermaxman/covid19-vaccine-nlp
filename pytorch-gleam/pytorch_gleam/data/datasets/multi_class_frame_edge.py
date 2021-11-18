@@ -4,13 +4,14 @@ from collections import defaultdict
 from typing import List, Dict, Any, Union
 
 import numpy as np
-import senticnet5
+
 from py_lex import EmoLex
 import torch
 from torch.utils.data import Dataset
 
 from pytorch_gleam.data.datasets.base_datasets import BaseDataModule
 from pytorch_gleam.data.collators import MultiClassFrameEdgeBatchCollator
+import pytorch_gleam.data.datasets.senticnet5 as senticnet5
 
 
 def read_jsonl(path):
