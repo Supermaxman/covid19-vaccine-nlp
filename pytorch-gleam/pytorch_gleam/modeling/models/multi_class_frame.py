@@ -176,7 +176,7 @@ class MultiClassFrameLanguageModel(BaseLanguageModel):
 class MultiClassFrameGraphLanguageModel(MultiClassFrameLanguageModel):
 	def __init__(
 			self,
-			graphs: List[str],
+			graphs: list[str],
 			gcn_size: int,
 			gcn_depth: int,
 			*args,

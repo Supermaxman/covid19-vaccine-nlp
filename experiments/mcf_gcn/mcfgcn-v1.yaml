@@ -3,10 +3,7 @@ model:
   class_path: pytorch_gleam.modeling.models.MultiClassFrameLanguageModel
   init_args:
     learning_rate: 1e-4
-    graphs:
-      - semantic
-      - emotion
-      - lexical
+    graphs: [semantic, emotion, lexical]
     gcn_size: 64
     gcn_depth: 6
     pre_model_name: digitalepidemiologylab/covid-twitter-bert-v2
