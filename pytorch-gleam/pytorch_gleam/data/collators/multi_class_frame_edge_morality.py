@@ -25,8 +25,6 @@ class MultiClassFrameEdgeMoralityBatchCollator(BatchCollator):
 		ex_morality = torch.zeros([batch_size, self.num_moralities], dtype=torch.long)
 		f_morality = torch.zeros([batch_size, self.num_moralities], dtype=torch.long)
 
-		ex_seq_mask = torch.zeros([batch_size, pad_seq_len], dtype=torch.long)
-		f_seq_mask = torch.zeros([batch_size, pad_seq_len], dtype=torch.long)
 		edges = {}
 		# [ex_count, num_classes]
 		labels = torch.zeros([batch_size], dtype=torch.long)
@@ -38,11 +36,7 @@ class MultiClassFrameEdgeMoralityBatchCollator(BatchCollator):
 			self.pad_and_apply(ex['attention_mask'], attention_mask, ex_idx)
 			if 'token_type_ids' in ex:
 				self.pad_and_apply(ex['token_type_ids'], token_type_ids, ex_idx)
-				self.pad_and_apply((ex['token_type_ids'] == 0).long(), f_seq_mask, ex_idx)
-				self.pad_and_apply((ex['token_type_ids'] == 1).long(), ex_seq_mask, ex_idx)
 			else:
-				self.pad_and_apply(ex['attention_mask'], f_seq_mask, ex_idx)
-				self.pad_and_apply(ex['attention_mask'], ex_seq_mask, ex_idx)
 				has_token_type_ids = False
 			if 'label' in ex:
 				labels[ex_idx] = ex['label']
@@ -66,12 +60,16 @@ class MultiClassFrameEdgeMoralityBatchCollator(BatchCollator):
 			'attention_mask': attention_mask,
 			'ex_morality': ex_morality,
 			'f_morality': f_morality,
-			'ex_seq_mask': ex_seq_mask,
-			'f_seq_mask': f_seq_mask,
 			'labels': labels,
 		}
 		if has_token_type_ids:
 			batch['token_type_ids'] = token_type_ids
+			batch['f_seq_mask'] = (token_type_ids == 0).long()
+			batch['ex_seq_mask'] = (token_type_ids == 1).long()
+		else:
+			batch['f_seq_mask'] = batch['attention_mask']
+			batch['ex_seq_mask'] = batch['attention_mask']
+
 		for edge_name, edge_value in edges.items():
 			batch[edge_name] = edge_value
 		return batch
