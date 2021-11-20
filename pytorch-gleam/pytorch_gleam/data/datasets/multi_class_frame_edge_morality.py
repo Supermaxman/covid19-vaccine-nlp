@@ -128,7 +128,7 @@ def create_edges(
 	seq_len = len(wpt_tokens['input_ids'])
 	align_map, a_tokens = align_token_sequences(m_tokens, t_tokens, wpt_tokens)
 
-	print(f'align_token_sequences {time.time()-start:0.4f} seconds')
+	print(f'align_token_sequences {time.time()-start:.4f} seconds')
 
 
 	semantic_edges = defaultdict(set)
@@ -186,7 +186,7 @@ def create_edges(
 
 		lexical_edges[text].add(head)
 
-	print(f'a_tokens {time.time()-start:0.4f} seconds')
+	print(f'a_tokens {time.time()-start:.4f} seconds')
 	lexical_edges['[CLS]'].add(root_text)
 	lexical_edges['[SEP]'].add(root_text)
 
@@ -197,7 +197,7 @@ def create_edges(
 		emotion_edges[text] = emotion_edges[text].union(
 			set(flatten(reverse_emotion_edges[emotion] for emotion in emotions))
 		)
-	print(f'emotion_edges {time.time()-start:0.4f} seconds')
+	print(f'emotion_edges {time.time()-start:.4f} seconds')
 	if 'dep' in lex_edge_expanded:
 		for text in lexical_edges.keys():
 			# expand lexical edges to same dependency roles
@@ -233,7 +233,7 @@ def create_edges(
 		t_map=t_map,
 		r_map=r_map
 	)
-	print(f'create_adjacency_matrix {time.time()-start:0.4f} seconds')
+	print(f'create_adjacency_matrix {time.time()-start:.4f} seconds')
 	exit()
 	edges = {
 		'semantic': semantic_adj,
