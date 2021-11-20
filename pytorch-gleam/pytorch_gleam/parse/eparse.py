@@ -155,18 +155,24 @@ def create_edges(
 		for e_txt in semantic_edges[input_idx_text]:
 			if e_txt in r_map:
 				r_indices = list(r_map[e_txt])
-				semantic_adj[input_indices][:, r_indices] = 1.0
-				semantic_adj[r_indices][:, input_indices] = 1.0
+				for idx in input_indices:
+					for r_idx in r_indices:
+						semantic_adj[idx, r_idx] = 1.0
+						semantic_adj[r_idx, idx] = 1.0
 		for e_txt in emotion_edges[input_idx_text]:
 			if e_txt in r_map:
 				r_indices = list(r_map[e_txt])
-				emotion_adj[input_indices][:, r_indices] = 1.0
-				emotion_adj[r_indices][:, input_indices] = 1.0
+				for idx in input_indices:
+					for r_idx in r_indices:
+						emotion_adj[idx, r_idx] = 1.0
+						emotion_adj[r_idx, idx] = 1.0
 		for e_txt in lexical_edges[input_idx_text]:
 			if e_txt in r_map:
 				r_indices = list(r_map[e_txt])
-				lexical_adj[input_indices][:, r_indices] = 1.0
-				lexical_adj[r_indices][:, input_indices] = 1.0
+				for idx in input_indices:
+					for r_idx in r_indices:
+						lexical_adj[idx, r_idx] = 1.0
+						lexical_adj[r_idx, idx] = 1.0
 
 	edges = {
 		'semantic': semantic_adj.tolist(),
