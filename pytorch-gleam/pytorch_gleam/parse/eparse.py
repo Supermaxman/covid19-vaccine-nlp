@@ -5,7 +5,6 @@ import json
 from collections import defaultdict
 
 import numpy as np
-import spacy
 from tqdm import tqdm
 from transformers import AutoTokenizer
 import pytorch_gleam.data.datasets.senticnet5 as senticnet5
@@ -215,12 +214,12 @@ def parse_tweets(tweet_path, tokenizer, num_semantic_hops, label_name, frames):
 				num_semantic_hops
 			)
 			f_example = {
-				'input_ids': token_data['input_ids'].tolist(),
-				'attention_mask': token_data['attention_mask'].tolist(),
+				'input_ids': token_data['input_ids'],
+				'attention_mask': token_data['attention_mask'],
 				'edges': ex_edges,
 			}
 			if 'token_type_ids' in token_data:
-				f_example['token_type_ids'] = token_data['token_type_ids'].tolist()
+				f_example['token_type_ids'] = token_data['token_type_ids']
 			ex_f_examples[f_id] = f_example
 		ex['f_examples'] = ex_f_examples
 		yield ex
