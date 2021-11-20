@@ -321,7 +321,7 @@ class MultiClassFrameEdgeMoralityDataset(Dataset):
 	def read_path(self, data_path, stage=0):
 		# multiprocess for speed
 		with Pool(processes=6) as p:
-			for ex_examples in tqdm(p.map(self.parse_example, read_jsonl(data_path))):
+			for ex_examples in tqdm(p.imap(self.parse_example, read_jsonl(data_path))):
 				self.examples.extend(ex_examples)
 
 	def __len__(self):
