@@ -179,20 +179,20 @@ def create_edges(
 	for input_idx_text, input_indices in r_map.items():
 		input_indices = list(input_indices)
 		for e_txt in semantic_edges[input_idx_text]:
-			r_indices = list(r_map[e_txt])
-			print(input_idx_text, e_txt)
-			semantic_adj[input_indices, r_indices] = 1.0
-			semantic_adj[r_indices, input_indices] = 1.0
+			if e_txt in r_map:
+				r_indices = list(r_map[e_txt])
+				semantic_adj[input_indices, r_indices] = 1.0
+				semantic_adj[r_indices, input_indices] = 1.0
 		for e_txt in emotion_edges[input_idx_text]:
-			r_indices = list(r_map[e_txt])
-			print(input_idx_text, e_txt)
-			emotion_adj[input_indices, r_indices] = 1.0
-			emotion_adj[r_indices, input_indices] = 1.0
+			if e_txt in r_map:
+				r_indices = list(r_map[e_txt])
+				emotion_adj[input_indices, r_indices] = 1.0
+				emotion_adj[r_indices, input_indices] = 1.0
 		for e_txt in lexical_edges[input_idx_text]:
-			r_indices = list(r_map[e_txt])
-			print(input_idx_text, e_txt)
-			lexical_adj[input_indices, r_indices] = 1.0
-			lexical_adj[r_indices, input_indices] = 1.0
+			if e_txt in r_map:
+				r_indices = list(r_map[e_txt])
+				lexical_adj[input_indices, r_indices] = 1.0
+				lexical_adj[r_indices, input_indices] = 1.0
 
 	print(f'create_adjacency_matrix {time.time()-start:.4f} seconds')
 	edges = {
