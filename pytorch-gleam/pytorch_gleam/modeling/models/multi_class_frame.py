@@ -316,13 +316,15 @@ class MultiClassFrameGraphMoralityLanguageModel(MultiClassFrameGraphLanguageMode
 			stored_pattern_padding_mask=~ex_seq_mask.bool()
 		)
 		# [bsize, num_moralities, hidden_size]
-		f_pool = f_pool * f_morality_mask
-		# [bsize, num_moralities, hidden_size]
 		ex_pool = self.ex_morality_pooler(
 			graph_outputs,
 			# masks used are inverted, aka ignored values should be True
 			stored_pattern_padding_mask=~f_seq_mask.bool()
 		)
+		print(f_pool.shape)
+		print(ex_pool.shape)
+		# [bsize, num_moralities, hidden_size]
+		f_pool = f_pool * f_morality_mask
 		# [bsize, num_moralities, hidden_size]
 		ex_pool = ex_pool * ex_morality_mask
 
