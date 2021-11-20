@@ -63,6 +63,7 @@ setup(
 			"ex-rm=pytorch_gleam.exqueue.exrm:main",
 			"t-parse=pytorch_gleam.parse.tparse:main",
 			"f-parse=pytorch_gleam.parse.fparse:main",
+			"e-parse=pytorch_gleam.parse.eparse:main",
 		],
 	},
 )
