@@ -122,7 +122,6 @@ def create_edges(
 		num_semantic_hops, num_emotion_hops, num_lexical_hops,
 		emotion_type, emolex, lex_edge_expanded
 ):
-	import time
 	seq_len = len(wpt_tokens['input_ids'])
 	align_map, a_tokens = align_token_sequences(m_tokens, t_tokens, wpt_tokens)
 
@@ -133,7 +132,6 @@ def create_edges(
 	r_map = defaultdict(set)
 	t_map = {}
 
-	start = time.time()
 	for token in a_tokens:
 		text = token['text'].lower()
 		head = token['head'].lower()
@@ -161,8 +159,6 @@ def create_edges(
 				raise ValueError(f'Invalid emotion type: {emotion_type}')
 
 		lexical_edges[text].add(head)
-
-	print(f'a_tokens {time.time()-start:.4f} seconds')
 	lexical_edges['[CLS]'].add(root_text)
 	lexical_edges['[SEP]'].add(root_text)
 
@@ -172,7 +168,6 @@ def create_edges(
 		for text in texts:
 			emotion_edges[text] = texts
 
-	start = time.time()
 	semantic_adj = np.eye(seq_len, dtype=np.float32)
 	emotion_adj = np.eye(seq_len, dtype=np.float32)
 	lexical_adj = np.eye(seq_len, dtype=np.float32)
@@ -194,7 +189,6 @@ def create_edges(
 				lexical_adj[input_indices][:, r_indices] = 1.0
 				lexical_adj[r_indices][:, input_indices] = 1.0
 
-	print(f'create_adjacency_matrix {time.time()-start:.4f} seconds')
 	edges = {
 		'semantic': semantic_adj,
 		'emotion': emotion_adj,
