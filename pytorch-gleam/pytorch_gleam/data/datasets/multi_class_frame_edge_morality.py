@@ -173,24 +173,28 @@ def create_edges(
 			emotion_edges[text] = texts
 
 	start = time.time()
-	semantic_adj = create_adjacency_matrix(
-		edges=semantic_edges,
-		size=seq_len,
-		t_map=t_map,
-		r_map=r_map
-	)
-	emotion_adj = create_adjacency_matrix(
-		edges=emotion_edges,
-		size=seq_len,
-		t_map=t_map,
-		r_map=r_map
-	)
-	lexical_adj = create_adjacency_matrix(
-		edges=lexical_edges,
-		size=seq_len,
-		t_map=t_map,
-		r_map=r_map
-	)
+	semantic_adj = np.eye(seq_len, dtype=np.float32)
+	emotion_adj = np.eye(seq_len, dtype=np.float32)
+	lexical_adj = np.eye(seq_len, dtype=np.float32)
+
+	for input_idx in range(seq_len):
+		input_idx_text = t_map[input_idx]
+		if input_idx_text in semantic_edges:
+			for e_txt in semantic_edges[input_idx_text]:
+				for edge_idx in r_map[e_txt]:
+					semantic_adj[input_idx, edge_idx] = 1.0
+					semantic_adj[edge_idx, input_idx] = 1.0
+		if input_idx_text in emotion_edges:
+			for e_txt in emotion_edges[input_idx_text]:
+				for edge_idx in r_map[e_txt]:
+					emotion_adj[input_idx, edge_idx] = 1.0
+					emotion_adj[edge_idx, input_idx] = 1.0
+		if input_idx_text in lexical_edges:
+			for e_txt in lexical_edges[input_idx_text]:
+				for edge_idx in r_map[e_txt]:
+					lexical_adj[input_idx, edge_idx] = 1.0
+					lexical_adj[edge_idx, input_idx] = 1.0
+
 	print(f'create_adjacency_matrix {time.time()-start:.4f} seconds')
 	edges = {
 		'semantic': semantic_adj,
