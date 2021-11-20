@@ -16,20 +16,6 @@ class JsonlWriter(BasePredictionWriter):
 		predictions_dir = os.path.join(trainer.default_root_dir, 'predictions')
 		if not os.path.exists(predictions_dir):
 			os.mkdir(predictions_dir)
-		# results = {
-		# 	# [bsize]
-		# 	'ids': batch['ids'],
-		# 	# [bsize]
-		# 	'm_ids': batch['m_ids'],
-		# 	# [bsize, num_pairs]
-		# 	'p_ids': batch['p_ids'],
-		# 	# [bsize, num_pairs+1]
-		# 	'labels': batch['labels'],
-		# 	# [bsize, num_pairs+1]
-		# 	'stages': batch['stages'],
-		# 	# [bsize, num_pairs, num_relations]
-		# 	'energies': pair_rel_energy
-		# }
 		pred_file = os.path.join(predictions_dir, 'predictions.jsonl')
 		rows = defaultdict(dict)
 		for key, values in prediction.items():
