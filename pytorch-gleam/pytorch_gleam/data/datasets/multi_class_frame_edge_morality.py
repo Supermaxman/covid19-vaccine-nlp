@@ -109,11 +109,11 @@ def create_adjacency_matrix(edges, size, t_map, r_map):
 
 
 def sentic_expand(sentic_edges, expand_list):
-	new_edges = set(sentic_edges)
+	new_edges = list(sentic_edges)
 	for edge in sentic_edges:
 		edge_info = senticnet5.senticnet[edge]
 		for i in expand_list:
-			new_edges.add(edge_info[i])
+			new_edges.append(edge_info[i])
 	return new_edges
 
 
@@ -123,24 +123,14 @@ def create_edges(
 		emotion_type, emolex, lex_edge_expanded
 ):
 	import time
-	start = time.time()
-
 	seq_len = len(wpt_tokens['input_ids'])
 	align_map, a_tokens = align_token_sequences(m_tokens, t_tokens, wpt_tokens)
 
-	print(f'align_token_sequences {time.time()-start:.4f} seconds')
-
-
-	semantic_edges = defaultdict(set)
-	emotion_edges = defaultdict(set)
-	reverse_emotion_edges = defaultdict(set)
-	lexical_edges = defaultdict(set)
-	reverse_lexical_dep_edges = defaultdict(set)
-	reverse_lexical_pos_edges = defaultdict(set)
-	lexical_dep_edges = defaultdict(set)
-	lexical_pos_edges = defaultdict(set)
+	semantic_edges = defaultdict(list)
+	reverse_emotion_edges = defaultdict(list)
+	lexical_edges = defaultdict(list)
 	root_text = None
-	r_map = defaultdict(set)
+	r_map = defaultdict(list)
 	t_map = {}
 
 	start = time.time()
@@ -149,70 +139,39 @@ def create_edges(
 		head = token['head'].lower()
 		for wpt_idx in token['wpt_idxs']:
 			t_map[wpt_idx] = text
-			r_map[text].add(wpt_idx)
-		pos = token['pos']
+			r_map[text].append(wpt_idx)
+		# pos = token['pos']
 		dep = token['dep']
-		reverse_lexical_dep_edges[dep].add(text)
-		reverse_lexical_pos_edges[pos].add(text)
-		lexical_dep_edges[text].add(dep)
-		lexical_pos_edges[text].add(pos)
 		# will be two roots with two sequences
 		if dep == 'ROOT':
 			root_text = text
 		sentic = token['sentic']
 		if sentic is not None:
 			for sem in sentic['semantics']:
-				semantic_edges[text].add(sem)
+				semantic_edges[text].append(sem)
 			for i in range(num_semantic_hops-1):
 				semantic_edges[text] = sentic_expand(semantic_edges[text], [8, 9, 10, 11, 12])
 			if emotion_type == 'senticnet':
-				emotion_edges[text].add(sentic['primary_mood'])
-				emotion_edges[text].add(sentic['secondary_mood'])
-				reverse_emotion_edges[sentic['primary_mood']].add(text)
-				reverse_emotion_edges[sentic['secondary_mood']].add(text)
+				reverse_emotion_edges[sentic['primary_mood']].append(text)
+				reverse_emotion_edges[sentic['secondary_mood']].append(text)
 			elif emotion_type == 'emolex':
 				for emotion in emolex.categorize_token(text):
-					emotion_edges[text].add(emotion)
-					reverse_emotion_edges[emotion].add(text)
+					reverse_emotion_edges[emotion].append(text)
 			else:
 				raise ValueError(f'Invalid emotion type: {emotion_type}')
-		# for emotion in [sentic['primary_mood'], sentic['secondary_mood']]:
-		# 	emotion_edges[text] = emotion_edges[text].union(emotion_nodes[emotion])
 
-		# for i in range(num_emotion_hops - 1):
-		# 	new_emotions = sentic_expand(emotion_edges[text], [4, 5])
-		# 	for emotion in new_emotions:
-		# 		emotion_edges[text] = emotion_edges[text].union(emotion_nodes[emotion])
-
-		lexical_edges[text].add(head)
+		lexical_edges[text].append(head)
 
 	print(f'a_tokens {time.time()-start:.4f} seconds')
-	lexical_edges['[CLS]'].add(root_text)
-	lexical_edges['[SEP]'].add(root_text)
+	lexical_edges['[CLS]'].append(root_text)
+	lexical_edges['[SEP]'].append(root_text)
 
-	start = time.time()
+	emotion_edges = defaultdict(list)
 	# text -> emotion node -> other text in sentence with same emotions
-	for text in emotion_edges.keys():
-		emotions = emotion_edges[text]
-		emotion_edges[text] = emotion_edges[text].union(
-			set(flatten(reverse_emotion_edges[emotion] for emotion in emotions))
-		)
-	print(f'emotion_edges {time.time()-start:.4f} seconds')
-	if 'dep' in lex_edge_expanded:
-		for text in lexical_edges.keys():
-			# expand lexical edges to same dependency roles
-			text_deps = lexical_dep_edges[text]
-			lexical_edges[text] = lexical_edges[text].union(
-				set(flatten(reverse_lexical_dep_edges[dep] for dep in text_deps))
-			)
-
-	if 'pos' in lex_edge_expanded:
-		for text in lexical_edges.keys():
-			# expand lexical edges to same pos tags
-			text_pos = lexical_pos_edges[text]
-			lexical_edges[text] = lexical_edges[text].union(
-				set(flatten(reverse_lexical_pos_edges[pos] for pos in text_pos))
-			)
+	for emotion, texts in reverse_emotion_edges.items():
+		for text_a in texts:
+			for text_b in texts:
+				emotion_edges[text_a].append(text_b)
 
 	start = time.time()
 	semantic_adj = create_adjacency_matrix(
@@ -332,11 +291,8 @@ class MultiClassFrameEdgeMoralityDataset(Dataset):
 
 	def read_path(self, data_path, stage=0):
 		for ex_idx, ex in tqdm(enumerate(read_jsonl(data_path))):
-			if ex_idx == 1000:
-				exit()
 			for ex_examples in self.parse_example(ex):
 				self.examples.extend(ex_examples)
-
 
 	def __len__(self):
 		return len(self.examples)
