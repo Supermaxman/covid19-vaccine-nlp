@@ -7,6 +7,7 @@ from pytorch_gleam.modeling.models.base_models import BaseLanguageModel
 from pytorch_gleam.modeling.thresholds import ThresholdModule
 from pytorch_gleam.modeling.metrics import Metric
 from pytorch_gleam.modeling.layers.gcn import GraphAttention
+from pytorch_gleam.modeling.layers.hopfield import HopfieldPooling
 
 
 # noinspection PyAbstractClass
@@ -196,6 +197,7 @@ class MultiClassFrameGraphLanguageModel(MultiClassFrameLanguageModel):
 			)
 		else:
 			self.gcn_projs = None
+		self.gcn_hidden_size = len(self.graphs) * gcn_size
 
 		self.gcns = torch.nn.ModuleDict()
 		for graph_name in self.graphs:
@@ -203,7 +205,7 @@ class MultiClassFrameGraphLanguageModel(MultiClassFrameLanguageModel):
 				layer_name = f'{graph_name}_{d}_gcn'
 				# first layer takes bert reduced output,
 				# further layers take previous graph outputs
-				in_features = gcn_size if d == 0 else gcn_size * len(self.graphs)
+				in_features = gcn_size if d == 0 else self.gcn_hidden_size
 				out_features = gcn_size
 				self.gcns[layer_name] = GraphAttention(
 					in_features=in_features,
@@ -214,25 +216,20 @@ class MultiClassFrameGraphLanguageModel(MultiClassFrameLanguageModel):
 				)
 
 		self.cls_layer = torch.nn.Linear(
-			in_features=len(self.graphs) * gcn_size,
+			in_features=self.gcn_hidden_size,
 			out_features=self.num_classes
 		)
 
-	def forward(self, batch):
-		input_ids = batch['input_ids']
-		attention_mask = batch['attention_mask']
-		if 'token_type_ids' in batch:
-			token_type_ids = batch['token_type_ids']
-		else:
-			token_type_ids = None
+	def gcn_pool(self, graph_outputs, graph_mask, batch):
+		# [bsize, seq_len] -> [bsize] -> [bsize, 1]
+		counts = graph_mask.float().sum(dim=-1).unsqueeze(dim=-1)
+		# [bsize, seq_len, hidden_size] -> [bsize, hidden_size] / [bsize, 1] -> [bsize, hidden_size]
+		graph_outputs_pooled = graph_outputs.sum(dim=-2) / counts
+		return graph_outputs_pooled
+
+	def gcn_forward(self, node_embeddings, batch):
 		# [bsize, seq_len, hidden_size]
-		contextualized_embeddings = self.lm_step(
-			input_ids,
-			attention_mask=attention_mask,
-			token_type_ids=token_type_ids
-		)
-		# [bsize, seq_len, hidden_size]
-		graph_inputs = [contextualized_embeddings]
+		graph_inputs = [node_embeddings]
 		for d in range(self.gcn_depth):
 			graph_emb_inputs = torch.cat(graph_inputs, dim=-1)
 			graph_outputs = []
@@ -246,11 +243,94 @@ class MultiClassFrameGraphLanguageModel(MultiClassFrameLanguageModel):
 				graph_outputs.append(gcn_outputs)
 			graph_inputs = graph_outputs
 		graph_outputs = torch.cat(graph_inputs, dim=-1)
-		# [bsize, seq_len] -> [bsize] -> [bsize, 1]
-		counts = attention_mask.float().sum(dim=-1).unsqueeze(dim=-1)
-		# [bsize, seq_len, hidden_size] -> [bsize, hidden_size] / [bsize, 1] -> [bsize, hidden_size]
-		graph_outputs_pooled = graph_outputs.sum(dim=-2) / counts
-		classifier_inputs = graph_outputs_pooled
+		return graph_outputs
+
+	def forward(self, batch):
+		# [bsize, seq_len, hidden_size]
+		contextualized_embeddings = self.lm_step(
+			batch['input_ids'],
+			attention_mask=batch['attention_mask'],
+			token_type_ids=batch['token_type_ids'] if 'token_type_ids' in batch else None
+		)
+		graph_outputs = self.gcn_forward(
+			contextualized_embeddings,
+			batch
+		)
+		classifier_inputs = self.gcn_pool(
+			graph_outputs,
+			graph_mask=batch['attention_mask'],
+			batch=batch
+		)
 		classifier_inputs = self.f_dropout(classifier_inputs)
 		logits = self.cls_layer(classifier_inputs)
 		return logits
+
+
+# noinspection PyAbstractClass
+class MultiClassFrameGraphMoralityLanguageModel(MultiClassFrameGraphLanguageModel):
+
+	def __init__(
+			self,
+			morality_map: Dict[str, int],
+			hopfield_update_steps_max: int = 2,
+			hopfield_dropout: float = 0.0,
+			hopfield_num_heads: int = 1,
+			*args,
+			**kwargs
+	):
+		super().__init__(*args, **kwargs)
+		self.morality_map = morality_map
+		self.num_moralities = len(self.morality_map)
+
+		self.f_morality_pooler = HopfieldPooling(
+			input_size=self.gcn_hidden_size,
+			quantity=self.num_moralities,
+			update_steps_max=hopfield_update_steps_max,
+			dropout=hopfield_dropout,
+			num_heads=hopfield_num_heads
+		)
+		self.ex_morality_pooler = HopfieldPooling(
+			input_size=self.gcn_hidden_size,
+			quantity=self.num_moralities,
+			update_steps_max=hopfield_update_steps_max,
+			dropout=hopfield_dropout,
+			num_heads=hopfield_num_heads
+		)
+		self.f_ex_pooler = torch.nn.Linear(
+			in_features=self.gcn_hidden_size * self.num_moralities,
+			out_features=self.gcn_hidden_size
+		)
+		self.f_ex_activation = torch.nn.ReLU()
+
+	def gcn_pool(self, graph_outputs, graph_mask, batch):
+		# [bsize, num_moralities, 1]
+		ex_morality_mask = batch['ex_morality'].float().unsqueeze(dim=-1)
+		# [bsize, num_moralities, 1]
+		f_morality_mask = batch['f_morality'].float().unsqueeze(dim=-1)
+		ex_seq_mask = batch['ex_seq_mask']
+		f_seq_mask = batch['f_seq_mask']
+		# [bsize, num_moralities, hidden_size]
+		f_pool = self.f_morality_pooler(
+			graph_outputs,
+			# masks used are inverted, aka ignored values should be True
+			stored_pattern_padding_mask=~ex_seq_mask.bool()
+		)
+		# [bsize, num_moralities, hidden_size]
+		f_pool = f_pool * f_morality_mask
+		# [bsize, num_moralities, hidden_size]
+		ex_pool = self.ex_morality_pooler(
+			graph_outputs,
+			# masks used are inverted, aka ignored values should be True
+			stored_pattern_padding_mask=~f_seq_mask.bool()
+		)
+		# [bsize, num_moralities, hidden_size]
+		ex_pool = ex_pool * ex_morality_mask
+
+		# [bsize, num_moralities, hidden_size]
+		f_ex_pool = (f_pool + ex_pool) / 2.0
+		# [bsize, num_moralities * hidden_size]
+		f_ex_emb = f_ex_pool.view(-1, self.num_moralities * self.gcn_hidden_size)
+		# [bsize, hidden_size]
+		graph_outputs_pooled = self.f_ex_activation(self.f_ex_pooler(f_ex_emb))
+
+		return graph_outputs_pooled
