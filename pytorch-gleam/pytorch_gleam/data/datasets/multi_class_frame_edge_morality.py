@@ -180,14 +180,17 @@ def create_edges(
 		input_indices = list(input_indices)
 		for e_txt in semantic_edges[input_idx_text]:
 			r_indices = list(r_map[e_txt])
+			print(input_idx_text, e_txt)
 			semantic_adj[input_indices, r_indices] = 1.0
 			semantic_adj[r_indices, input_indices] = 1.0
 		for e_txt in emotion_edges[input_idx_text]:
 			r_indices = list(r_map[e_txt])
+			print(input_idx_text, e_txt)
 			emotion_adj[input_indices, r_indices] = 1.0
 			emotion_adj[r_indices, input_indices] = 1.0
 		for e_txt in lexical_edges[input_idx_text]:
 			r_indices = list(r_map[e_txt])
+			print(input_idx_text, e_txt)
 			lexical_adj[input_indices, r_indices] = 1.0
 			lexical_adj[r_indices, input_indices] = 1.0
 
