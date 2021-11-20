@@ -332,7 +332,7 @@ class MultiClassFrameEdgeMoralityDataset(Dataset):
 
 	def read_path(self, data_path, stage=0):
 		for ex_idx, ex in tqdm(enumerate(read_jsonl(data_path))):
-			if ex_idx == 5:
+			if ex_idx == 1000:
 				exit()
 			for ex_examples in self.parse_example(ex):
 				self.examples.extend(ex_examples)
