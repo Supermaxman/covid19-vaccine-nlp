@@ -12,6 +12,8 @@ from torch.utils.data import Dataset
 from pytorch_gleam.data.datasets.base_datasets import BaseDataModule
 from pytorch_gleam.data.collators import MultiClassFrameEdgeBatchCollator
 import pytorch_gleam.data.datasets.senticnet5 as senticnet5
+from tqdm import tqdm
+from multiprocessing import Pool
 
 
 def read_jsonl(path):
@@ -263,48 +265,54 @@ class MultiClassFrameEdgeDataset(Dataset):
 			for stage, stage_path in enumerate(data_path):
 				self.read_path(stage_path, stage)
 
+	def parse_example(self, ex):
+		ex_id = ex['id']
+		ex_text = ex['full_text'] if 'full_text' in ex else ex['text']
+		ex_text = ex_text.strip().replace('\r', ' ').replace('\n', ' ')
+		ex_examples = []
+		for f_id, f_label in ex[self.label_name].items():
+			frame = self.frames[f_id]
+			frame_text = frame['text']
+			ex_label = 0
+			if f_label in self.label_map:
+				ex_label = self.label_map[f_label]
+			token_data = self.tokenizer(
+				frame_text,
+				ex_text
+			)
+
+			tweet_parse = [add_sentic_token_features(x) for x in ex['parse']]
+			f_parse = [add_sentic_token_features(x) for x in frame['parse']]
+
+			ex_edges = create_edges(
+				f_parse,
+				tweet_parse,
+				token_data,
+				self.num_semantic_hops,
+				self.num_emotion_hops,
+				self.num_lexical_hops,
+				self.emotion_type,
+				self.emolex,
+				self.lex_edge_expanded,
+			)
+
+			example = {
+				'ids': f'{ex_id}|{f_id}',
+				'label': ex_label,
+				'input_ids': token_data['input_ids'],
+				'attention_mask': token_data['attention_mask'],
+				'edges': ex_edges
+			}
+			if 'token_type_ids' in token_data:
+				example['token_type_ids'] = token_data['token_type_ids']
+			ex_examples.append(example)
+		return ex_examples
+
 	def read_path(self, data_path, stage=0):
-		for ex in read_jsonl(data_path):
-			ex_id = ex['id']
-			ex_text = ex['full_text'] if 'full_text' in ex else ex['text']
-			ex_text = ex_text.strip().replace('\r', ' ').replace('\n', ' ')
-			for f_id, f_label in ex[self.label_name].items():
-				frame = self.frames[f_id]
-				frame_text = frame['text']
-				ex_label = 0
-				if f_label in self.label_map:
-					ex_label = self.label_map[f_label]
-				token_data = self.tokenizer(
-					frame_text,
-					ex_text
-				)
-
-				tweet_parse = [add_sentic_token_features(x) for x in ex['parse']]
-				f_parse = [add_sentic_token_features(x) for x in frame['parse']]
-
-				ex_edges = create_edges(
-					f_parse,
-					tweet_parse,
-					token_data,
-					self.num_semantic_hops,
-					self.num_emotion_hops,
-					self.num_lexical_hops,
-					self.emotion_type,
-					self.emolex,
-					self.lex_edge_expanded,
-				)
-
-				example = {
-					'ids': f'{ex_id}|{f_id}',
-					'label': ex_label,
-					'input_ids': token_data['input_ids'],
-					'attention_mask': token_data['attention_mask'],
-					'edges': ex_edges
-				}
-				if 'token_type_ids' in token_data:
-					example['token_type_ids'] = token_data['token_type_ids']
-
-				self.examples.append(example)
+		# multiprocess for speed
+		with Pool(processes=6) as p:
+			for ex_examples in tqdm(p.map(self.parse_example, read_jsonl(data_path))):
+				self.examples.extend(ex_examples)
 
 	def __len__(self):
 		return len(self.examples)
