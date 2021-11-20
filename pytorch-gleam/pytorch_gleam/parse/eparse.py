@@ -215,12 +215,12 @@ def parse_tweets(tweet_path, tokenizer, num_semantic_hops, label_name, frames):
 				num_semantic_hops
 			)
 			f_example = {
-				'input_ids': token_data['input_ids'],
-				'attention_mask': token_data['attention_mask'],
+				'input_ids': token_data['input_ids'].tolist(),
+				'attention_mask': token_data['attention_mask'].tolist(),
 				'edges': ex_edges,
 			}
 			if 'token_type_ids' in token_data:
-				f_example['token_type_ids'] = token_data['token_type_ids']
+				f_example['token_type_ids'] = token_data['token_type_ids'].tolist()
 			ex_f_examples[f_id] = f_example
 		ex['f_examples'] = ex_f_examples
 		yield ex
