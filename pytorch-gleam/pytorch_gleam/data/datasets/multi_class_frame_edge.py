@@ -13,7 +13,6 @@ from pytorch_gleam.data.datasets.base_datasets import BaseDataModule
 from pytorch_gleam.data.collators import MultiClassFrameEdgeBatchCollator
 import pytorch_gleam.data.datasets.senticnet5 as senticnet5
 from tqdm import tqdm
-from multiprocessing import Pool
 
 
 def read_jsonl(path):
