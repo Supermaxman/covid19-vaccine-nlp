@@ -9,3 +9,4 @@ from pytorch_gleam.modeling.models.nli_text import NliTextLanguageModel
 from pytorch_gleam.modeling.models.multi_label import MultiLabelLanguageModel
 from pytorch_gleam.modeling.models.multi_class_frame import MultiClassFrameLanguageModel
 from pytorch_gleam.modeling.models.multi_class_frame import MultiClassFrameGraphLanguageModel
+from pytorch_gleam.modeling.models.multi_class_frame import MultiClassFrameGraphMoralityLanguageModel
