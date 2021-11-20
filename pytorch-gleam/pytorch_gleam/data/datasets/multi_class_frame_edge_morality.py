@@ -177,16 +177,17 @@ def create_edges(
 	emotion_adj = np.eye(seq_len, dtype=np.float32)
 	lexical_adj = np.eye(seq_len, dtype=np.float32)
 	for input_idx_text, input_indices in r_map.items():
+		input_indices = list(input_indices)
 		for e_txt in semantic_edges[input_idx_text]:
-			r_indices = r_map[e_txt]
+			r_indices = list(r_map[e_txt])
 			semantic_adj[input_indices, r_indices] = 1.0
 			semantic_adj[r_indices, input_indices] = 1.0
 		for e_txt in emotion_edges[input_idx_text]:
-			r_indices = r_map[e_txt]
+			r_indices = list(r_map[e_txt])
 			emotion_adj[input_indices, r_indices] = 1.0
 			emotion_adj[r_indices, input_indices] = 1.0
 		for e_txt in lexical_edges[input_idx_text]:
-			r_indices = r_map[e_txt]
+			r_indices = list(r_map[e_txt])
 			lexical_adj[input_indices, r_indices] = 1.0
 			lexical_adj[r_indices, input_indices] = 1.0
 
