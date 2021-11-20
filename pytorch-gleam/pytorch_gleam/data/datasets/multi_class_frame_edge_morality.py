@@ -267,7 +267,7 @@ class MultiClassFrameEdgeMoralityDataset(Dataset):
 			for stage, stage_path in enumerate(data_path):
 				self.read_path(stage_path, stage)
 
-	def parse_example(self, ex):
+	def parse_example(self, ex) -> List[dict]:
 		ex_id = ex['id']
 		ex_text = ex['full_text'] if 'full_text' in ex else ex['text']
 		ex_text = ex_text.strip().replace('\r', ' ').replace('\n', ' ')
@@ -319,9 +319,8 @@ class MultiClassFrameEdgeMoralityDataset(Dataset):
 		return ex_examples
 
 	def read_path(self, data_path, stage=0):
-		# multiprocess for speed
-		with Pool(processes=6) as p:
-			for ex_examples in tqdm(p.imap(self.parse_example, read_jsonl(data_path))):
+		for ex in tqdm(read_jsonl(data_path)):
+			for ex_examples in self.parse_example(ex):
 				self.examples.extend(ex_examples)
 
 	def __len__(self):
