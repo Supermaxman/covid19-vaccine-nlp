@@ -38,7 +38,9 @@ class MultiLabelDataset(Dataset):
 			ex_id = ex['id']
 			ex_text = ex['full_text'] if 'full_text' in ex else ex['text']
 			ex_text = ex_text.strip().replace('\r', ' ').replace('\n', ' ')
-			ex_labels = [self.label_map[label] for label in ex[self.label_name]]
+			ex_labels = []
+			if self.label_name in ex:
+				ex_labels = [self.label_map[label] for label in ex[self.label_name]]
 			token_data = self.tokenizer(
 				ex_text
 			)
