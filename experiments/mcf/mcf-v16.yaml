@@ -4,8 +4,8 @@ model:
   init_args:
     learning_rate: 5e-4
     pre_model_name: digitalepidemiologylab/covid-twitter-bert-v2
-    load_pre_model: true
-    update_threshold: true
+    load_pre_model: false
+    update_threshold: false
     label_map:
       Not Relevant: 0
       Accept: 1
