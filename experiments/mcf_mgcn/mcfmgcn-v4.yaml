@@ -1,0 +1,72 @@
+seed_everything: 0
+model:
+  class_path: pytorch_gleam.modeling.models.MultiClassFrameGraphMoralityLanguageModel
+  init_args:
+    learning_rate: 2e-5
+    graphs: [semantic, emotion, lexical]
+    gcn_size: 32
+    gcn_depth: 3
+    hopfield_update_steps_max: 2
+    pre_model_name: digitalepidemiologylab/covid-twitter-bert-v2
+    load_pre_model: true
+    update_threshold: true
+    label_map:
+      Not Relevant: 0
+      Accept: 1
+      Reject: 2
+    morality_map:
+      subversion: 0
+      loyalty: 1
+      cheating: 2
+      care: 3
+      purity: 4
+      fairness: 5
+      harm: 6
+      betrayal: 7
+      authority: 8
+      degradation: 9
+    threshold:
+      class_path: pytorch_gleam.modeling.thresholds.MultiClassThresholdModule
+    metric:
+      class_path: pytorch_gleam.modeling.metrics.F1PRMultiClassMetric
+      init_args:
+        mode: macro
+        num_classes: 3
+
+trainer:
+  max_epochs: 20
+  accumulate_grad_batches: 4
+  check_val_every_n_epoch: 1
+  deterministic: true
+  num_sanity_val_steps: 1
+  checkpoint_callback: false
+  callbacks:
+    - class_path: pytorch_gleam.callbacks.FitCheckpointCallback
+data:
+  class_path: pytorch_gleam.data.datasets.MultiClassFrameEdgeMoralityDataModule
+  init_args:
+    batch_size: 8
+    max_seq_len: 96
+    label_name: labels
+    label_map:
+      Not Relevant: 0
+      Accept: 1
+      Reject: 2
+    morality_map:
+      subversion: 0
+      loyalty: 1
+      cheating: 2
+      care: 3
+      purity: 4
+      fairness: 5
+      harm: 6
+      betrayal: 7
+      authority: 8
+      degradation: 9
+    tokenizer_name: digitalepidemiologylab/covid-twitter-bert-v2
+    num_workers: 8
+    frame_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-parsed-frames.json
+    train_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-frames-tparsed-train.jsonl
+    val_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-frames-tparsed-dev.jsonl
+    test_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-frames-tparsed-test.jsonl
+#    predict_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-frames-parsed-test.jsonl
