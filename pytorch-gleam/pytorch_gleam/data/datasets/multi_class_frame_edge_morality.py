@@ -58,7 +58,7 @@ def add_sentic_token_features(token_data):
 def align_tokens(tokens, wpt_tokens, seq_offset=0):
 	align_map = {}
 	for token in tokens:
-		token['wpt_idxs'] = set()
+		token['wpt_idxs'] = []
 		start = token['start']
 		end = token['end']
 		for char_idx in range(start, end):
@@ -66,7 +66,7 @@ def align_tokens(tokens, wpt_tokens, seq_offset=0):
 			# White spaces have no token and will return None
 			if sub_token_idx is not None:
 				align_map[sub_token_idx] = token
-				token['wpt_idxs'].add(sub_token_idx)
+				token['wpt_idxs'].append(sub_token_idx)
 	return align_map
 
 
@@ -101,7 +101,7 @@ def create_adjacency_matrix(edges, size, t_map, r_map):
 	adj = np.eye(size, dtype=np.float32)
 	for input_idx in range(size):
 		input_idx_text = t_map[input_idx]
-		i_edges = set(flatten([r_map[e_txt] for e_txt in edges[input_idx_text]]))
+		i_edges = flatten([r_map[e_txt] for e_txt in edges[input_idx_text]])
 		for edge_idx in i_edges:
 			adj[input_idx, edge_idx] = 1.0
 			adj[edge_idx, input_idx] = 1.0
