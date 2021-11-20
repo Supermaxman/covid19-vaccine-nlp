@@ -67,8 +67,8 @@ class MultiClassFrameEdgeMoralityBatchCollator(BatchCollator):
 			batch['f_seq_mask'] = (token_type_ids == 0).long()
 			batch['ex_seq_mask'] = (token_type_ids == 1).long()
 		else:
-			batch['f_seq_mask'] = batch['attention_mask']
-			batch['ex_seq_mask'] = batch['attention_mask']
+			batch['f_seq_mask'] = attention_mask
+			batch['ex_seq_mask'] = attention_mask
 
 		for edge_name, edge_value in edges.items():
 			batch[edge_name] = edge_value
