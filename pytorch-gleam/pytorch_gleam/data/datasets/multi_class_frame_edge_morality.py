@@ -234,7 +234,6 @@ def create_edges(
 		r_map=r_map
 	)
 	print(f'create_adjacency_matrix {time.time()-start:.4f} seconds')
-	exit()
 	edges = {
 		'semantic': semantic_adj,
 		'emotion': emotion_adj,
@@ -332,9 +331,12 @@ class MultiClassFrameEdgeMoralityDataset(Dataset):
 		return ex_examples
 
 	def read_path(self, data_path, stage=0):
-		for ex in tqdm(read_jsonl(data_path)):
+		for ex_idx, ex in tqdm(enumerate(read_jsonl(data_path))):
+			if ex_idx == 3:
+				exit()
 			for ex_examples in self.parse_example(ex):
 				self.examples.extend(ex_examples)
+
 
 	def __len__(self):
 		return len(self.examples)
