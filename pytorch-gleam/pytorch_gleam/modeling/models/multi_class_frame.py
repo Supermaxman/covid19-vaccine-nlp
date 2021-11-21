@@ -289,49 +289,22 @@ class MultiClassFrameGraphMoralityLanguageModel(MultiClassFrameGraphLanguageMode
 			dropout=hopfield_dropout,
 			num_heads=hopfield_num_heads
 		)
-		self.ex_morality_pooler = HopfieldPooling(
-			input_size=self.gcn_hidden_size,
-			quantity=self.num_moralities,
-			update_steps_max=hopfield_update_steps_max,
-			dropout=hopfield_dropout,
-			num_heads=hopfield_num_heads
-		)
-		self.f_ex_pooler = torch.nn.Linear(
-			in_features=self.gcn_hidden_size * self.num_moralities,
-			out_features=self.gcn_hidden_size
-		)
-		self.f_ex_activation = torch.nn.ReLU()
 
 	def gcn_pool(self, graph_outputs, graph_mask, batch):
 		# [bsize, num_moralities, 1]
-		ex_morality_mask = batch['ex_morality'].float().unsqueeze(dim=-1)
-		# [bsize, num_moralities, 1]
 		f_morality_mask = batch['f_morality'].float().unsqueeze(dim=-1)
-		ex_seq_mask = batch['ex_seq_mask']
-		f_seq_mask = batch['f_seq_mask']
 		# [bsize, num_moralities, hidden_size]
 		f_pool = self.f_morality_pooler(
 			graph_outputs,
 			# masks used are inverted, aka ignored values should be True
-			stored_pattern_padding_mask=~ex_seq_mask.bool()
-		).view(-1, self.num_moralities, self.gcn_hidden_size)
-		# [bsize, num_moralities, hidden_size]
-		ex_pool = self.ex_morality_pooler(
-			graph_outputs,
-			# masks used are inverted, aka ignored values should be True
-			stored_pattern_padding_mask=~f_seq_mask.bool()
+			stored_pattern_padding_mask=~graph_mask.bool()
 		).view(-1, self.num_moralities, self.gcn_hidden_size)
 
 		# [bsize, num_moralities, hidden_size]
 		f_pool = f_pool * f_morality_mask
-		# [bsize, num_moralities, hidden_size]
-		ex_pool = ex_pool * ex_morality_mask
-
-		# [bsize, num_moralities, hidden_size]
-		f_ex_pool = (f_pool + ex_pool) / 2.0
-		# [bsize, num_moralities * hidden_size]
-		f_ex_emb = f_ex_pool.view(-1, self.num_moralities * self.gcn_hidden_size)
-		# [bsize, hidden_size]
-		graph_outputs_pooled = self.f_ex_activation(self.f_ex_pooler(f_ex_emb))
+		# [bsize, 1]
+		f_counts = f_morality_mask.sum(dim=-2)
+		# [bsize, num_moralities, hidden_size] -> [bsize, hidden_size] / [bsize, 1] -> [bsize, hidden_size]
+		graph_outputs_pooled = f_pool.sum(dim=-2) / f_counts
 
 		return graph_outputs_pooled
