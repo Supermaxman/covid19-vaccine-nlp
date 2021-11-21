@@ -77,7 +77,7 @@ class MultiClassFrameLanguageModel(BaseLanguageModel):
 			m_min_score = torch.min(scores).item()
 			m_max_score = torch.max(scores).item()
 			# check 100 values between min and max
-			if torch.abs(m_min_score - m_max_score) < 1e-6:
+			if abs(m_min_score - m_max_score) < 1e-6:
 				m_max_score += 10
 			m_delta = (m_max_score - m_min_score) / num_threshold_steps
 			max_threshold, max_metrics = self.metric.best(
