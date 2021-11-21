@@ -202,12 +202,11 @@ class MultiLabelLanguageModel(BaseLanguageModel):
 			'logits': logits,
 			'loss': loss,
 			'scores': scores,
-			'thresholds': self.threshold
 		}
 
 		for label_name, label_idx in self.label_map.items():
 			m_threshold = self.threshold[label_name]
-			results[f'{label_name}_pred'] = m_threshold(scores[:, label_idx])
+			results[f'{label_name}_pred'] = m_threshold(scores[:, label_idx].cpu())
 
 		return results
 
