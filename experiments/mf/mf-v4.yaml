@@ -62,6 +62,6 @@ data:
     train_path: /users/max/data/corpora/mftc/mf-train.jsonl
     val_path: /users/max/data/corpora/mftc/mf-dev.jsonl
     test_path: /users/max/data/corpora/mftc/mf-test.jsonl
-#    predict_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-frames-tparsed-train.jsonl
-    predict_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-frames-tparsed-dev.jsonl
+    predict_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-frames-tparsed-train.jsonl
+#    predict_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-frames-tparsed-dev.jsonl
 #    predict_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-frames-tparsed-test.jsonl
