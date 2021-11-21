@@ -7,8 +7,8 @@ model:
     gcn_size: 32
     gcn_depth: 3
     pre_model_name: digitalepidemiologylab/covid-twitter-bert-v2
-    load_pre_model: true
-    update_threshold: true
+    load_pre_model: false
+    update_threshold: false
     label_map:
       No Stance: 0
       Accept: 1

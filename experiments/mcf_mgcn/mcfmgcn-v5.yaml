@@ -8,8 +8,8 @@ model:
     gcn_depth: 3
     hopfield_update_steps_max: 2
     pre_model_name: digitalepidemiologylab/covid-twitter-bert-v2
-    load_pre_model: true
-    update_threshold: true
+    load_pre_model: false
+    update_threshold: false
     label_map:
       No Stance: 0
       Accept: 1
