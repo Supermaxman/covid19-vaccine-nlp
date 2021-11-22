@@ -29,7 +29,6 @@ class BasePreModel(pl.LightningModule, ABC):
 		# assigned later when training starts
 		self.train_steps = 0
 		self.torch_cache_dir = torch_cache_dir
-
 		if load_pre_model:
 			self.lm = self.pre_model_type.from_pretrained(
 				pre_model_name,

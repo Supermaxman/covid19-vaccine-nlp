@@ -50,10 +50,10 @@ class MultiClassFrameEdgeMoralityDataset(Dataset):
 		for f_id, f_label in ex[self.label_name].items():
 			f_ex = ex['f_examples'][f_id]
 			frame = self.frames[f_id]
+			ex_label = 0
+			if f_label in self.label_map:
+				ex_label = self.label_map[f_label]
 
-			if f_label not in self.label_map:
-				continue
-			ex_label = self.label_map[f_label]
 			ex_edges = {e_key: np.array(e_value) for e_key, e_value in f_ex['edges'].items()}
 
 			ex_morality = []

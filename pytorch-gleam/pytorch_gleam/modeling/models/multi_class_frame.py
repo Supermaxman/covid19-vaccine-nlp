@@ -1,5 +1,5 @@
 
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import torch
 
@@ -18,7 +18,7 @@ class MultiClassFrameLanguageModel(BaseLanguageModel):
 			threshold: ThresholdModule,
 			metric: Metric,
 			num_threshold_steps: int = 100,
-			update_threshold: bool = True,
+			update_threshold: bool = False,
 			*args,
 			**kwargs
 	):
@@ -46,6 +46,11 @@ class MultiClassFrameLanguageModel(BaseLanguageModel):
 		self.score_func = torch.nn.Softmax(
 			dim=-1
 		)
+
+	def setup(self, stage: Optional[str] = None):
+		super().setup(stage)
+		if stage == 'fit':
+			self.update_threshold = True
 
 	def eval_epoch_end(self, outputs, stage):
 		loss = torch.cat([x['loss'] for x in outputs], dim=0).mean().cpu()
