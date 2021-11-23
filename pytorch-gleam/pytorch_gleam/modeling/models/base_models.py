@@ -140,9 +140,9 @@ class BaseLanguageModelForSequenceClassification(BasePreModel, ABC):
 		super().__init__(pre_model_name, pre_model_type, *args, **kwargs)
 		# TODO check for these, not all models may have them
 		# noinspection PyUnresolvedReferences
-		self.id2label = self.lm.config.id2label
+		# self.id2label = self.lm.config.id2label
 		# noinspection PyUnresolvedReferences
-		self.label2id = self.lm.config.label2id
+		# self.label2id = self.lm.config.label2id
 		# 0 - contradiction
 		# 1 - neutral
 		# 2 - entailment
@@ -155,7 +155,7 @@ class BaseLanguageModelForSequenceClassification(BasePreModel, ABC):
 		# 2 -> 1
 		# 0 -> 2
 		# TODO build automatically
-		self.label_list = [1, 2, 0]
+		# self.label_list = [1, 2, 0]
 
 	def lm_step(self, input_ids, attention_mask, token_type_ids=None):
 		if token_type_ids is not None:
@@ -172,5 +172,5 @@ class BaseLanguageModelForSequenceClassification(BasePreModel, ABC):
 
 		logits = outputs[0]
 		# re-arrange logits
-		logits = logits[:, self.label_list]
+		# logits = logits[:, self.label_list]
 		return logits

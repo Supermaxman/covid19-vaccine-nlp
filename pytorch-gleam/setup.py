@@ -24,7 +24,7 @@ def _load_requirements(path_dir: str, file_name: str = "requirements.txt", comme
 	return requirements
 
 
-VERSION = '0.3.0'
+VERSION = '0.4.0'
 DESCRIPTION = 'NLP package for pytorch and pytorch_lightning with pre-built models'
 LONG_DESCRIPTION = 'NLP package for pytorch and pytorch_lightning with pre-built models'
 
@@ -64,6 +64,9 @@ setup(
 			"t-parse=pytorch_gleam.parse.tparse:main",
 			"f-parse=pytorch_gleam.parse.fparse:main",
 			"e-parse=pytorch_gleam.parse.eparse:main",
+			"gleam-search-tweet-index=pytorch_gleam.search.tweet_index_search:main",
+			"gleam-tweet-to-jsonl=pytorch_gleam.search.tweet_to_jsonl:main",
+			"gleam-parse-raw-tweet=pytorch_gleam.parse.parse_raw_tweet:main",
 		],
 	},
 )
