@@ -33,23 +33,20 @@ model:
 
 trainer:
   max_epochs: 5
-  accumulate_grad_batches: 4
+  accumulate_grad_batches: 1
   check_val_every_n_epoch: 1
   deterministic: true
   num_sanity_val_steps: 1
   checkpoint_callback: false
   callbacks:
     - class_path: pytorch_gleam.callbacks.FitCheckpointCallback
+    - class_path: pytorch_gleam.callbacks.JsonlWriter
 data:
-  class_path: pytorch_gleam.data.datasets.MultiClassFrameEdgeMoralityDataModule
+  class_path: pytorch_gleam.data.datasets.MultiClassFrameEdgeMoralityIterableDataModule
   init_args:
-    batch_size: 8
+    batch_size: 32
     max_seq_len: 96
-    label_name: labels
-    label_map:
-      Not Relevant: 0
-      Accept: 1
-      Reject: 2
+    label_name: candidates
     morality_map:
       subversion: 0
       loyalty: 1
@@ -64,6 +61,5 @@ data:
     tokenizer_name: digitalepidemiologylab/covid-twitter-bert-v2
     num_workers: 8
     frame_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/frames-covid19-parsed.jsonl
-    train_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-frames-tparsed-train.jsonl
-    val_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-frames-tparsed-dev.jsonl
-    test_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/co-vax-frames-tparsed-test.jsonl
+    predict_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/artifacts/covid19-frame-rel-v2/covid19-frame-rel-v2_candidates-parsed.jsonl
+    size_estimate: 2592922

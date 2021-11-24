@@ -237,6 +237,7 @@ def main():
 	parser.add_argument('-i', '--input_path', required=True)
 	parser.add_argument('-f', '--frame_path', required=True)
 	parser.add_argument('-o', '--output_path', required=True)
+	parser.add_argument('-l', '--label_name', default='labels')
 	parser.add_argument('-t', '--tokenizer', default='digitalepidemiologylab/covid-twitter-bert-v2')
 	parser.add_argument('-sh', '--num_semantic_hops', default=3)
 	args = parser.parse_args()
@@ -246,7 +247,7 @@ def main():
 
 	tokenizer = AutoTokenizer.from_pretrained(args.tokenizer)
 	write_jsonl(
-		parse_tweets(args.input_path, tokenizer, args.num_semantic_hops, 'labels', frames),
+		parse_tweets(args.input_path, tokenizer, args.num_semantic_hops, args.label_name, frames),
 		args.output_path
 	)
 

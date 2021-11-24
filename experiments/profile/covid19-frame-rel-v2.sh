@@ -120,3 +120,15 @@ gleam-search-candidates \
   --output_path ${output_path}_candidates.jsonl \
   --min_rank 5000 \
   --min_score 2.0
+
+t-parse \
+  --input_path ${output_path}_candidates.jsonl \
+  --output_path ${output_path}_candidates-tparsed.jsonl
+
+e-parse \
+  --input_path ${output_path}_candidates-tparsed.jsonl \
+  --frame_path ${frame_path} \
+  --label_name candidates \
+  --output_path ${output_path}_candidates-parsed.jsonl
+
+bash ex/predict.sh experiments/profile/mcfmgcn-v36.yaml
