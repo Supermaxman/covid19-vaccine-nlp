@@ -91,8 +91,8 @@ class RerankDataset(IterableDataset):
 				continue
 			tweet_text = get_tweet_text(tweet)
 			# only do relevance re-ranking on bm25 results
-			# OR do relevance re-ranking on all results
 			q_exs = self.tweet_examples[tweet_id]
+			# OR do relevance re-ranking on all results (EXPENSIVE)
 			# q_exs = self.questions
 			for q_id in q_exs:
 				ex = {
