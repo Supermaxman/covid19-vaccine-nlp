@@ -60,7 +60,7 @@ def worker_init_fn(_):
 
 
 class RerankDataset(IterableDataset):
-	def __init__(self, index_path, scores_path, questions_path):
+	def __init__(self, index_path, scores_path, questions_path, worker_estimate=6):
 
 		with open(questions_path, 'r') as f:
 			self.questions = json.load(f)
@@ -72,6 +72,7 @@ class RerankDataset(IterableDataset):
 		self.num_workers = 1
 		self.tweet_examples = defaultdict(list)
 		self.num_examples = 0
+		self.worker_estimate = worker_estimate
 
 		for tweet_id, q_scores in scores.items():
 			for q_p_id, score in q_scores.items():
@@ -79,7 +80,7 @@ class RerankDataset(IterableDataset):
 				self.num_examples += 1
 
 	def __len__(self):
-		return self.num_examples // self.num_workers
+		return self.num_examples // self.worker_estimate
 
 	def __iter__(self):
 		ex_idx = 0
