@@ -24,4 +24,3 @@ data:
       Relevant: 1
     tokenizer_name: nboost/pt-biobert-base-msmarco
     num_workers: 8
-    predict_path: TODO
