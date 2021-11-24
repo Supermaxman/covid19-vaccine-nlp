@@ -47,15 +47,27 @@ gleam-search-tweet-index \
   --top_k 400000 \
   --threads 8
 
-gleam-rerank \
-  --index_path ${index_data_path} \
-  --questions_path ${frame_path} \
-  --scores_path ${output_path}_bm25_scores.json \
-  --output_path ${output_path}_rerank_scores.json \
+#gleam-rerank \
+#  --index_path ${index_data_path} \
+#  --questions_path ${frame_path} \
+#  --scores_path ${output_path}_bm25_scores.json \
+#  --output_path ${output_path}_rerank_scores.json \
+#  --pre_model_name nboost/pt-biobert-base-msmarco \
+#  --batch_size 64 \
+#  --max_seq_len 128 \
+#  --gpus 0
+
+python pytorch-gleam/pytorch_gleam/search/rerank.py \
+  --index_path data/covid19 \
+  --questions_path data/frames-covid19-parsed.jsonl \
+  --scores_path data/covid19-frame-rel-v2_bm25_scores.json \
+  --output_path data/covid19-frame-rel-v2_rerank_scores \
   --pre_model_name nboost/pt-biobert-base-msmarco \
   --batch_size 64 \
   --max_seq_len 128 \
-  --gpus 0
+  --gpus 2,3,4,5,6,7
+
+
 
 gleam-rerank-format \
   --input_path ${output_path}_rerank_scores \

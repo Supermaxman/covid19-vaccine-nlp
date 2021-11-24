@@ -79,7 +79,7 @@ class RerankDataset(IterableDataset):
 				self.num_examples += 1
 
 	def __len__(self):
-		return self.num_examples
+		return self.num_examples // self.num_workers
 
 	def __iter__(self):
 		ex_idx = 0
@@ -184,7 +184,7 @@ class RerankBert(pl.LightningModule):
 
 	def _eval_step(self, batch, batch_nb, name):
 		logits = self._forward_step(batch, batch_nb)
-		logits = logits.detach()
+		logits = logits.detach().cpu()
 		device_id = get_device_id()
 		self.write_prediction_dict(
 			{
