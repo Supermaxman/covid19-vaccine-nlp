@@ -3,10 +3,6 @@
 # run names
 FILE_ID=covid19-frame-rel-v2
 
-bm25_top_k=400000
-
-rerank_model=nboost/pt-biobert-base-msmarco
-
 artifacts_path=/shared/hltdir4/disk1/team/data/corpora/co-vax-frames/artifacts
 data_version=v4
 data_root=/shared/hltdir4/disk1/team/data/corpora/covid19-vaccine-twitter
@@ -56,7 +52,7 @@ gleam-rerank \
   --questions_path ${frame_path} \
   --scores_path ${output_path}_bm25_scores.json \
   --output_path ${output_path}_rerank_scores.json \
-  --pre_model_name ${rerank_model} \
+  --pre_model_name nboost/pt-biobert-base-msmarco \
   --batch_size 64 \
   --max_seq_len 128 \
   --gpus 0

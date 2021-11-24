@@ -6,10 +6,10 @@ import argparse
 from pyserini.search import SimpleSearcher
 
 
-def batch(iterable, n=1):
-	num_examples = len(iterable)
-	for ndx in range(0, num_examples, n):
-		yield iterable[ndx:min(ndx + n, l)]
+def batch(iterable, chunk_size=1):
+	size = len(iterable)
+	for ndx in range(0, size, chunk_size):
+		yield iterable[ndx:min(ndx + chunk_size, size)]
 
 
 def main():
@@ -37,7 +37,7 @@ def main():
 		queries.append((q_id, q_txt))
 
 	scores = {}
-	batches = list(batch(queries, n=args.threads))
+	batches = list(batch(queries, chunk_size=args.threads))
 	for batch_pairs in tqdm(batches):
 		batch_q_txt = [q_txt for q_p_id, q_txt in batch_pairs]
 		batch_q_ids = [f'{q_p_id}' for q_p_id, q_txt in batch_pairs]
