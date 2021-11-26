@@ -13,6 +13,7 @@ if __name__ == '__main__':
 	)
 	cli.trainer.predict(
 		cli.model,
-		datamodule=cli.datamodule
+		datamodule=cli.datamodule,
+		return_predictions=False
 	)
 
