@@ -44,7 +44,7 @@ trainer:
 data:
   class_path: pytorch_gleam.data.datasets.MultiClassFrameEdgeMoralityIterableDataModule
   init_args:
-    batch_size: 32
+    batch_size: 128
     max_seq_len: 96
     label_name: candidates
     label_map:
