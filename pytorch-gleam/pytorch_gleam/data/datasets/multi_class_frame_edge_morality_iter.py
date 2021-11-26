@@ -76,7 +76,7 @@ class MultiClassFrameEdgeMoralityIterableDataset(IterableDataset):
 			yield example
 
 	def __len__(self):
-		return self.size_estimate
+		return self.size_estimate // self.batch_size
 
 	def __iter__(self):
 		iterator = self.ex_iter()
