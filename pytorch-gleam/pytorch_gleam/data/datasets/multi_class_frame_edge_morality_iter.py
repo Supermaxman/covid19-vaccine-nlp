@@ -13,8 +13,12 @@ from tqdm import tqdm
 
 
 def batch(iterable, n):
-	args = [iter(iterable)] * n
-	return (list(filter(lambda x: x is not None, x)) for x in zip_longest(fillvalue=None, *args))
+	try:
+		while True:
+			batch_iter = list(islice(iterable, n))
+			yield batch_iter
+	except StopIteration:
+		return
 
 
 def read_jsonl(path):
