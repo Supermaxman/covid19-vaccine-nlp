@@ -67,8 +67,8 @@ class MultiClassFrameEdgeMoralityIterableDataset(IterableDataset):
 				example['token_type_ids'] = f_ex['token_type_ids']
 			yield example
 
-	def __len__(self):
-		return self.size_estimate
+	# def __len__(self):
+	# 	return self.size_estimate
 
 	def __iter__(self):
 		ex_idx = 0

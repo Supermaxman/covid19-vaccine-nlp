@@ -162,7 +162,7 @@ class MultiClassFrameLanguageModel(BaseLanguageModel):
 		logits = self(batch)
 		loss = self.loss(logits, batch['labels'])
 		scores = self.score_func(logits)
-
+		print(scores.shape)
 		results = {
 			# [bsize]
 			'ids': batch['ids'],

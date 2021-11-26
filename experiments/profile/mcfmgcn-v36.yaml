@@ -44,7 +44,7 @@ trainer:
 data:
   class_path: pytorch_gleam.data.datasets.MultiClassFrameEdgeMoralityIterableDataModule
   init_args:
-    batch_size: 512
+    batch_size: 64
     max_seq_len: 96
     label_name: candidates
     label_map:
@@ -63,7 +63,7 @@ data:
       authority: 8
       degradation: 9
     tokenizer_name: digitalepidemiologylab/covid-twitter-bert-v2
-    num_workers: 8
+    num_workers: 1
     frame_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/frames-covid19-parsed.jsonl
     predict_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/artifacts/covid19-frame-rel-v2/covid19-frame-rel-v2_candidates-parsed.jsonl
     size_estimate: 2592922
