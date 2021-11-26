@@ -47,6 +47,10 @@ data:
     batch_size: 32
     max_seq_len: 96
     label_name: candidates
+    label_map:
+      Not Relevant: 0
+      Accept: 1
+      Reject: 2
     morality_map:
       subversion: 0
       loyalty: 1
