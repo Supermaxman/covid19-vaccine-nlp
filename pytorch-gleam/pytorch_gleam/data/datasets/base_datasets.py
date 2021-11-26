@@ -56,6 +56,8 @@ class BaseDataModule(pl.LightningDataModule, ABC):
 		return data_loaders
 
 	def create_eval_data_loaders(self, datasets):
+		print(len(datasets))
+		print(self.batch_size)
 		data_loaders = [
 			DataLoader(
 				ds,
