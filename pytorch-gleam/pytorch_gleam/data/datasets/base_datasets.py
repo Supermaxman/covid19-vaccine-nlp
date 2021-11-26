@@ -55,14 +55,12 @@ class BaseDataModule(pl.LightningDataModule, ABC):
 				data_loaders = data_loaders[0]
 		return data_loaders
 
-	def create_eval_data_loaders(self, datasets):
-		print(len(datasets))
-		print(self.batch_size)
+	def create_eval_data_loaders(self, datasets, self_batch=False):
 		data_loaders = [
 			DataLoader(
 				ds,
 				num_workers=self.num_workers,
-				batch_size=self.batch_size,
+				batch_size=self.batch_size if not self_batch else None,
 				shuffle=False,
 				collate_fn=self.create_collator(),
 				worker_init_fn=ds.worker_init_fn,
@@ -113,6 +111,6 @@ class BaseDataModule(pl.LightningDataModule, ABC):
 
 	def predict_dataloader(self):
 		data_sets = self.get_datasets(self.predict_dataset)
-		data_loaders = self.create_eval_data_loaders(data_sets)
+		data_loaders = self.create_eval_data_loaders(data_sets, self_batch=True)
 		data_loaders = self.flatten_dataloaders(data_loaders)
 		return data_loaders

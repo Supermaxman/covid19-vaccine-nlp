@@ -1,6 +1,7 @@
 
 import json
 from typing import List, Dict, Any, Union
+from itertools import islice, chain, zip_longest
 
 import numpy as np
 import torch
@@ -9,6 +10,11 @@ from torch.utils.data import Dataset, IterableDataset
 from pytorch_gleam.data.datasets.base_datasets import BaseDataModule
 from pytorch_gleam.data.collators import MultiClassFrameEdgeMoralityBatchCollator
 from tqdm import tqdm
+
+
+def batch(iterable, n):
+	args = [iter(iterable)] * n
+	return (list(filter(lambda x: x is not None, x)) for x in zip_longest(fillvalue=None, *args))
 
 
 def read_jsonl(path):
@@ -24,6 +30,7 @@ class MultiClassFrameEdgeMoralityIterableDataset(IterableDataset):
 
 	def __init__(
 			self,
+			batch_size: int,
 			data_path: str,
 			frame_path: str,
 			label_name: str,
@@ -32,6 +39,7 @@ class MultiClassFrameEdgeMoralityIterableDataset(IterableDataset):
 	):
 		super().__init__()
 		self.morality_map = morality_map
+		self.batch_size = batch_size
 		self.frame_path = frame_path
 		self.label_name = label_name
 		self.size_estimate = size_estimate
@@ -67,15 +75,18 @@ class MultiClassFrameEdgeMoralityIterableDataset(IterableDataset):
 				example['token_type_ids'] = f_ex['token_type_ids']
 			yield example
 
-	# def __len__(self):
-	# 	return self.size_estimate
+	def __len__(self):
+		return self.size_estimate
 
 	def __iter__(self):
-		ex_idx = 0
+		iterator = self.ex_iter()
+		for ex_batch in batch(iterator, self.batch_size):
+			yield ex_batch
+
+	def ex_iter(self):
 		for ex in read_jsonl(self.data_path):
 			for ex_example in self.parse_example(ex):
 				yield ex_example
-				ex_idx += 1
 
 	def worker_init_fn(self, _):
 		pass
@@ -103,6 +114,7 @@ class MultiClassFrameEdgeMoralityIterableDataModule(BaseDataModule):
 		self.size_estimate = size_estimate
 
 		self.predict_dataset = MultiClassFrameEdgeMoralityIterableDataset(
+			batch_size=self.batch_size,
 			data_path=self.predict_path,
 			frame_path=self.frame_path,
 			label_name=self.label_name,
