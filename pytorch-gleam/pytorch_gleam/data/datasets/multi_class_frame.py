@@ -39,7 +39,7 @@ class MultiClassFrameDataset(Dataset):
 				with open(f_path) as f:
 					s_frames = json.load(f)
 				for f_id, f in s_frames.items():
-					assert f_id not in s_frames, f'Duplicate frames: {f_id}'
+					assert f_id not in self.frames, f'Duplicate frames: {f_id}'
 					self.frames[f_id] = f
 
 		if isinstance(data_path, str):
