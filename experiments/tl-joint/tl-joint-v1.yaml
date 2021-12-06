@@ -51,4 +51,4 @@ data:
       - /shared/hltdir4/disk1/team/data/corpora/vax-lies/hpv/rel-dev.jsonl
     test_path:
       - /shared/hltdir4/disk1/team/data/corpora/vax-lies/covid-19/rel-test.jsonl
-      - /shared/hltdir4/disk1/team/data/corpora/vax-lies/hpv/rel-test.jsonl
+#      - /shared/hltdir4/disk1/team/data/corpora/vax-lies/hpv/rel-test.jsonl
