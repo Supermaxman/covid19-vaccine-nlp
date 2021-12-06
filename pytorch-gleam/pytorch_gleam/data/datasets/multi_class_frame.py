@@ -21,7 +21,7 @@ class MultiClassFrameDataset(Dataset):
 	examples: List[Dict[Any, Union[Any, Dict]]]
 
 	def __init__(
-			self, data_path: Union[str, List[str]], frame_path: str,
+			self, data_path: Union[str, List[str]], frame_path: Union[str, List[str]],
 			label_name: str, tokenizer, label_map: Dict[str, int]):
 		super().__init__()
 		self.frame_path = frame_path
@@ -30,8 +30,18 @@ class MultiClassFrameDataset(Dataset):
 		self.label_map = label_map
 
 		self.examples = []
-		with open(self.frame_path) as f:
-			self.frames = json.load(f)
+		if isinstance(self.frame_path, str):
+			with open(self.frame_path) as f:
+				self.frames = json.load(f)
+		else:
+			self.frames = {}
+			for f_stage, f_path in enumerate(self.frame_path):
+				with open(f_path) as f:
+					s_frames = json.load(f)
+				for f_id, f in s_frames.items():
+					assert f_id not in s_frames, f'Duplicate frames: {f_id}'
+					self.frames[f_id] = f
+
 		if isinstance(data_path, str):
 			self.read_path(data_path)
 		else:
@@ -84,11 +94,11 @@ class MultiClassFrameDataModule(BaseDataModule):
 			self,
 			label_name: str,
 			label_map: Dict[str, int],
-			frame_path: str,
-			train_path: str = None,
-			val_path: str = None,
-			test_path: str = None,
-			predict_path: str = None,
+			frame_path: Union[str, List[str]],
+			train_path: Union[str, List[str]] = None,
+			val_path: Union[str, List[str]] = None,
+			test_path: Union[str, List[str]] = None,
+			predict_path: Union[str, List[str]] = None,
 			*args,
 			**kwargs
 	):

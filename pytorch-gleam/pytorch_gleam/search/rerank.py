@@ -253,7 +253,7 @@ def main():
 	precision = 16 if args.use_tpus else 32
 	# precision = 32
 	tpu_cores = 8
-	num_workers = 4
+	num_workers = 1
 	deterministic = True
 
 	tokenizer = BertTokenizer.from_pretrained(args.pre_model_name)
