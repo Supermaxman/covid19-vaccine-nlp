@@ -39,3 +39,18 @@ class FitCheckpointCallback(Callback):
 	def on_predict_start(self, trainer: pl.Trainer, pl_module: pl.LightningModule):
 		if trainer.state.fn != TrainerFn.FITTING:
 			self._load_fit_checkpoint(trainer, pl_module)
+
+
+class PreTrainedCheckpointCallback(Callback):
+	def __init__(self, pre_model_path: str, pre_checkpoint_name: str = 'pytorch_model.bin'):
+		super().__init__()
+		self.pre_model_path = pre_model_path
+		self.pre_checkpoint_name = pre_checkpoint_name
+		self.checkpoint_path = os.path.join(self.pre_model_path, self.pre_checkpoint_name)
+
+	def _load_pre_checkpoint(self, trainer: pl.Trainer, pl_module: pl.LightningModule):
+		print(f'Loading checkpoint...')
+		pl_module.load_state_dict(torch.load(self.checkpoint_path), strict=False)
+
+	def on_fit_start(self, trainer: pl.Trainer, pl_module: pl.LightningModule):
+		self._load_pre_checkpoint(trainer, pl_module)
