@@ -19,7 +19,7 @@ def main():
 	for ex_file in os.listdir(batch_path):
 		ex_path = os.path.join(batch_path, ex_file)
 		experiment = f'{script} {ex_path}'
-		ex_queue(queue_path, experiment)
+		ex_queue(experiment, queue_path)
 
 
 if __name__ == '__main__':
