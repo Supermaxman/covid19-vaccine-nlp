@@ -58,6 +58,7 @@ setup(
 			"free-gpus=pytorch_gleam.gpu.free_gpus:main",
 			"request-gpus=pytorch_gleam.gpu.request_gpus:main",
 			"ex-queue=pytorch_gleam.exqueue.exqueue:main",
+			"ex-bqueue=pytorch_gleam.exqueue.exbqueue:main",
 			"ex-start=pytorch_gleam.exqueue.exstart:main",
 			"ex-stat=pytorch_gleam.exqueue.exstat:main",
 			"ex-rm=pytorch_gleam.exqueue.exrm:main",

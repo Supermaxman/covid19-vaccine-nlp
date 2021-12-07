@@ -10,14 +10,8 @@ import base64
 time_format = '%Y%m%d%H%M%S'
 
 
-def main():
-	parser = argparse.ArgumentParser()
-	parser.add_argument('-ex', '--experiment', required=True)
-	parser.add_argument('-qp', '--queue_path', default='~/.default_queue')
-	args = parser.parse_args()
-
-	experiment = args.experiment
-	queue_path = os.path.expanduser(args.queue_path)
+def ex_queue(experiment: str, queue_path: str = '~/.default_queue'):
+	queue_path = os.path.expanduser(queue_path)
 	if not os.path.exists(queue_path):
 		os.mkdir(queue_path)
 	submitted_path = os.path.join(queue_path, 'submitted')
@@ -44,6 +38,17 @@ def main():
 			with open(ex_queue_path, 'w') as f:
 				json.dump(ex, f, indent=4)
 			print(f'Experiment successfully added to queue.')
+
+
+def main():
+	parser = argparse.ArgumentParser()
+	parser.add_argument('-ex', '--experiment', required=True)
+	parser.add_argument('-qp', '--queue_path', default='~/.default_queue')
+	args = parser.parse_args()
+
+	experiment = args.experiment
+	queue_path = args.queue_path
+	ex_queue(experiment, queue_path)
 
 
 if __name__ == '__main__':
