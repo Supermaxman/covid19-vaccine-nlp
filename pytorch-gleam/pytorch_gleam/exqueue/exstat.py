@@ -1,9 +1,7 @@
 #!/usr/bin/env python
+
 import os
-import subprocess
 import argparse
-import time
-import heapq
 from datetime import datetime
 import json
 
@@ -15,12 +13,12 @@ time_format = '%Y%m%d%H%M%S'
 
 def ex_format(ex):
 	c_status = ex['current_status']
-	p_id = ex['process_id']
+	# p_id = ex['process_id']
 	status = '[' + c_status['status'] + ']'
 	timestamp = str(datetime.strptime(c_status['timestamp'], time_format))
 	experiment = ex['experiment']
 	ex_id = ex['ex_id']
-	return f'{status:<12} {timestamp:<20} {experiment} ({ex_id}) - {p_id}'
+	return f'{status:<12} {ex_id:<10} {timestamp:<20} {experiment}'
 
 
 def get_experiments(queue_path, status):

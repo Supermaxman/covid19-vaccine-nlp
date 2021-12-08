@@ -31,17 +31,7 @@ def update_status(queue_path, ex, status, p_id=None):
 	os.remove(old_file_path)
 
 
-def ex_format(ex):
-	c_status = ex['current_status']
-	p_id = ex['process_id']
-	status = c_status['status']
-	timestamp = datetime.strptime(c_status['timestamp'], time_format)
-	experiment = ex['experiment']
-	ex_id = ex['ex_id']
-	return f'{timestamp} [{status}]{experiment} ({ex_id}) - {p_id}'
-
-
-def get_experiments(queue_path, status):
+def get_experiments(queue_path: str, status: str):
 	ex_list = []
 	status_path = os.path.join(queue_path, status)
 	if not os.path.exists(status_path):
