@@ -1,0 +1,49 @@
+seed_everything: 0
+model:
+  class_path: pytorch_gleam.modeling.models.MultiClassFrameLanguageModel
+  init_args:
+    learning_rate: 5e-4
+    pre_model_name: digitalepidemiologylab/covid-twitter-bert-v2
+    label_map:
+      No Stance: 0
+      Accept: 1
+      Reject: 2
+    threshold:
+      class_path: pytorch_gleam.modeling.thresholds.MultiClassThresholdModule
+    metric:
+      class_path: pytorch_gleam.modeling.metrics.F1PRMultiClassMetric
+      init_args:
+        mode: macro
+        num_classes: 3
+
+trainer:
+  max_epochs: 5
+  accumulate_grad_batches: 4
+  check_val_every_n_epoch: 1
+  deterministic: true
+  num_sanity_val_steps: 1
+  checkpoint_callback: false
+  callbacks:
+    - class_path: pytorch_gleam.callbacks.FitCheckpointCallback
+data:
+  class_path: pytorch_gleam.data.datasets.MultiClassFrameDataModule
+  init_args:
+    batch_size: 8
+    max_seq_len: 128
+    label_name: misinfo
+    label_map:
+      No Stance: 0
+      Accept: 1
+      Reject: 2
+    tokenizer_name: digitalepidemiologylab/covid-twitter-bert-v2
+    num_workers: 8
+    frame_path:
+      - /shared/hltdir4/disk1/team/data/corpora/vax-lies/covid-19/misinfo.json
+      - /shared/hltdir4/disk1/team/data/corpora/vax-lies/hpv/misinfo.json
+    train_path:
+      - /shared/hltdir4/disk1/team/data/corpora/vax-lies/hpv/stance-train.jsonl
+      - /shared/hltdir4/disk1/team/data/corpora/vax-lies/hpv/stance-test.jsonl
+    val_path:
+      - /shared/hltdir4/disk1/team/data/corpora/vax-lies/hpv/stance-dev.jsonl
+    test_path:
+      - /shared/hltdir4/disk1/team/data/corpora/vax-lies/covid-19/stance-test.jsonl
