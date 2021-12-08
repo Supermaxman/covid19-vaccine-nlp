@@ -5,9 +5,17 @@ from filelock import FileLock
 from datetime import datetime
 import json
 import base64
+import hashlib
 
 
 time_format = '%Y%m%d%H%M%S'
+
+
+def get_ex_id(experiment: str):
+	ex_hasher = hashlib.sha1(experiment.encode('utf-8'))
+	ex_hash = ex_hasher.digest()[:6]
+	ex_id = base64.urlsafe_b64encode(ex_hash).decode('utf-8')
+	return ex_id
 
 
 def ex_queue(experiment: str, queue_path: str = '~/.default_queue'):
@@ -17,7 +25,8 @@ def ex_queue(experiment: str, queue_path: str = '~/.default_queue'):
 	submitted_path = os.path.join(queue_path, 'submitted')
 	if not os.path.exists(submitted_path):
 		os.mkdir(submitted_path)
-	ex_id = base64.urlsafe_b64encode(experiment.encode('utf-8')).decode('utf-8')
+
+	ex_id = get_ex_id(experiment)
 	status = {
 		'status': 'submitted',
 		'timestamp': datetime.now().strftime(time_format),
