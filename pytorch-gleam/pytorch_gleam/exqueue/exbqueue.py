@@ -16,7 +16,7 @@ def main():
 	script = args.script_path
 	queue_path = args.queue_path
 
-	for ex_file in sorted(os.listdir(batch_path)):
+	for ex_file in sorted(list(os.listdir(batch_path))):
 		ex_path = os.path.join(batch_path, ex_file)
 		experiment = f'{script} {ex_path}'
 		ex_queue(experiment, queue_path)
