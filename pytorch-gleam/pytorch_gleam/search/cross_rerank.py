@@ -44,13 +44,11 @@ def read_jsonl(path):
 					print(e)
 
 
-def get_tweets(dir_path):
-	for file_name in os.listdir(dir_path):
-		file_path = os.path.join(dir_path, file_name)
-		for ex in read_jsonl(file_path):
-			if 'tweet' in ex:
-				ex = ex['tweet']
-			yield ex
+def get_tweets(file_path):
+	for ex in read_jsonl(file_path):
+		if 'tweet' in ex:
+			ex = ex['tweet']
+		yield ex
 
 
 def worker_init_fn(_):
