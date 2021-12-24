@@ -132,3 +132,14 @@ e-parse \
   --output_path ${output_path}_candidates-parsed.jsonl
 
 bash ex/predict.sh experiments/profile/mcfmgcn-v36.yaml
+
+
+
+python pytorch-gleam/pytorch_gleam/search/cross_rerank.py \
+  --data_path data/covid19-frame-rel-v2_candidates.jsonl \
+  --questions_path data/frames-covid19-parsed.jsonl \
+  --output_path data/covid19-frame-rel-v2_rerank_scores \
+  --pre_model_name nboost/pt-biobert-base-msmarco \
+  --batch_size 64 \
+  --max_seq_len 128 \
+  --gpus 2,3,4,5,6,7
