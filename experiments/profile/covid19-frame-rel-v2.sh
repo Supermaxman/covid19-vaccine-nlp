@@ -129,7 +129,12 @@ gleam-rerank-format \
 # --gpus 5
 #
 
-
+python pytorch-gleam/pytorch_gleam/search/select_candidates.py \
+  --index_path data/covid19 \
+  --scores_path data/covid19-frame-rel-v2_cross_rerank_scores_fixed.json \
+  --output_path data/covid19-frame-rel-v2_candidates.jsonl \
+  --min_rank 5000 \
+  --min_score 2.0
 
 # minimum number of tweets for each frame
 # minimum relevance score for each frame
@@ -158,11 +163,12 @@ bash ex/predict.sh experiments/profile/mcfmgcn-v36.yaml
 python pytorch-gleam/pytorch_gleam/search/cross_rerank.py \
   --data_path data/covid19-frame-rel-v2_candidates.jsonl \
   --questions_path data/frames-covid19-parsed.jsonl \
-  --output_path data/covid19-frame-rel-v2_rerank_scores_test \
+  --output_path data/covid19-frame-rel-v2_rerank_scores_cross \
   --pre_model_name nboost/pt-biobert-base-msmarco \
   --batch_size 64 \
   --max_seq_len 128 \
-  --gpus 2
+  --num_workers 1 \
+  --gpus 2,3,4,5,6,7
 
 #python pytorch-gleam/pytorch_gleam/search/cross_rerank.py \
 #  --data_path data/covid19-frame-rel-v2_candidates.jsonl \

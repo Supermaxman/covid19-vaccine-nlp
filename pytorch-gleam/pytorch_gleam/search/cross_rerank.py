@@ -242,6 +242,7 @@ def main():
 	parser.add_argument('-op', '--output_path', required=True)
 	parser.add_argument('-pm', '--pre_model_name', default='nboost/pt-biobert-base-msmarco')
 	parser.add_argument('-sd', '--save_directory', default='models')
+	parser.add_argument('-w', '--num_workers', default=1, type=int)
 	parser.add_argument('-bs', '--batch_size', default=4, type=int)
 	parser.add_argument('-ml', '--max_seq_len', default=96, type=int)
 	parser.add_argument('-se', '--seed', default=0, type=int)
@@ -262,7 +263,7 @@ def main():
 	precision = 16 if args.use_tpus else 32
 	# precision = 32
 	tpu_cores = 8
-	num_workers = 1
+	num_workers = args.num_workers
 	deterministic = True
 
 	tokenizer = BertTokenizer.from_pretrained(args.pre_model_name)
