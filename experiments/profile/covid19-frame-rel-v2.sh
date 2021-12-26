@@ -67,7 +67,7 @@ python pytorch-gleam/pytorch_gleam/search/rerank.py \
   --batch_size 64 \
   --max_seq_len 128 \
   --num_workers 1 \
-  --gpus 2,3,4,5
+  --gpus 5,6
 
 python pytorch-gleam/pytorch_gleam/search/rerank_format.py \
 --input_path data/covid19-frame-rel-v2_rerank_scores_fixed_test \
@@ -81,7 +81,7 @@ python pytorch-gleam/pytorch_gleam/search/rerank.py \
   --output_path data/covid19-frame-rel-v2_rerank_scores_fixed \
   --pre_model_name nboost/pt-biobert-base-msmarco \
   --batch_size 64 \
-  --max_seq_len 256 \
+  --max_seq_len 128 \
   --num_workers 1 \
   --gpus 2,3,4,5,6,7
 

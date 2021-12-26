@@ -85,8 +85,7 @@ class RerankDataset(IterableDataset):
 		self.num_examples = 0
 		self.worker_estimate = worker_estimate
 
-		# TODO just for testing
-		for tweet_id, q_scores in list(scores.items())[:100]:
+		for tweet_id, q_scores in scores.items():
 			for q_p_id, score in q_scores.items():
 				self.tweet_examples[tweet_id].append(q_p_id)
 				self.num_examples += 1
@@ -117,6 +116,8 @@ class RerankDataset(IterableDataset):
 				}
 				if ex_idx % self.num_workers == self.frequency:
 					yield ex
+				if ex_idx > 1000:
+					return
 				ex_idx += 1
 
 
