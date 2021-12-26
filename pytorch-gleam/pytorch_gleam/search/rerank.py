@@ -45,18 +45,29 @@ def read_jsonl(path):
 
 
 def get_tweets(dir_path):
-	for file_name in os.listdir(dir_path):
+	for file_name in sorted(list(os.listdir(dir_path))):
 		file_path = os.path.join(dir_path, file_name)
 		for ex in read_jsonl(file_path):
 			yield ex
 
 
 def worker_init_fn(_):
+	# ISSUE: this only works for WORKERS within the same process, not
+	# TODO multiprocessing
+	process_id = dist.get_rank()
+	num_processes = dist.get_world_size()
+
 	worker_info = torch.utils.data.get_worker_info()
-	dataset = worker_info.dataset
 	worker_id = worker_info.id
-	dataset.frequency = worker_id
-	dataset.num_workers = worker_info.num_workers
+	num_workers = worker_info.num_workers
+	print(f'INFO: WORKER_INIT WORKER_INFO: {worker_id}/{num_workers}')
+	print(f'INFO: WORKER_INIT: RANK_INFO: {process_id}/{num_processes}')
+	dataset = worker_info.dataset
+	# dataset.frequency = worker_id
+	# dataset.num_workers = num_workers
+	dataset.frequency = process_id * worker_id
+	dataset.num_workers = num_processes * num_workers
+	print(f'INFO: WORKER_INIT: F_INFO: {dataset.frequency}/{dataset.num_workers}')
 
 
 class RerankDataset(IterableDataset):
@@ -74,10 +85,12 @@ class RerankDataset(IterableDataset):
 		self.num_examples = 0
 		self.worker_estimate = worker_estimate
 
-		for tweet_id, q_scores in scores.items():
+		# TODO just for testing
+		for tweet_id, q_scores in list(scores.items())[:10000]:
 			for q_p_id, score in q_scores.items():
 				self.tweet_examples[tweet_id].append(q_p_id)
 				self.num_examples += 1
+		print(f'Num examples: {self.num_examples}')
 
 	def __len__(self):
 		return self.num_examples // self.worker_estimate
@@ -105,7 +118,6 @@ class RerankDataset(IterableDataset):
 				if ex_idx % self.num_workers == self.frequency:
 					yield ex
 				ex_idx += 1
-			del self.tweet_examples[tweet_id]
 
 
 class RerankBatchCollator(object):
@@ -234,6 +246,7 @@ def main():
 	parser.add_argument('-pm', '--pre_model_name', default='nboost/pt-biobert-base-msmarco')
 	parser.add_argument('-sd', '--save_directory', default='models')
 	parser.add_argument('-bs', '--batch_size', default=4, type=int)
+	parser.add_argument('-w', '--num_workers', default=1, type=int)
 	parser.add_argument('-ml', '--max_seq_len', default=96, type=int)
 	parser.add_argument('-se', '--seed', default=0, type=int)
 	parser.add_argument('-cd', '--torch_cache_dir', default=None)
@@ -253,7 +266,7 @@ def main():
 	precision = 16 if args.use_tpus else 32
 	# precision = 32
 	tpu_cores = 8
-	num_workers = 1
+	num_workers = args.num_workers
 	deterministic = True
 
 	tokenizer = BertTokenizer.from_pretrained(args.pre_model_name)

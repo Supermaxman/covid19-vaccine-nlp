@@ -52,11 +52,22 @@ def get_tweets(file_path):
 
 
 def worker_init_fn(_):
+	# ISSUE: this only works for WORKERS within the same process, not
+	# TODO multiprocessing
+	process_id = dist.get_rank()
+	num_processes = dist.get_world_size()
+
 	worker_info = torch.utils.data.get_worker_info()
-	dataset = worker_info.dataset
 	worker_id = worker_info.id
-	dataset.frequency = worker_id
-	dataset.num_workers = worker_info.num_workers
+	num_workers = worker_info.num_workers
+	print(f'INFO: WORKER_INIT WORKER_INFO: {worker_id}/{num_workers}')
+	print(f'INFO: WORKER_INIT: RANK_INFO: {process_id}/{num_processes}')
+	dataset = worker_info.dataset
+	# dataset.frequency = worker_id
+	# dataset.num_workers = num_workers
+	dataset.frequency = process_id * worker_id
+	dataset.num_workers = num_processes * num_workers
+	print(f'INFO: WORKER_INIT: F_INFO: {dataset.frequency}/{dataset.num_workers}')
 
 
 class RerankDataset(IterableDataset):
@@ -105,7 +116,6 @@ class RerankDataset(IterableDataset):
 				if ex_idx % self.num_workers == self.frequency:
 					yield ex
 				ex_idx += 1
-			del self.tweet_examples[tweet_id]
 
 
 class RerankBatchCollator(object):
