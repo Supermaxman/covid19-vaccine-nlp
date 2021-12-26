@@ -80,6 +80,7 @@ class RerankDataset(IterableDataset):
 				self.tweet_examples[tweet_id].append(q_id)
 				self.num_examples += 1
 		print(f'Num examples: {self.num_examples}')
+		exit()
 
 	def __len__(self):
 		return self.num_examples // self.worker_estimate
