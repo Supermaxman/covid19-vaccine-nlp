@@ -84,10 +84,9 @@ class RerankDataset(IterableDataset):
 		self.worker_estimate = worker_estimate
 		for tweet in get_tweets(self.data_path):
 			tweet_id = tweet['id']
-			ignore_q_ids = set()
-			for q_id, q in tweet['candidates'].items():
-				ignore_q_ids.add(q_id)
 			for q_id in self.questions:
+				if q_id in tweet['candidates']:
+					continue
 				self.tweet_examples[tweet_id].append(q_id)
 				self.num_examples += 1
 		print(f'Num examples: {self.num_examples}')
