@@ -116,8 +116,6 @@ class RerankDataset(IterableDataset):
 				}
 				if ex_idx % self.num_workers == self.frequency:
 					yield ex
-				if ex_idx > 1000:
-					return
 				ex_idx += 1
 
 

@@ -58,20 +58,20 @@ gleam-search-tweet-index \
 #  --gpus 0
 
 # 27096
-python pytorch-gleam/pytorch_gleam/search/rerank.py \
-  --index_path data/covid19 \
-  --questions_path data/frames-covid19-parsed.jsonl \
-  --scores_path data/covid19-frame-rel-v2_bm25_scores.json \
-  --output_path data/covid19-frame-rel-v2_rerank_scores_fixed_test \
-  --pre_model_name nboost/pt-biobert-base-msmarco \
-  --batch_size 64 \
-  --max_seq_len 128 \
-  --num_workers 1 \
-  --gpus 5,6
+#python pytorch-gleam/pytorch_gleam/search/rerank.py \
+#  --index_path data/covid19 \
+#  --questions_path data/frames-covid19-parsed.jsonl \
+#  --scores_path data/covid19-frame-rel-v2_bm25_scores.json \
+#  --output_path data/covid19-frame-rel-v2_rerank_scores_fixed_test \
+#  --pre_model_name nboost/pt-biobert-base-msmarco \
+#  --batch_size 64 \
+#  --max_seq_len 128 \
+#  --num_workers 1 \
+#  --gpus 5,6
 
-python pytorch-gleam/pytorch_gleam/search/rerank_format.py \
---input_path data/covid19-frame-rel-v2_rerank_scores_fixed_test \
---output_path data/covid19-frame-rel-v2_cross_rerank_scores_fixed_test.json
+#python pytorch-gleam/pytorch_gleam/search/rerank_format.py \
+#--input_path data/covid19-frame-rel-v2_rerank_scores_fixed_test \
+#--output_path data/covid19-frame-rel-v2_cross_rerank_scores_fixed_test.json
 
 
 python pytorch-gleam/pytorch_gleam/search/rerank.py \
@@ -85,6 +85,9 @@ python pytorch-gleam/pytorch_gleam/search/rerank.py \
   --num_workers 1 \
   --gpus 2,3,4,5,6,7
 
+python pytorch-gleam/pytorch_gleam/search/rerank_format.py \
+--input_path data/covid19-frame-rel-v2_rerank_scores_fixed \
+--output_path data/covid19-frame-rel-v2_cross_rerank_scores_fixed.json
 
 gleam-rerank-format \
   --input_path ${output_path}_rerank_scores \
