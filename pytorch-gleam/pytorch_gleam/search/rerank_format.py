@@ -15,6 +15,7 @@ def load_predictions(input_path):
 
 	question_scores = defaultdict(lambda: defaultdict(dict))
 	p_count = 0
+	u_count = 0
 	for prediction in pred_list:
 		doc_pass_id = prediction['id']
 		q_p_id = prediction['question_id']
@@ -22,8 +23,10 @@ def load_predictions(input_path):
 		score = prediction['pos_score'] - prediction['neg_score']
 		if doc_pass_id not in question_scores or q_p_id not in question_scores[doc_pass_id]:
 			p_count += 1
+		u_count += 1
 		question_scores[doc_pass_id][q_p_id] = score
-	print(f'{p_count} total predictions')
+	print(f'{p_count} unique predictions')
+	print(f'{u_count} total predictions')
 	return question_scores
 
 
