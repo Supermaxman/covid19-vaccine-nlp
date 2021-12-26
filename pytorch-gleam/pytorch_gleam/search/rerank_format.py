@@ -14,13 +14,15 @@ def load_predictions(input_path):
 			pred_list.extend(preds)
 
 	question_scores = defaultdict(lambda: defaultdict(dict))
+	p_count = 0
 	for prediction in pred_list:
 		doc_pass_id = prediction['id']
 		q_p_id = prediction['question_id']
 		# score = prediction['pos_score']
 		score = prediction['pos_score'] - prediction['neg_score']
 		question_scores[doc_pass_id][q_p_id] = score
-
+		p_count += 1
+	print(f'{p_count} total predictions')
 	return question_scores
 
 
