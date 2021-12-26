@@ -57,6 +57,7 @@ gleam-search-tweet-index \
 #  --max_seq_len 128 \
 #  --gpus 0
 
+# 27096
 python pytorch-gleam/pytorch_gleam/search/rerank.py \
   --index_path data/covid19 \
   --questions_path data/frames-covid19-parsed.jsonl \
