@@ -271,7 +271,8 @@ def main():
 
 	val_dataset = RerankDataset(
 		data_path=args.data_path,
-		questions_path=args.questions_path
+		questions_path=args.questions_path,
+		worker_estimate=len(gpus)
 	)
 	val_data_loader = DataLoader(
 		val_dataset,
