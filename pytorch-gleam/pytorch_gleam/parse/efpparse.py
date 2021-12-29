@@ -156,37 +156,37 @@ def create_edges(
 		for text in texts:
 			emotion_edges[text] = texts
 
-	semantic_adj = np.eye(seq_len, dtype=np.float32)
-	emotion_adj = np.eye(seq_len, dtype=np.float32)
-	lexical_adj = np.eye(seq_len, dtype=np.float32)
+	semantic_edges = []
+	emotion_edges = []
+	lexical_edges = []
+	s_indices = set()
+	e_indices = set()
+	l_indices = set()
 	for input_idx_text, input_indices in r_map.items():
-		input_indices = list(input_indices)
 		for e_txt in semantic_edges[input_idx_text]:
 			if e_txt in r_map:
-				r_indices = list(r_map[e_txt])
-				for idx in input_indices:
-					for r_idx in r_indices:
-						semantic_adj[idx, r_idx] = 1.0
-						semantic_adj[r_idx, idx] = 1.0
+				r_indices = r_map[e_txt]
+				s_indices = s_indices.union(r_indices)
 		for e_txt in emotion_edges[input_idx_text]:
 			if e_txt in r_map:
-				r_indices = list(r_map[e_txt])
-				for idx in input_indices:
-					for r_idx in r_indices:
-						emotion_adj[idx, r_idx] = 1.0
-						emotion_adj[r_idx, idx] = 1.0
+				r_indices = r_map[e_txt]
+				e_indices = e_indices.union(r_indices)
 		for e_txt in lexical_edges[input_idx_text]:
 			if e_txt in r_map:
-				r_indices = list(r_map[e_txt])
-				for idx in input_indices:
-					for r_idx in r_indices:
-						lexical_adj[idx, r_idx] = 1.0
-						lexical_adj[r_idx, idx] = 1.0
+				r_indices = r_map[e_txt]
+				l_indices = l_indices.union(r_indices)
+		for idx in input_indices:
+			for r_idx in s_indices:
+				semantic_edges.append((idx, r_idx))
+			for r_idx in e_indices:
+				emotion_edges.append((idx, r_idx))
+			for r_idx in l_indices:
+				lexical_edges.append((idx, r_idx))
 
 	edges = {
-		'semantic': semantic_adj.tolist(),
-		'emotion': emotion_adj.tolist(),
-		'lexical': lexical_adj.tolist(),
+		'semantic': semantic_edges,
+		'emotion': emotion_edges,
+		'lexical': lexical_edges,
 	}
 	return edges
 
@@ -215,8 +215,8 @@ def get_token_features(token):
 def parse_tweet(ex: dict):
 	ex_text = ex['full_text'] if 'full_text' in ex else ex['text']
 	ex_text = ex_text.strip().replace('\r', ' ').replace('\n', ' ')
-	tweet_parse = [get_token_features(x) for x in nlp(ex_text)]
-	ex['parse'] = tweet_parse
+	tweet_raw_parse = [get_token_features(x) for x in nlp(ex_text)]
+	tweet_parse = [add_sentic_token_features(x) for x in tweet_raw_parse]
 	ex_f_examples = {}
 	for f_id, f_label in ex[label_name].items():
 		frame = frames[f_id]
@@ -226,7 +226,6 @@ def parse_tweet(ex: dict):
 			ex_text
 		)
 
-		tweet_parse = [add_sentic_token_features(x) for x in ex['parse']]
 		f_parse = [add_sentic_token_features(x) for x in frame['parse']]
 
 		ex_edges = create_edges(
@@ -236,12 +235,12 @@ def parse_tweet(ex: dict):
 			num_semantic_hops
 		)
 		f_example = {
-			'input_ids': token_data['input_ids'],
-			'attention_mask': token_data['attention_mask'],
+			# 'input_ids': token_data['input_ids'],
+			# 'attention_mask': token_data['attention_mask'],
 			'edges': ex_edges,
 		}
-		if 'token_type_ids' in token_data:
-			f_example['token_type_ids'] = token_data['token_type_ids']
+		# if 'token_type_ids' in token_data:
+		# 	f_example['token_type_ids'] = token_data['token_type_ids']
 		ex_f_examples[f_id] = f_example
 	ex['f_examples'] = ex_f_examples
 	ex_json_data = json.dumps(ex) + '\n'
