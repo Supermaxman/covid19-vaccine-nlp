@@ -177,11 +177,14 @@ def create_edges(
 				l_indices = l_indices.union(r_indices)
 		for idx in input_indices:
 			for r_idx in s_indices:
-				semantic_e.append((idx, r_idx))
+				if idx != r_idx:
+					semantic_e.append((idx, r_idx))
 			for r_idx in e_indices:
-				emotion_e.append((idx, r_idx))
+				if idx != r_idx:
+					emotion_e.append((idx, r_idx))
 			for r_idx in l_indices:
-				lexical_e.append((idx, r_idx))
+				if idx != r_idx:
+					lexical_e.append((idx, r_idx))
 
 	edges = {
 		'semantic': semantic_e,
