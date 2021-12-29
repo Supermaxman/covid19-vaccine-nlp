@@ -200,12 +200,6 @@ def read_jsonl(path):
 				yield ex
 
 
-def write_jsonl_data(data, path):
-	with open(path, 'w') as f:
-		for json_data in data:
-			f.write(json_data)
-
-
 def get_token_features(token):
 	token_data = {
 		'text': token.text,
@@ -254,15 +248,16 @@ def parse_tweet(ex: dict):
 	return ex_json_data
 
 
-def parse_tweets(tweet_path: str, num_processes: int):
+def parse_tweets(tweet_path: str, num_processes: int, output_path: str):
 	# for ex in tqdm(read_jsonl(tweet_path)):
-	with Pool(processes=num_processes) as p:
-		for ex in tqdm(
-			p.imap_unordered(parse_tweet, read_jsonl(tweet_path)),
-			mininterval=1.0,
-			total=8161354
-		):
-			yield ex
+	with open(output_path, 'w') as f:
+		with Pool(processes=num_processes) as p:
+			for ex_jsonl in tqdm(
+				p.imap_unordered(parse_tweet, read_jsonl(tweet_path)),
+				mininterval=1.0,
+				total=8161354
+			):
+				f.write(ex_jsonl)
 
 
 def main():
@@ -291,10 +286,7 @@ def main():
 
 	nlp = spacy.load(args.model_name)
 	tokenizer = AutoTokenizer.from_pretrained(args.tokenizer)
-	write_jsonl_data(
-		parse_tweets(args.input_path, args.num_processes),
-		args.output_path
-	)
+	parse_tweets(args.input_path, args.num_processes, args.output_path)
 
 
 if __name__ == '__main__':
