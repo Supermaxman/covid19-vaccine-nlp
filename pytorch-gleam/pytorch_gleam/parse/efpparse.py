@@ -4,17 +4,15 @@ import argparse
 import json
 from collections import defaultdict
 from multiprocessing import Pool
-from typing import Optional
 
 import numpy as np
-from spacy import Language
 from tqdm import tqdm
-from transformers import AutoTokenizer, BertTokenizer
+from transformers import AutoTokenizer
 import pytorch_gleam.data.datasets.senticnet5 as senticnet5
 import spacy
 
-tokenizer: Optional[BertTokenizer, None] = None
-nlp: Optional[Language, None] = None
+tokenizer = None
+nlp = None
 num_semantic_hops: int = 3
 label_name: str = 'labels'
 frames: dict = {}
