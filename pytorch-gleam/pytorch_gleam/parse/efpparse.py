@@ -200,11 +200,10 @@ def read_jsonl(path):
 				yield ex
 
 
-def write_jsonl(data, path):
+def write_jsonl_data(data, path):
 	with open(path, 'w') as f:
-		for example in data:
-			json_data = json.dumps(example)
-			f.write(json_data + '\n')
+		for json_data in data:
+			f.write(json_data)
 
 
 def get_token_features(token):
@@ -251,7 +250,8 @@ def parse_tweet(ex: dict):
 			f_example['token_type_ids'] = token_data['token_type_ids']
 		ex_f_examples[f_id] = f_example
 	ex['f_examples'] = ex_f_examples
-	return ex
+	ex_json_data = json.dumps(ex) + '\n'
+	return ex_json_data
 
 
 def parse_tweets(tweet_path: str, num_processes: int):
@@ -291,7 +291,7 @@ def main():
 
 	nlp = spacy.load(args.model_name)
 	tokenizer = AutoTokenizer.from_pretrained(args.tokenizer)
-	write_jsonl(
+	write_jsonl_data(
 		parse_tweets(args.input_path, args.num_processes),
 		args.output_path
 	)
