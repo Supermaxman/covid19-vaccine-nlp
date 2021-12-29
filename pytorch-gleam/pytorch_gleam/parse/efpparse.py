@@ -273,8 +273,8 @@ def main():
 	parser.add_argument('-l', '--label_name', default='candidates')
 	parser.add_argument('-t', '--tokenizer', default='digitalepidemiologylab/covid-twitter-bert-v2')
 	parser.add_argument('-m', '--model_name', default='en_core_web_sm')
-	parser.add_argument('-sh', '--num_semantic_hops', default=3)
-	parser.add_argument('-p', '--num_processes', default=8)
+	parser.add_argument('-sh', '--num_semantic_hops', default=3, type=int)
+	parser.add_argument('-p', '--num_processes', default=8, type=int)
 	args = parser.parse_args()
 	# for multiprocessing pool
 	global tokenizer
