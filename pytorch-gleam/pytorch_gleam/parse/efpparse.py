@@ -156,9 +156,9 @@ def create_edges(
 		for text in texts:
 			emotion_edges[text] = texts
 
-	semantic_edges = []
-	emotion_edges = []
-	lexical_edges = []
+	semantic_e = []
+	emotion_e = []
+	lexical_e = []
 	s_indices = set()
 	e_indices = set()
 	l_indices = set()
@@ -177,16 +177,16 @@ def create_edges(
 				l_indices = l_indices.union(r_indices)
 		for idx in input_indices:
 			for r_idx in s_indices:
-				semantic_edges.append((idx, r_idx))
+				semantic_e.append((idx, r_idx))
 			for r_idx in e_indices:
-				emotion_edges.append((idx, r_idx))
+				emotion_e.append((idx, r_idx))
 			for r_idx in l_indices:
-				lexical_edges.append((idx, r_idx))
+				lexical_e.append((idx, r_idx))
 
 	edges = {
-		'semantic': semantic_edges,
-		'emotion': emotion_edges,
-		'lexical': lexical_edges,
+		'semantic': semantic_e,
+		'emotion': emotion_e,
+		'lexical': lexical_e,
 	}
 	return edges
 
