@@ -146,6 +146,9 @@ gleam-search-candidates \
   --min_rank 5000 \
   --min_score 2.0
 
+#rsync -avz --progress local/path/some_file usr@server.com:"/some/path/"
+
+
 t-parse \
   --input_path ${output_path}_candidates.jsonl \
   --output_path ${output_path}_candidates-tparsed.jsonl
@@ -156,19 +159,26 @@ e-parse \
   --label_name candidates \
   --output_path ${output_path}_candidates-parsed.jsonl
 
+
+python pytorch-gleam/pytorch_gleam/parse/efpparse.py \
+  --input_path data/covid19-frame-rel-v2_candidates.jsonl \
+  --frame_path data/frames-covid19-parsed.jsonl \
+  --output_path data/covid19-frame-rel-v2_candidates-parsed.jsonl \
+  --num_processes 12
+
 bash ex/predict.sh experiments/profile/mcfmgcn-v36.yaml
 
 
 
-python pytorch-gleam/pytorch_gleam/search/cross_rerank.py \
-  --data_path data/covid19-frame-rel-v2_candidates.jsonl \
-  --questions_path data/frames-covid19-parsed.jsonl \
-  --output_path data/covid19-frame-rel-v2_rerank_scores_cross \
-  --pre_model_name nboost/pt-biobert-base-msmarco \
-  --batch_size 64 \
-  --max_seq_len 128 \
-  --num_workers 1 \
-  --gpus 2,3,4,5,6,7
+#python pytorch-gleam/pytorch_gleam/search/cross_rerank.py \
+#  --data_path data/covid19-frame-rel-v2_candidates.jsonl \
+#  --questions_path data/frames-covid19-parsed.jsonl \
+#  --output_path data/covid19-frame-rel-v2_rerank_scores_cross \
+#  --pre_model_name nboost/pt-biobert-base-msmarco \
+#  --batch_size 64 \
+#  --max_seq_len 128 \
+#  --num_workers 1 \
+#  --gpus 2,3,4,5,6,7
 
 #python pytorch-gleam/pytorch_gleam/search/cross_rerank.py \
 #  --data_path data/covid19-frame-rel-v2_candidates.jsonl \
