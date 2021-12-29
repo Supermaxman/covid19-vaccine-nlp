@@ -163,8 +163,8 @@ e-parse \
 python pytorch-gleam/pytorch_gleam/parse/efpparse.py \
   --input_path data/covid19-frame-rel-v2_candidates.jsonl \
   --frame_path data/frames-covid19-parsed.jsonl \
-  --output_path data/covid19-frame-rel-v2_candidates-parsed.jsonl \
-  --num_processes 12
+  --output_path /nas1-nfs1/data/maw150130/covid19/covid19-frame-rel-v2_candidates-parsed.jsonl \
+  --num_processes 20
 
 bash ex/predict.sh experiments/profile/mcfmgcn-v36.yaml
 

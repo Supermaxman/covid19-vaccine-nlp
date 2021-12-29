@@ -38,7 +38,7 @@ setup(
 	long_description=LONG_DESCRIPTION,
 	install_requires=_load_requirements(_PATH_ROOT),
 	keywords=['pytorch', 'torch', 'pytorch_lightning', 'nlp', 'deep learning'],
-	python_requires=">=3.9",
+	python_requires=">=3.6",
 	license="Apache-2.0",
 	packages=find_packages(),
 	classifiers=[
