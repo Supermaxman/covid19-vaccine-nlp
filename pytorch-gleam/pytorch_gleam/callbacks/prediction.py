@@ -6,17 +6,33 @@ from typing import Any, List
 
 from pytorch_lightning.callbacks import BasePredictionWriter
 import pytorch_lightning as pl
+import torch.distributed as dist
 
 
 class JsonlWriter(BasePredictionWriter):
-	def __init__(self, write_interval: str = 'batch'):
+	def __init__(self, write_interval: str = 'batch', output_path: str = None):
 		super().__init__(write_interval)
+		self.output_path = output_path
 
 	def _write(self, trainer, prediction):
-		predictions_dir = os.path.join(trainer.default_root_dir, 'predictions')
+		if self.output_path is None:
+			predictions_dir = os.path.join(trainer.default_root_dir, 'predictions')
+		else:
+			predictions_dir = self.output_path
+
 		if not os.path.exists(predictions_dir):
 			os.mkdir(predictions_dir)
-		pred_file = os.path.join(predictions_dir, 'predictions.jsonl')
+
+		try:
+			process_id = dist.get_rank()
+		except RuntimeError:
+			process_id = -1
+		if process_id == -1:
+			file_name = 'predictions.jsonl'
+		else:
+			file_name = f'predictions-{process_id}.jsonl'
+
+		pred_file = os.path.join(predictions_dir, file_name)
 		rows = defaultdict(dict)
 		for key, values in prediction.items():
 			for ex_idx, ex_value in enumerate(values):
@@ -38,7 +54,6 @@ class JsonlWriter(BasePredictionWriter):
 			batch_idx: int,
 			dataloader_idx: int
 	):
-		# TODO get node id
 		self._write(trainer, prediction)
 
 	def write_on_epoch_end(
@@ -48,6 +63,5 @@ class JsonlWriter(BasePredictionWriter):
 			predictions: List[Any],
 			batch_indices: List[Any]
 	):
-		# TODO get node id
 		for prediction in predictions:
 			self._write(trainer, prediction)

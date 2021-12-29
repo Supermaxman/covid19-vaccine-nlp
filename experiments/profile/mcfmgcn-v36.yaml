@@ -41,6 +41,8 @@ trainer:
   callbacks:
     - class_path: pytorch_gleam.callbacks.FitCheckpointCallback
     - class_path: pytorch_gleam.callbacks.JsonlWriter
+      init_args:
+        output_path: /nas1-nfs1/data/maw150130/covid19/stance-predictions
 data:
   class_path: pytorch_gleam.data.datasets.MultiClassFrameEdgeMoralityIterableDataModule
   init_args:
@@ -64,6 +66,6 @@ data:
       degradation: 9
     tokenizer_name: digitalepidemiologylab/covid-twitter-bert-v2
     num_workers: 1
-    frame_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/covid19/frames-covid19-parsed.jsonl
-    predict_path: /shared/hltdir4/disk1/team/data/corpora/co-vax-frames/artifacts/covid19-frame-rel-v2/covid19-frame-rel-v2_candidates-parsed.jsonl
-    size_estimate: 2592922
+    frame_path: data/frames-covid19-parsed.jsonl
+    predict_path: /nas1-nfs1/data/maw150130/covid19/covid19-frame-rel-v2_candidates-parsed.jsonl
+    worker_estimate: 6

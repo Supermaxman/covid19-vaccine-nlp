@@ -52,8 +52,6 @@ def get_tweets(dir_path):
 
 
 def worker_init_fn(_):
-	# ISSUE: this only works for WORKERS within the same process, not
-	# TODO multiprocessing
 	process_id = dist.get_rank()
 	num_processes = dist.get_world_size()
 
@@ -63,8 +61,6 @@ def worker_init_fn(_):
 	print(f'INFO: WORKER_INIT WORKER_INFO: {worker_id}/{num_workers}')
 	print(f'INFO: WORKER_INIT: RANK_INFO: {process_id}/{num_processes}')
 	dataset = worker_info.dataset
-	# dataset.frequency = worker_id
-	# dataset.num_workers = num_workers
 	dataset.frequency = (process_id * num_workers) + worker_id
 	dataset.num_workers = num_processes * num_workers
 	print(f'INFO: WORKER_INIT: F_INFO: {dataset.frequency}/{dataset.num_workers}')

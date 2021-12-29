@@ -6,6 +6,7 @@ from itertools import islice, chain, zip_longest
 import numpy as np
 import torch
 from torch.utils.data import Dataset, IterableDataset
+import torch.distributed as dist
 
 from pytorch_gleam.data.datasets.base_datasets import BaseDataModule
 from pytorch_gleam.data.collators import MultiClassFrameEdgeMoralityBatchCollator
@@ -30,70 +31,105 @@ def read_jsonl(path):
 				yield ex
 
 
-class MultiClassFrameEdgeMoralityIterableDataset(IterableDataset):
+def worker_init_fn(_):
+	process_id = dist.get_rank()
+	num_processes = dist.get_world_size()
 
+	worker_info = torch.utils.data.get_worker_info()
+	worker_id = worker_info.id
+	num_workers = worker_info.num_workers
+	print(f'INFO: WORKER_INIT WORKER_INFO: {worker_id}/{num_workers}')
+	print(f'INFO: WORKER_INIT: RANK_INFO: {process_id}/{num_processes}')
+	dataset = worker_info.dataset
+	dataset.frequency = (process_id * num_workers) + worker_id
+	dataset.num_workers = num_processes * num_workers
+	print(f'INFO: WORKER_INIT: F_INFO: {dataset.frequency}/{dataset.num_workers}')
+
+
+class MultiClassFrameEdgeMoralityIterableDataset(IterableDataset):
 	def __init__(
 			self,
+			tokenizer,
 			batch_size: int,
 			data_path: str,
 			frame_path: str,
 			label_name: str,
-			size_estimate: int,
 			morality_map: Dict[str, int],
+			worker_estimate: int
 	):
 		super().__init__()
+		self.tokenizer = tokenizer
 		self.morality_map = morality_map
 		self.batch_size = batch_size
 		self.frame_path = frame_path
 		self.label_name = label_name
-		self.size_estimate = size_estimate
 		self.data_path = data_path
+
+		self.frequency = 0
+		self.num_workers = 1
+		self.worker_estimate = worker_estimate
 
 		with open(self.frame_path) as f:
 			self.frames = json.load(f)
 
-	def parse_example(self, ex):
-		ex_id = ex['id']
-		for f_id, f_label in ex[self.label_name].items():
-			f_ex = ex['f_examples'][f_id]
-			frame = self.frames[f_id]
-			ex_label = 0
-			ex_edges = {e_key: np.array(e_value) for e_key, e_value in f_ex['edges'].items()}
-			ex_morality = []
-			if 'morality_preds' in ex:
-				ex_morality = [self.morality_map[m_name] for m_name in ex['morality_preds']]
-			f_morality = []
-			for m_name, m_val in frame['moralities'].items():
-				if m_val:
-					f_morality.append(self.morality_map[m_name])
-			example = {
-				'ids': f'{ex_id}|{f_id}',
-				'label': ex_label,
-				'input_ids': f_ex['input_ids'],
-				'attention_mask': f_ex['attention_mask'],
-				'edges': ex_edges,
-				'ex_morality': ex_morality,
-				'f_morality': f_morality,
-			}
-			if 'token_type_ids' in f_ex:
-				example['token_type_ids'] = f_ex['token_type_ids']
-			yield example
+		for ex in read_jsonl(self.data_path):
+			self.num_examples += len(ex[self.label_name])
+
+		print(f'Num examples: {self.num_examples}')
 
 	def __len__(self):
-		return self.size_estimate // self.batch_size
+		return self.num_examples // self.worker_estimate
 
 	def __iter__(self):
-		iterator = self.ex_iter()
-		for ex_batch in batch(iterator, self.batch_size):
-			yield ex_batch
+		ex_idx = 0
+		for tweet in read_jsonl(self.data_path):
+			ex_id = tweet['id']
+			ex_text = tweet['full_text'] if 'full_text' in tweet else tweet['text']
+			ex_text = ex_text.strip().replace('\r', ' ').replace('\n', ' ')
 
-	def ex_iter(self):
-		for ex in read_jsonl(self.data_path):
-			for ex_example in self.parse_example(ex):
-				yield ex_example
+			for f_id, f_label in tweet[self.label_name].items():
+				if ex_idx % self.num_workers == self.frequency:
+					f_ex = tweet['f_examples'][f_id]
+					frame = self.frames[f_id]
+					frame_text = frame['text']
+					token_data = self.tokenizer(
+						frame_text,
+						ex_text
+					)
+					seq_len = len(token_data['input_ids'])
+					ex_label = 0
+					# create np.eye of floats, then fill in with tuples
+					# ex_edges = {e_key: np.array(e_value) for e_key, e_value in f_ex['edges'].items()}
+					ex_edges = {}
+					for edge_type, edge_list in f_ex['edges'].items():
+						adj_list = np.eye(seq_len, dtype=np.float32)
+						for i, j in edge_list:
+							adj_list[i, j] = 1.0
+							adj_list[j, i] = 1.0
+						ex_edges[edge_type] = adj_list.tolist()
+					ex_morality = []
+					if 'morality_preds' in tweet:
+						ex_morality = [self.morality_map[m_name] for m_name in tweet['morality_preds']]
+					f_morality = []
+					for m_name, m_val in frame['moralities'].items():
+						if m_val:
+							f_morality.append(self.morality_map[m_name])
+					example = {
+						'ids': f'{ex_id}|{f_id}',
+						'label': ex_label,
+						'input_ids': token_data['input_ids'],
+						'attention_mask': token_data['attention_mask'],
+						'edges': ex_edges,
+						'ex_morality': ex_morality,
+						'f_morality': f_morality,
+					}
+					if 'token_type_ids' in token_data:
+						example['token_type_ids'] = token_data['token_type_ids']
+					yield example
+				ex_idx += 1
 
 	def worker_init_fn(self, _):
-		pass
+		return worker_init_fn(_)
 
 
 class MultiClassFrameEdgeMoralityIterableDataModule(BaseDataModule):
@@ -104,7 +140,7 @@ class MultiClassFrameEdgeMoralityIterableDataModule(BaseDataModule):
 			morality_map: Dict[str, int],
 			frame_path: str,
 			predict_path: str,
-			size_estimate: int,
+			worker_estimate: int,
 			*args,
 			**kwargs
 	):
@@ -115,15 +151,16 @@ class MultiClassFrameEdgeMoralityIterableDataModule(BaseDataModule):
 		self.label_name = label_name
 		self.predict_path = predict_path
 		self.frame_path = frame_path
-		self.size_estimate = size_estimate
+		self.worker_estimate = worker_estimate
 
 		self.predict_dataset = MultiClassFrameEdgeMoralityIterableDataset(
+			tokenizer=self.tokenizer,
 			batch_size=self.batch_size,
 			data_path=self.predict_path,
 			frame_path=self.frame_path,
 			label_name=self.label_name,
 			morality_map=self.morality_map,
-			size_estimate=self.size_estimate
+			worker_estimate=self.worker_estimate
 		)
 
 	def create_collator(self):

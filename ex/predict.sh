@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 config="$@"
-num_gpus=1
+num_gpus=6
 
 config_name=`basename ${config}`
 run_id=${config_name::-5}
