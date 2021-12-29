@@ -2,17 +2,18 @@
 
 import argparse
 import json
-from collections import defaultdict
+from collections import defaultdict, Callable
 from multiprocessing import Pool
+from typing import Optional
 
 import numpy as np
 from tqdm import tqdm
 from transformers import AutoTokenizer
-import pytorch_gleam.data.datasets.senticnet5 as senticnet5
+import senticnet5 as senticnet5
 import spacy
 
-tokenizer = None
-nlp = None
+tokenizer: Optional[Callable, None] = None
+nlp: Optional[Callable, None] = None
 num_semantic_hops: int = 3
 label_name: str = 'labels'
 frames: dict = {}
