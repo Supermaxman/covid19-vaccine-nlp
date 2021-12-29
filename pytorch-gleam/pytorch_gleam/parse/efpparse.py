@@ -259,7 +259,7 @@ def parse_tweets(tweet_path: str, num_processes: int):
 	with Pool(processes=num_processes) as p:
 		for ex in tqdm(
 			p.imap_unordered(parse_tweet, read_jsonl(tweet_path)),
-			miniters=10000,
+			mininterval=1.0,
 			total=8161354
 		):
 			yield ex
