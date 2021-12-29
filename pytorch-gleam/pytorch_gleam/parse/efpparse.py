@@ -159,10 +159,10 @@ def create_edges(
 	semantic_e = []
 	emotion_e = []
 	lexical_e = []
-	s_indices = set()
-	e_indices = set()
-	l_indices = set()
 	for input_idx_text, input_indices in r_map.items():
+		s_indices = set()
+		e_indices = set()
+		l_indices = set()
 		for e_txt in semantic_edges[input_idx_text]:
 			if e_txt in r_map:
 				r_indices = r_map[e_txt]
