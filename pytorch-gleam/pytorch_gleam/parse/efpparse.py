@@ -12,8 +12,8 @@ from transformers import AutoTokenizer
 import senticnet5 as senticnet5
 import spacy
 
-tokenizer: Optional[Callable, None] = None
-nlp: Optional[Callable, None] = None
+tokenizer: Optional[Callable] = None
+nlp: Optional[Callable] = None
 num_semantic_hops: int = 3
 label_name: str = 'labels'
 frames: dict = {}
