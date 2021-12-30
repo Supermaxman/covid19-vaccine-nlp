@@ -107,7 +107,7 @@ class MultiClassFrameEdgeMoralityIterableDataset(IterableDataset):
 						for i, j in edge_list:
 							adj_list[i, j] = 1.0
 							adj_list[j, i] = 1.0
-						ex_edges[edge_type] = adj_list.tolist()
+						ex_edges[edge_type] = adj_list
 					ex_morality = []
 					if 'morality_preds' in tweet:
 						ex_morality = [self.morality_map[m_name] for m_name in tweet['morality_preds']]

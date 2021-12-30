@@ -185,6 +185,7 @@ rsync -avz --progress \
 python ex/predict.py \
   --config experiments/profile/mcfmgcn-v36.yaml \
   --trainer.default_root_dir models/mcfmgcn-v36 \
+  --trainer.strategy ddp \
   --trainer.gpus 2,3,4,5,6,7
 
 
