@@ -4,7 +4,7 @@ import torch
 
 class ThresholdModule(torch.nn.Module):
 	def __init__(
-			self, num_thresholds: int = 1, threshold_min: int = 0.0, threshold_max: int = 1.0, threshold_delta: int = 0.01):
+			self, num_thresholds: int = 1, threshold_min: float = 0.0, threshold_max: float = 1.0, threshold_delta: float = 0.01):
 		super().__init__()
 		self.num_thresholds = num_thresholds
 		self.threshold_min = threshold_min

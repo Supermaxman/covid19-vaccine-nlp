@@ -184,8 +184,8 @@ rsync -avz --progress \
 
 python ex/predict.py \
   --config experiments/profile/mcfmgcn-v36.yaml \
-  --trainer.gpus 2,3,4,5,6,7 \
-  --trainer.default_root_dir models/mcfmgcn-v36
+  --trainer.default_root_dir models/mcfmgcn-v36 \
+  --trainer.gpus 2,3,4,5,6,7
 
 
 #python pytorch-gleam/pytorch_gleam/search/cross_rerank.py \

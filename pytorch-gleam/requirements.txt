@@ -7,3 +7,4 @@ spacy
 py_lex
 numpy
 ujson
+jsonargparse
