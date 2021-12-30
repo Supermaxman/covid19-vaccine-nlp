@@ -6,6 +6,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset, IterableDataset
 import torch.distributed as dist
+from torch.utils.data.dataset import T_co
 
 from pytorch_gleam.data.datasets.base_datasets import BaseDataModule
 from pytorch_gleam.data.collators import MultiClassFrameEdgeMoralityBatchCollator
@@ -47,6 +48,11 @@ def worker_init_fn(_):
 
 
 class MultiClassFrameEdgeMoralityIterableDataset(IterableDataset):
+	def __getitem__(self, index):
+		if self._iterator is None:
+			self._iterator = iter(self)
+		return next(self._iterator)
+
 	def __init__(
 			self,
 			tokenizer,
@@ -68,6 +74,7 @@ class MultiClassFrameEdgeMoralityIterableDataset(IterableDataset):
 		self.num_workers = 1
 		self.worker_estimate = worker_estimate
 		self.size_estimate = size_estimate
+		self._iterator = None
 
 		with open(self.frame_path) as f:
 			self.frames = json.load(f)
