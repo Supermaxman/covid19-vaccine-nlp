@@ -166,8 +166,26 @@ python pytorch-gleam/pytorch_gleam/parse/efpparse.py \
   --output_path /nas1-nfs1/data/maw150130/covid19/covid19-frame-rel-v2_candidates-parsed.jsonl \
   --num_processes 20
 
-bash ex/predict.sh experiments/profile/mcfmgcn-v36.yaml
 
+python pytorch-gleam/pytorch_gleam/parse/efpparse.py \
+  --input_path ${output_path}_candidates.jsonl \
+  --frame_path ${frame_path} \
+  --output_path ${output_path}_candidates-parsed.jsonl \
+  --num_processes 8
+
+
+rsync -avz --progress \
+  max@hltgpu04:"/users/max/code/covid19-vaccine-nlp/models/mcfmgcn-v36" \
+  /nas1-nfs1/data/maw150130/covid19/models/mcfmgcn-v36
+
+
+
+#bash ex/predict.sh experiments/profile/mcfmgcn-v36.yaml
+
+python ex/predict.py \
+  --config experiments/profile/mcfmgcn-v36.yaml \
+  --trainer.gpus 2,3,4,5,6,7 \
+  --trainer.default_root_dir models/mcfmgcn-v36
 
 
 #python pytorch-gleam/pytorch_gleam/search/cross_rerank.py \

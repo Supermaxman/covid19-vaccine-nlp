@@ -1,5 +1,4 @@
 
-import json
 from typing import List, Dict, Any, Union
 from itertools import islice, chain, zip_longest
 
@@ -11,6 +10,7 @@ import torch.distributed as dist
 from pytorch_gleam.data.datasets.base_datasets import BaseDataModule
 from pytorch_gleam.data.collators import MultiClassFrameEdgeMoralityBatchCollator
 from tqdm import tqdm
+import ujson as json
 
 
 def batch(iterable, n):
@@ -50,17 +50,16 @@ class MultiClassFrameEdgeMoralityIterableDataset(IterableDataset):
 	def __init__(
 			self,
 			tokenizer,
-			batch_size: int,
 			data_path: str,
 			frame_path: str,
 			label_name: str,
 			morality_map: Dict[str, int],
-			worker_estimate: int
+			worker_estimate: int,
+			size_estimate: int,
 	):
 		super().__init__()
 		self.tokenizer = tokenizer
 		self.morality_map = morality_map
-		self.batch_size = batch_size
 		self.frame_path = frame_path
 		self.label_name = label_name
 		self.data_path = data_path
@@ -68,12 +67,14 @@ class MultiClassFrameEdgeMoralityIterableDataset(IterableDataset):
 		self.frequency = 0
 		self.num_workers = 1
 		self.worker_estimate = worker_estimate
+		self.size_estimate = size_estimate
 
 		with open(self.frame_path) as f:
 			self.frames = json.load(f)
 
-		for ex in read_jsonl(self.data_path):
-			self.num_examples += len(ex[self.label_name])
+		self.num_examples = self.size_estimate
+		# for ex in read_jsonl(self.data_path):
+		# 	self.num_examples += len(ex[self.label_name])
 
 		print(f'Num examples: {self.num_examples}')
 
@@ -141,6 +142,7 @@ class MultiClassFrameEdgeMoralityIterableDataModule(BaseDataModule):
 			frame_path: str,
 			predict_path: str,
 			worker_estimate: int,
+			size_estimate: int,
 			*args,
 			**kwargs
 	):
@@ -152,15 +154,16 @@ class MultiClassFrameEdgeMoralityIterableDataModule(BaseDataModule):
 		self.predict_path = predict_path
 		self.frame_path = frame_path
 		self.worker_estimate = worker_estimate
+		self.size_estimate = size_estimate
 
 		self.predict_dataset = MultiClassFrameEdgeMoralityIterableDataset(
 			tokenizer=self.tokenizer,
-			batch_size=self.batch_size,
 			data_path=self.predict_path,
 			frame_path=self.frame_path,
 			label_name=self.label_name,
 			morality_map=self.morality_map,
-			worker_estimate=self.worker_estimate
+			worker_estimate=self.worker_estimate,
+			size_estimate=self.size_estimate,
 		)
 
 	def create_collator(self):

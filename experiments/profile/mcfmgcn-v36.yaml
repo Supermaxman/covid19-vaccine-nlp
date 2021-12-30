@@ -69,3 +69,4 @@ data:
     frame_path: data/frames-covid19-parsed.jsonl
     predict_path: /nas1-nfs1/data/maw150130/covid19/covid19-frame-rel-v2_candidates-parsed.jsonl
     worker_estimate: 6
+    size_estimate: 19233144
