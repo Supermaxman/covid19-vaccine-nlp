@@ -15,7 +15,6 @@ class MultiClassFrameEdgeMoralityBatchCollator(BatchCollator):
 		self.num_moralities = num_moralities
 
 	def __call__(self, examples: list) -> dict:
-		print(f'b_examples={len(examples)}')
 		if isinstance(examples[0], list) and len(examples) == 1:
 			examples = examples[0]
 		pad_seq_len = self._calculate_seq_padding(examples)
