@@ -12,7 +12,7 @@ def cluster_kmeans(user_ids, user_vecs, num_clusters):
 		n_clusters=num_clusters,
 		random_state=0,
 		n_init=20,
-		verbose=1
+		verbose=0
 	)
 
 	model = model.fit(user_vecs)
