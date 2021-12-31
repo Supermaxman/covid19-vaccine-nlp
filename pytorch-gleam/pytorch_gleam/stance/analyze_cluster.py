@@ -75,6 +75,18 @@ def main():
 		for t_idx, t_text in idx2txt.items():
 			t_score = c_centroid[t_idx]
 			tax_name, tax_theme = idx2t[t_idx][1:-1].split(',')
+			tax_name = tax_name[1:-1]
+			if tax_name == 'literacy':
+				if t_text == '+':
+					t_text = 'Vaccines more important than civil rights'
+				else:
+					t_text = 'Civil rights above all'
+			elif tax_name == 'civil_rights':
+				if t_text == '+':
+					t_text = 'Civil rights above all'
+				else:
+					t_text = 'Lacking literacy'
+
 			if abs(t_score) >= threshold:
 				if current_tax != tax_name:
 					current_tax = tax_name
