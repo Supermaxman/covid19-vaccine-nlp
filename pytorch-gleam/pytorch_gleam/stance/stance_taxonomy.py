@@ -485,6 +485,10 @@ def main():
 		]
 	)
 	f2t = tax.frames_to_themes()
+	for f_id, f_list in f2t.items():
+		print(f_id)
+		print(f_list)
+		print()
 	t2idx = tax.themes
 	with open(frame_map_output_path, 'w') as f:
 		json.dump(f2t, f)
