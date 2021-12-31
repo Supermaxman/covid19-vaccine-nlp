@@ -58,7 +58,7 @@ def main():
 	with open(theme_path) as f:
 		# [theme_id] -> List[(vec_idx, score_sign)]
 		theme_map = json.load(f)['idx']
-	vec_size = max([max(v) for k, v in theme_map.items()]) + 1
+	vec_size = max([v for k, v in theme_map.items()]) + 1
 
 	user_ids = []
 	user_vecs = []
