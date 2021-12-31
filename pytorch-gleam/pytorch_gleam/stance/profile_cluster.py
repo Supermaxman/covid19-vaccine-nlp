@@ -1,21 +1,10 @@
 
 import argparse
+import pickle
 from collections import defaultdict
 
 import ujson as json
-from tqdm import tqdm
-import numpy as np
-import scipy.sparse as scp
 import sklearn.cluster as skc
-
-
-def read_jsonl(path):
-	with open(path, 'r') as f:
-		for line in f:
-			line = line.strip()
-			if line:
-				ex = json.loads(line)
-				yield ex
 
 
 def cluster_kmeans(user_ids, user_vecs, num_clusters):
@@ -58,23 +47,13 @@ def main():
 	with open(theme_path) as f:
 		# [theme_id] -> List[(vec_idx, score_sign)]
 		theme_map = json.load(f)['idx']
-	vec_size = max([v for k, v in theme_map.items()]) + 1
 
-	user_ids = []
-	user_vecs = []
 	print('collecting user vectors...')
-	for user in tqdm(read_jsonl(input_path), total=1425378):
-		user_id = user['user_id']
-		u_sparse = user['user_vec']
-		u_vec = np.zeros(shape=[vec_size], dtype=np.float32)
-		if len(u_sparse) > 0:
-			indices, values = zip(*[(int(t_idx), t_score) for t_idx, t_score in u_sparse.items()])
-			u_vec[list(indices)] = values
-			u_vec = scp.csr_matrix(u_vec)
-			user_ids.append(user_id)
-			user_vecs.append(u_vec)
+	with open(input_path, 'rb') as f:
+		profiles = pickle.load(f)
+		user_ids = profiles['users']
+		user_vecs = profiles['matrix']
 
-	user_vecs = scp.vstack(user_vecs)
 	print(user_vecs.shape)
 	print('clustering...')
 	clusters = cluster_kmeans(user_ids, user_vecs, num_clusters)
