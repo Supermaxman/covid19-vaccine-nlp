@@ -33,6 +33,6 @@ python pytorch-gleam/pytorch_gleam/stance/collect_cluster_users.py \
   --input_path ${data_path}/${base_name}-clusters-m${profile_type}-v${cluster_version}-k${cluster_count}.pk  \
   --user_path ${data_path}/${base_name}-profiles-m${profile_type}.pk \
   --tweets_path ${data_path}/covid19-frame-rel-v2_candidates.jsonl \
-  --output_path ${data_path}/${base_name}-clusters-m${profile_type}-v${cluster_version}-k${cluster_count}-users.json \
+  --output_path ${data_path}/${base_name}-clusters-m${profile_type}-v${cluster_version}-k${cluster_count}-users.pk \
   --num_samples 50
 
