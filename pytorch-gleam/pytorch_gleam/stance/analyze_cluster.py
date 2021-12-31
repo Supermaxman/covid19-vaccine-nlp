@@ -61,7 +61,7 @@ def main():
 
 	print(user_vecs.shape)
 	print('loading clusters...')
-	with open(input_path, 'w') as f:
+	with open(input_path) as f:
 		# [cluster_id]['users'] -> list[user_ids]
 		# [cluster_id]['centroid'] -> list[float]
 		clusters = json.load(f)
