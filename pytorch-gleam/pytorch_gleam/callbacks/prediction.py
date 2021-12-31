@@ -1,4 +1,7 @@
-import json
+
+import argparse
+
+import ujson as json
 import os
 import torch
 from collections import defaultdict
@@ -65,3 +68,45 @@ class JsonlWriter(BasePredictionWriter):
 	):
 		for prediction in predictions:
 			self._write(trainer, prediction)
+
+
+def read_jsonl(path):
+	with open(path, 'r') as f:
+		for line in f:
+			line = line.strip()
+			if line:
+				ex = json.loads(line)
+				yield ex
+
+
+def read_predictions(input_path):
+	predictions = defaultdict(dict)
+	total_count = 0
+	for file_name in os.listdir(input_path):
+		if file_name.endswith('.jsonl'):
+			print(f'{file_name}: ', end=None)
+			file_path = os.path.join(input_path, file_name)
+			f_count = 0
+			for pred in read_jsonl(file_path):
+				tweet_id, f_id = pred['ids'].split('|')
+				scores = pred['scores']
+				predictions[tweet_id][f_id] = scores
+				f_count += 1
+			print(f'{f_count}')
+			total_count += f_count
+	print(f'TOTAL: {total_count}')
+	return predictions
+
+
+def main():
+	parser = argparse.ArgumentParser()
+	parser.add_argument('-i', '--input_path', required=True)
+	parser.add_argument('-o', '--output_path', required=True)
+	args = parser.parse_args()
+	predictions = read_predictions(args.input_path)
+	with open(args.output_path, 'w') as f:
+		json.dump(predictions, f)
+
+
+if __name__ == '__main__':
+	main()
