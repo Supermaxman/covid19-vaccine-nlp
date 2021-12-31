@@ -67,7 +67,7 @@ def main():
 		user_id = user['user_id']
 		u_sparse = user['user_vec']
 		user_ids.append(user_id)
-		u_vec = scp.csr_matrix([1, vec_size], dtype=np.float32)
+		u_vec = scp.csr_matrix((1, vec_size), dtype=np.float32)
 		for t_idx, t_score in u_sparse.items():
 			t_idx = int(t_idx)
 			t_score = float(t_score)
