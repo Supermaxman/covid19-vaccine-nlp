@@ -82,7 +82,7 @@ def read_jsonl(path):
 def read_predictions(input_path):
 	predictions = defaultdict(dict)
 	total_count = 0
-	for file_name in os.listdir(input_path):
+	for file_name in sorted(os.listdir(input_path)):
 		if file_name.endswith('.jsonl'):
 			print(f'{file_name}: ', end=None)
 			file_path = os.path.join(input_path, file_name)

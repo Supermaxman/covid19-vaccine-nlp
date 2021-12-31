@@ -189,6 +189,10 @@ python ex/predict.py \
   --trainer.gpus 2,3,4,5,6,7
 
 
+python pytorch-gleam/pytorch_gleam/callbacks/prediction.py \
+  --input_path /nas1-nfs1/data/maw150130/covid19/stance-predictions \
+  --output_path /nas1-nfs1/data/maw150130/covid19/covid19-frame-rel-v2_stance-predictions.json
+
 #python pytorch-gleam/pytorch_gleam/search/cross_rerank.py \
 #  --data_path data/covid19-frame-rel-v2_candidates.jsonl \
 #  --questions_path data/frames-covid19-parsed.jsonl \
