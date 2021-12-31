@@ -3,7 +3,7 @@
 data_path=/nas1-nfs1/data/maw150130/covid19
 base_name=covid19-frame-rel-v2_stance
 profile_type=sign
-cluster_version=v2
+cluster_version=v3
 
 #python pytorch-gleam/pytorch_gleam/stance/stance_profile.py \
 #  --input_path ${data_path}/${base_name}-scores.json \
