@@ -7,8 +7,8 @@ import numpy as np
 import sklearn.cluster as skc
 
 
-def sim(a, b):
-	a_b = -np.linalg.norm(a - b, axis=-1)
+def dist(a, b):
+	a_b = np.linalg.norm(a - b, axis=-1)
 	return a_b
 
 
@@ -32,13 +32,13 @@ def cluster_kmeans(user_ids, user_vecs, num_clusters):
 		cluster_centroid = centroids[cluster_id]
 		cluster_user_idxs = [user_lookup[user_id] for user_id in cluster_users]
 		c_user_vecs = user_vecs[cluster_user_idxs]
-		user_sim = sim(cluster_centroid, c_user_vecs)
-		avg_sim = np.mean(user_sim)
+		user_dist = dist(cluster_centroid, c_user_vecs)
+		avg_dist = np.mean(user_dist)
 
 		clusters[cluster_id] = {
+			'dist': float(avg_dist),
 			'users': cluster_users,
-			'centroid': cluster_centroid.tolist(),
-			'avg_centroid_dist': -avg_sim
+			'centroid': cluster_centroid.tolist()
 		}
 	return clusters
 

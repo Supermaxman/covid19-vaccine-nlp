@@ -3,7 +3,6 @@ import pickle
 
 import numpy as np
 import ujson as json
-import scipy.sparse as scp
 
 
 def sim(a, b):

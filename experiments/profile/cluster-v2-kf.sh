@@ -4,7 +4,6 @@ data_path=/nas1-nfs1/data/maw150130/covid19
 base_name=covid19-frame-rel-v2_stance
 profile_type=sign
 cluster_version=v2
-#cluster_count=5
 
 python pytorch-gleam/pytorch_gleam/stance/stance_profile.py \
   --input_path ${data_path}/${base_name}-scores.json \
@@ -20,6 +19,7 @@ do
      --output_path ${data_path}/${base_name}-clusters-m${profile_type}-v${cluster_version}-k${cluster_count}.pk \
      --num_clusters ${cluster_count}
 done
+
 
 
 python pytorch-gleam/pytorch_gleam/stance/analyze_cluster.py \
