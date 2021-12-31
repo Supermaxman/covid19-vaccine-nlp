@@ -63,7 +63,7 @@ def main():
 	user_ids = []
 	user_vecs = []
 	print('collecting user vectors...')
-	for user in read_jsonl(input_path):
+	for user in tqdm(read_jsonl(input_path), total=1425378):
 		user_id = user['user_id']
 		u_sparse = user['user_vec']
 		user_ids.append(user_id)
