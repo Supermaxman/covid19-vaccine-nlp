@@ -1,15 +1,11 @@
 
 import argparse
-from collections import defaultdict
-import os
 from multiprocessing import Pool
 
 import ujson as json
 from tqdm import tqdm
 import numpy as np
-import pandas as pd
 import scipy.sparse as scp
-import pickle
 
 
 vec_size = 0
@@ -26,7 +22,7 @@ def embed_user(args):
 				u_vec[vec_idx] += vec_sign * frame_score
 				u_vec_count[vec_idx] += 1.0
 	# divide each vec_idx by the number of stances the user has on it
-	u_vec /= np.clip(u_vec_count, a_min=1.0)
+	u_vec /= np.maximum(u_vec_count, 1.0)
 	u_vec = scp.csr_matrix(u_vec)
 
 	u_vec_sp = {
