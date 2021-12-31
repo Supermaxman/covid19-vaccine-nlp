@@ -58,7 +58,7 @@ def main():
 	cluster_samples = defaultdict(list)
 	for cluster_id, cluster in sorted(clusters.items(), key=lambda x: len(x[1]['users']), reverse=True):
 		c_users = cluster['users']
-		c_centroid = cluster['centroid']
+		c_centroid = np.array(cluster['centroid'], dtype=np.float32)
 		cluster_user_idxs = [user_lookup[user_id] for user_id in c_users]
 		c_user_vecs = user_vecs[cluster_user_idxs]
 		user_dists = dist(c_centroid, c_user_vecs)
