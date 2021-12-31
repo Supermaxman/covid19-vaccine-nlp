@@ -344,7 +344,7 @@ class FrameTaxonomy(object):
 			tax_theme['taxonomy'] = tax.name
 			themes.append(tax_theme)
 		themes = pd.concat(themes)
-		themes['idx'] = range(len(themes))
+		themes['idx'] = list(range(len(themes)))
 		self.themes = themes.set_index(['taxonomy', 'theme_id'])
 		self.themes_inv = themes.reset_index().set_index('idx')
 		self.f_map = {f_id: idx for (idx, f_id) in enumerate(self.frames.index)}
