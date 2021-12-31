@@ -1,5 +1,6 @@
 
 import argparse
+import pickle
 from multiprocessing import Pool
 
 import ujson as json
@@ -27,12 +28,10 @@ def embed_user(args):
 	# divide each vec_idx by the number of stances the user has on it
 	u_vec /= np.maximum(u_vec_count, 1.0)
 	u_vec = scp.csr_matrix(u_vec)
-
-	u_vec_sp = {
-		int(idx): float(score) for idx, score in zip(u_vec.indices, u_vec.data)
-	}
-
-	return user_id, u_vec_sp
+	if u_vec_count.sum() == 0:
+		user_id = None
+		u_vec = None
+	return user_id, u_vec
 
 
 def main():
@@ -60,16 +59,19 @@ def main():
 		frame_map = json.load(f)
 	vec_size = max([max(v[0]) for k, v in frame_map.items()]) + 1
 	user_count = len(user_scores)
-	user_vecs = {}
-	with open(output_path, 'w') as f:
-		with Pool(processes=num_processes) as p:
-			for user_id, u_vec in tqdm(p.imap_unordered(embed_user, user_scores.items()), total=user_count):
-				user_vecs[user_id] = u_vec
-				user_info = {
-					'user_id': user_id,
-					'user_vec': u_vec
-				}
-				f.write(json.dumps(user_info) + '\n')
+	user_vecs = {
+		'users': [],
+		'matrix': []
+	}
+	with Pool(processes=num_processes) as p:
+		for user_id, u_vec in tqdm(p.imap_unordered(embed_user, user_scores.items()), total=user_count):
+			if user_id is not None:
+				user_vecs['users'].append(user_id)
+				user_vecs['matrix'].append(u_vec)
+
+	user_vecs['matrix'] = scp.vstack(user_vecs['matrix'])
+	with open(output_path, 'wb') as f:
+		pickle.dump(user_vecs, f)
 
 
 if __name__ == '__main__':
