@@ -16,10 +16,8 @@ def cluster_kmeans(user_ids, user_vecs, num_clusters):
 	model = skc.KMeans(
 		n_clusters=num_clusters,
 		random_state=0,
-		n_init=5,
-		verbose=0,
-		max_iter=300,
-		tol=1e-6
+		n_init=20,
+		verbose=0
 	)
 
 	model = model.fit(user_vecs)
