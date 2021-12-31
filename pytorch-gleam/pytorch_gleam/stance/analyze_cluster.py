@@ -50,7 +50,7 @@ def main():
 	for cluster_id, cluster in sorted(clusters.items(), key=lambda x: len(x[1]['users']), reverse=True):
 		c_users = cluster['users']
 		c_centroid = cluster['centroid']
-		c_avg_centroid_dist = cluster['avg_centroid_dist']
+		c_avg_centroid_dist = cluster['dist']
 
 		print(
 			f'Cluster {cluster_id}: {len(c_users):,} '
