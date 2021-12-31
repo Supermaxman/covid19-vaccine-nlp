@@ -18,6 +18,9 @@ def embed_user(args):
 	u_vec_count = np.zeros(shape=[vec_size], dtype=np.float32)
 	for tweet_id, frame_scores in tweet_scores.items():
 		for frame_id, frame_score in frame_scores.items():
+			# TODO some frames have no assigned taxonomy
+			if frame_id not in frame_map:
+				continue
 			for vec_idx, vec_sign in frame_map[frame_id]:
 				u_vec[vec_idx] += vec_sign * frame_score
 				u_vec_count[vec_idx] += 1.0
