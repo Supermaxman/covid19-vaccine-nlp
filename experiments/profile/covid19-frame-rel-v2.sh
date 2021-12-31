@@ -207,4 +207,6 @@ python pytorch-gleam/pytorch_gleam/stance/stance_taxonomy.py \
 
 bash experiments/profile/cluster-v1-k5.sh
 
+bash experiments/profile/cluster-v2-k5.sh
+
 

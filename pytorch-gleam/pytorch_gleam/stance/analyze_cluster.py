@@ -42,10 +42,10 @@ def main():
 
 	print(user_vecs.shape)
 	print('loading clusters...')
-	with open(input_path) as f:
+	with open(input_path, 'rb') as f:
 		# [cluster_id]['users'] -> list[user_ids]
 		# [cluster_id]['centroid'] -> list[float]
-		clusters = json.load(f)
+		clusters = pickle.load(f)
 
 	total_users = user_vecs.shape[0]
 	for cluster_id, cluster in sorted(clusters.items(), key=lambda x: len(x[1]['users']), reverse=True):

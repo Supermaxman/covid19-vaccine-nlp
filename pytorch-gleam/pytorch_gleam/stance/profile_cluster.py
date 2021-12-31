@@ -4,9 +4,7 @@ import pickle
 from collections import defaultdict
 
 import numpy as np
-import ujson as json
 import sklearn.cluster as skc
-import scipy.sparse as scp
 
 
 def sim(a, b):
@@ -32,9 +30,9 @@ def cluster_kmeans(user_ids, user_vecs, num_clusters):
 	user_lookup = {user_id: idx for (idx, user_id) in enumerate(user_ids)}
 	for cluster_id, cluster_users in cluster_users.items():
 		cluster_centroid = centroids[cluster_id]
-
-		c_user_vecs = scp.vstack([user_vecs[user_lookup[user_id]] for user_id in cluster_users]).toarray()
-		user_sim = sim(c_user_vecs, np.expand_dims(cluster_centroid, axis=0))
+		cluster_user_idxs = [user_lookup[user_id] for user_id in cluster_users]
+		c_user_vecs = user_vecs[cluster_user_idxs]
+		user_sim = sim(cluster_centroid, c_user_vecs)
 		avg_sim = np.mean(user_sim)
 
 		clusters[cluster_id] = {
@@ -70,8 +68,8 @@ def main():
 		print(f'{cluster_id}: {len(cluster["users"])}')
 
 	print('saving clusters...')
-	with open(output_path, 'w') as f:
-		json.dump(clusters, f)
+	with open(output_path, 'wb') as f:
+		pickle.dump(clusters, f)
 
 
 if __name__ == '__main__':
