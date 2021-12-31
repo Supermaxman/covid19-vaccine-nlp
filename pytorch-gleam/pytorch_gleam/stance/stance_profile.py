@@ -11,6 +11,7 @@ import scipy.sparse as scp
 
 vec_size = 0
 frame_map = {}
+mode = None
 
 
 def embed_user(args):
@@ -23,7 +24,12 @@ def embed_user(args):
 			if frame_id not in frame_map:
 				continue
 			for vec_idx, vec_sign in frame_map[frame_id]:
-				u_vec[vec_idx] += vec_sign * frame_score
+				if mode == 'prob':
+					u_vec[vec_idx] += vec_sign * frame_score
+				elif mode == 'sign':
+					u_vec[vec_idx] += vec_sign * np.sign(frame_score)
+				else:
+					raise ValueError(f'Unknown mode: {mode}')
 				u_vec_count[vec_idx] += 1.0
 	# divide each vec_idx by the number of stances the user has on it
 	u_vec /= np.maximum(u_vec_count, 1.0)
@@ -40,6 +46,7 @@ def main():
 	parser.add_argument('-f', '--frame_map_path', required=True)
 	parser.add_argument('-o', '--output_path', required=True)
 	parser.add_argument('-p', '--num_processes', default=12, type=int)
+	parser.add_argument('-m', '--mode', default='prob')
 	args = parser.parse_args()
 
 	input_path = args.input_path
@@ -53,7 +60,9 @@ def main():
 
 	global frame_map
 	global vec_size
+	global mode
 
+	mode = args.mode.lower()
 	with open(frame_map_path) as f:
 		# [frame_id] -> List[(vec_idx, score_sign)]
 		frame_map = json.load(f)

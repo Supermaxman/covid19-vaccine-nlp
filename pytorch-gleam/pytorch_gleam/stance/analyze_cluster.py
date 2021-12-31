@@ -51,14 +51,12 @@ def main():
 	for cluster_id, cluster in sorted(clusters.items(), key=lambda x: len(x[1]['users']), reverse=True):
 		c_users = cluster['users']
 		c_centroid = cluster['centroid']
-		c_user_vecs = scp.vstack([user_vecs[user_lookup[user_id]] for user_id in c_users]).toarray()
-		user_sim = sim(c_user_vecs, np.expand_dims(c_centroid, axis=0))
-		avg_sim = np.mean(user_sim)
+		c_avg_centroid_dist = cluster['avg_centroid_dist']
 
 		print(
 			f'Cluster {cluster_id}: {len(c_users):,} '
 			f'users ({100 * len(c_users) / total_users:.0f}%) '
-			f'{-avg_sim:.2f} avg centroid distance'
+			f'{c_avg_centroid_dist:.2f} avg centroid distance'
 		)
 		current_tax = None
 		for t_idx, t_text in idx2txt.items():
