@@ -86,7 +86,10 @@ def main():
 					t_text = 'Civil rights above all'
 				else:
 					t_text = 'Lacking literacy'
-
+			elif tax_name == 'trust+':
+				tax_name = 'Building trust'
+			elif tax_name == 'trust-':
+				tax_name = 'Eroding trust'
 			if abs(t_score) >= threshold:
 				if current_tax != tax_name:
 					current_tax = tax_name
