@@ -67,7 +67,7 @@ def main():
 		clusters = json.load(f)
 
 	total_users = user_vecs.shape[0]
-	for cluster_id, cluster in sorted(clusters.items(), key=lambda x: len(x[1]['users'])):
+	for cluster_id, cluster in sorted(clusters.items(), key=lambda x: len(x[1]['users']), reverse=True):
 		c_users = cluster['users']
 		c_centroid = cluster['centroid']
 		print(f'cluster {cluster_id}: {len(c_users):,} users ({100*len(c_users)/total_users:.0f}%)')
