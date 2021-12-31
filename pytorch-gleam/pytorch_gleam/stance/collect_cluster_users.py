@@ -28,6 +28,7 @@ def main():
 	parser.add_argument('-t', '--tweets_path', required=True)
 	parser.add_argument('-o', '--output_path', required=True)
 	parser.add_argument('-c', '--num_samples', default=50, type=int)
+	parser.add_argument('-mt', '--max_tweets', default=5, type=int)
 	args = parser.parse_args()
 
 	input_path = args.input_path
@@ -35,6 +36,13 @@ def main():
 	tweets_path = args.tweets_path
 	output_path = args.output_path
 	num_samples = args.num_samples
+	max_tweets = args.max_tweets
+
+	print('counting tweets for each user...')
+	uc = defaultdict(int)
+	for tweet in tqdm(read_jsonl(tweets_path), total=8161354):
+		user_id = tweet['author_id']
+		uc[user_id] += 1
 
 	print('collecting user vectors...')
 	with open(user_path, 'rb') as f:
@@ -58,14 +66,19 @@ def main():
 		cluster_user_idxs = [user_lookup[user_id] for user_id in c_users]
 		c_user_vecs = user_vecs[cluster_user_idxs]
 		user_dists = dist(c_centroid, c_user_vecs)
-		ind = np.argpartition(user_dists, -num_samples)[-num_samples:]
-		ind = ind[np.argsort(user_dists[ind])[::-1]]
+		# ind = np.argpartition(user_dists, -num_samples)[-num_samples:]
+		# ind = ind[np.argsort(user_dists[ind])[::-1]]
+		ind = np.argsort(user_dists)[::-1]
 		for user_index in ind:
 			sample_user_id = c_users[user_index]
+			if uc[sample_user_id] > max_tweets:
+				continue
 			cluster_samples[cluster_id].append(
 				sample_user_id
 			)
 			keep_users.add(sample_user_id)
+			if len(cluster_samples[cluster_id]) >= num_samples:
+				break
 
 	print('collecting tweets for each user...')
 	users = defaultdict(list)
