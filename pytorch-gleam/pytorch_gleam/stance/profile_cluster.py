@@ -34,19 +34,13 @@ def cluster_kmeans(user_ids, user_vecs, num_clusters):
 def main():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-i', '--input_path', required=True)
-	parser.add_argument('-t', '--theme_path', required=True)
 	parser.add_argument('-o', '--output_path', required=True)
 	parser.add_argument('-c', '--num_clusters', default=5, type=int)
 	args = parser.parse_args()
 
 	input_path = args.input_path
-	theme_path = args.theme_path
 	output_path = args.output_path
 	num_clusters = args.num_clusters
-
-	with open(theme_path) as f:
-		# [theme_id] -> List[(vec_idx, score_sign)]
-		theme_map = json.load(f)['idx']
 
 	print('collecting user vectors...')
 	with open(input_path, 'rb') as f:

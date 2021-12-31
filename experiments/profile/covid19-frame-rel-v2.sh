@@ -213,12 +213,12 @@ python pytorch-gleam/pytorch_gleam/stance/stance_profile.py \
 
 python pytorch-gleam/pytorch_gleam/stance/profile_cluster.py \
   --input_path /nas1-nfs1/data/maw150130/covid19/covid19-frame-rel-v2_stance-profiles.pk \
-  --theme_path /nas1-nfs1/data/maw150130/covid19/theme_map.json \
   --output_path /nas1-nfs1/data/maw150130/covid19/covid19-frame-rel-v2_stance-clusters-v1-k5.json \
   --num_clusters 5
 
 python pytorch-gleam/pytorch_gleam/stance/analyze_cluster.py \
   --input_path /nas1-nfs1/data/maw150130/covid19/covid19-frame-rel-v2_stance-clusters-v1-k5.json  \
+  --user_path /nas1-nfs1/data/maw150130/covid19/covid19-frame-rel-v2_stance-profiles.pk \
   --theme_path /nas1-nfs1/data/maw150130/covid19/theme_map.json
 
 
