@@ -1,5 +1,6 @@
 import argparse
 import pickle
+from collections import defaultdict
 
 import numpy as np
 import ujson as json
@@ -57,6 +58,7 @@ def main():
 			f'users ({100 * len(c_users) / total_users:.0f}%) '
 			f'{c_avg_centroid_dist:.2f} avg centroid distance'
 		)
+		tax_info = {}
 		current_tax = None
 		for t_idx, t_text in idx2txt.items():
 			t_score = c_centroid[t_idx]
@@ -81,8 +83,13 @@ def main():
 				if current_tax != tax_name:
 					current_tax = tax_name
 					tax_name = tax_name.title()
-					print(f'  {tax_name} Taxonomy')
-				print(f'    {t_score:+.2f}: {t_text}')
+					# print(f'  {tax_name} Taxonomy')
+					tax_info[f'  {tax_name} Taxonomy'] = []
+				tax_info[f'  {tax_name.title()} Taxonomy'].append((abs(t_score), f'    {t_score:+.2f}: {t_text}'))
+		for tax, tax_s in tax_info.items():
+			print(tax)
+			for _, s_line in sorted(tax_info.items(), key=lambda x: x[0], reverse=True):
+				print(s_line)
 		print('-------')
 
 
