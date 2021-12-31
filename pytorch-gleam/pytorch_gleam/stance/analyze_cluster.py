@@ -78,14 +78,15 @@ def main():
 			tax_name = tax_name[1:-1]
 			if tax_name == 'literacy':
 				if t_text == '+':
+					t_text = 'Having literacy'
+				else:
+					t_text = 'Lacking literacy'
+			elif tax_name == 'civil_rights':
+				tax_name = 'Civil rights'
+				if t_text == '+':
 					t_text = 'Vaccines more important than civil rights'
 				else:
 					t_text = 'Civil rights above all'
-			elif tax_name == 'civil_rights':
-				if t_text == '+':
-					t_text = 'Civil rights above all'
-				else:
-					t_text = 'Lacking literacy'
 			elif tax_name == 'trust+':
 				tax_name = 'Building trust'
 			elif tax_name == 'trust-':
