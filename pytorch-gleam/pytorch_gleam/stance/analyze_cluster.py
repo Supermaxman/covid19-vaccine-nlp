@@ -71,11 +71,16 @@ def main():
 		c_users = cluster['users']
 		c_centroid = cluster['centroid']
 		print(f'{cluster_id}: {len(c_users):,} users; {100*len(c_users)/total_users:.0f}%')
+		current_tax = None
 		for t_idx, t_text in idx2txt.items():
 			t_score = c_centroid[t_idx]
 			tax_name, tax_theme = idx2t[t_idx][1:-1].split(',')
 			if abs(t_score) >= threshold:
-				print(f'  {t_score:+.2f}: {t_text}')
+				if current_tax != tax_name:
+					current_tax = tax_name
+					tax_name = tax_name.title()
+					print(f'  {tax_name} Taxonomy')
+				print(f'    {t_score:+.2f}: {t_text}')
 
 
 if __name__ == '__main__':
