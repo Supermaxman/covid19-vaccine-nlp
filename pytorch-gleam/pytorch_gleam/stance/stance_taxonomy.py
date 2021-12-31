@@ -356,7 +356,7 @@ class FrameTaxonomy(object):
 			tax_f_lookup = tax.frames_to_themes()
 			for f_id, tax_set in tax_f_lookup.items():
 				for tax_theme_id, score_sign in tax_set:
-					theme_idx = self.themes[tax.name, tax_theme_id]
+					theme_idx = self.themes.loc[tax.name, tax_theme_id]['idx']
 					f_lookup[f_id].append((theme_idx, score_sign))
 		return f_lookup
 
