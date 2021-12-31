@@ -199,3 +199,8 @@ python pytorch-gleam/pytorch_gleam/stance/stance_merge.py \
   --input_path /nas1-nfs1/data/maw150130/covid19/covid19-frame-rel-v2_stance-predictions.json \
   --tweet_path /nas1-nfs1/data/maw150130/covid19/covid19-frame-rel-v2_candidates.jsonl \
   --output_path /nas1-nfs1/data/maw150130/covid19/covid19-frame-rel-v2_stance-scores.json
+
+python pytorch-gleam/pytorch_gleam/stance/stance_taxonomy.py \
+  --input_path /home/maw150130/covid19-vaccine-nlp/data/taxonomy \
+  --frame_map_output_path /nas1-nfs1/data/maw150130/covid19/frame_map.json \
+  --theme_output_path /nas1-nfs1/data/maw150130/covid19/theme_map.json
