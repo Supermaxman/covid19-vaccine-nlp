@@ -70,7 +70,7 @@ def main():
 	for cluster_id, cluster in sorted(clusters.items(), key=lambda x: len(x[1]['users'])):
 		c_users = cluster['users']
 		c_centroid = cluster['centroid']
-		print(f'{cluster_id}: {len(c_users):,} users; {100*len(c_users)/total_users:.0f}%')
+		print(f'cluster {cluster_id}: {len(c_users):,} users ({100*len(c_users)/total_users:.0f}%)')
 		current_tax = None
 		for t_idx, t_text in idx2txt.items():
 			t_score = c_centroid[t_idx]
