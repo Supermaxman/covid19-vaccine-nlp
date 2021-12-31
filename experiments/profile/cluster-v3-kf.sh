@@ -2,17 +2,17 @@
 
 data_path=/nas1-nfs1/data/maw150130/covid19
 base_name=covid19-frame-rel-v2_stance
-profile_type=sign
+profile_type=prob
 cluster_version=v3
 
 #python pytorch-gleam/pytorch_gleam/stance/stance_profile.py \
 #  --input_path ${data_path}/${base_name}-scores.json \
 #  --frame_map_path ${data_path}/frame_map.json \
 #  --output_path ${data_path}/${base_name}-profiles-m${profile_type}.pk \
-#  --mode sign \
+#  --mode ${profile_type} \
 #  --num_processes 12
 
-for cluster_count in {3..10}
+for cluster_count in {3..12}
 do
    python pytorch-gleam/pytorch_gleam/stance/profile_cluster.py \
      --input_path ${data_path}/${base_name}-profiles-m${profile_type}.pk \
@@ -21,11 +21,11 @@ do
 done
 
 
-cluster_count=9
-python pytorch-gleam/pytorch_gleam/stance/analyze_cluster.py \
-  --input_path ${data_path}/${base_name}-clusters-m${profile_type}-v${cluster_version}-k${cluster_count}.pk  \
-  --user_path ${data_path}/${base_name}-profiles-m${profile_type}.pk \
-  --theme_path ${data_path}/theme_map.json
+#cluster_count=9
+#python pytorch-gleam/pytorch_gleam/stance/analyze_cluster.py \
+#  --input_path ${data_path}/${base_name}-clusters-m${profile_type}-v${cluster_version}-k${cluster_count}.pk  \
+#  --user_path ${data_path}/${base_name}-profiles-m${profile_type}.pk \
+#  --theme_path ${data_path}/theme_map.json
 
 
 
