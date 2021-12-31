@@ -66,14 +66,16 @@ def main():
 	for user in tqdm(read_jsonl(input_path), total=1425378):
 		user_id = user['user_id']
 		u_sparse = user['user_vec']
-		user_ids.append(user_id)
 		u_vec = np.zeros(shape=[vec_size], dtype=np.float32)
-		indices, values = zip(*[(int(t_idx), t_score) for t_idx, t_score in u_sparse.items()])
-		u_vec[list(indices)] = values
-		u_vec = scp.csr_matrix(u_vec)
-		user_vecs.append(u_vec)
+		if len(u_sparse) > 0:
+			indices, values = zip(*[(int(t_idx), t_score) for t_idx, t_score in u_sparse.items()])
+			u_vec[list(indices)] = values
+			u_vec = scp.csr_matrix(u_vec)
+			user_ids.append(user_id)
+			user_vecs.append(u_vec)
 
 	user_vecs = scp.vstack(user_vecs)
+	print(user_vecs.shape)
 	print('clustering...')
 	clusters = cluster_kmeans(user_ids, user_vecs, num_clusters)
 
