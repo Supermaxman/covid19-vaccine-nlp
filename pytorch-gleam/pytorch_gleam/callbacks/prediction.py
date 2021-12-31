@@ -82,19 +82,22 @@ def read_jsonl(path):
 def read_predictions(input_path):
 	predictions = defaultdict(dict)
 	total_count = 0
+	unique_set = set()
 	for file_name in sorted(os.listdir(input_path)):
 		if file_name.endswith('.jsonl'):
-			print(f'{file_name}: ', end=None)
+			print(f'{file_name}: ', end='')
 			file_path = os.path.join(input_path, file_name)
 			f_count = 0
 			for pred in read_jsonl(file_path):
 				tweet_id, f_id = pred['ids'].split('|')
+				unique_set.add((tweet_id, f_id))
 				scores = pred['scores']
 				predictions[tweet_id][f_id] = scores
 				f_count += 1
 			print(f'{f_count}')
 			total_count += f_count
 	print(f'TOTAL: {total_count}')
+	print(f'UNIQUE: {len(unique_set)}')
 	return predictions
 
 
