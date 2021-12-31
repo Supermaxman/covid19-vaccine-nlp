@@ -88,7 +88,7 @@ def main():
 				tax_info[f'  {tax_name.title()} Taxonomy'].append((abs(t_score), f'    {t_score:+.2f}: {t_text}'))
 		for tax, tax_s in tax_info.items():
 			print(tax)
-			for _, s_line in sorted(tax_info.items(), key=lambda x: x[0], reverse=True):
+			for _, s_line in sorted(tax_s, key=lambda x: x[0], reverse=True):
 				print(s_line)
 		print('-------')
 
