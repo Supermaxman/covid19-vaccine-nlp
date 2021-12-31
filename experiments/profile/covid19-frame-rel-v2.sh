@@ -211,5 +211,11 @@ python pytorch-gleam/pytorch_gleam/stance/stance_profile.py \
   --output_path /nas1-nfs1/data/maw150130/covid19/covid19-frame-rel-v2_stance-profiles.json \
   --num_processes 12
 
+python pytorch-gleam/pytorch_gleam/stance/profile_cluster.py \
+  --input_path /nas1-nfs1/data/maw150130/covid19/covid19-frame-rel-v2_stance-profiles.json \
+  --theme_path /nas1-nfs1/data/maw150130/covid19/theme_map.json \
+  --output_path
+
+
 
 

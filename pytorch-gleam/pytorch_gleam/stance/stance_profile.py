@@ -71,5 +71,6 @@ def main():
 				}
 				f.write(json.dumps(user_info) + '\n')
 
+
 if __name__ == '__main__':
 	main()
