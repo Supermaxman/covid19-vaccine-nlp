@@ -39,10 +39,13 @@ def main():
 	print('collecting tweet-frame scores')
 	tweets_kept = set()
 	users_kept = set()
+	users_seen = set()
 	frame_count = defaultdict(int)
 	keep_scores = defaultdict(lambda: defaultdict(dict))
+	tweet_count = len(scores)
 	for tweet_id, f_scores in tqdm(scores.items()):
 		user_id = user_lookup[tweet_id]
+		users_seen.add(user_id)
 		for f_id, fs_scores in f_scores.items():
 			not_rel_score, accept_score, reject_score = fs_scores
 			if accept_score > threshold or reject_score > threshold:
@@ -65,8 +68,8 @@ def main():
 	min_fc = np.min(f_counts)
 	max_fc = np.max(f_counts)
 	print()
-	print(f'{len(users_kept)} users')
-	print(f'{len(tweets_kept)} tweets')
+	print(f'{len(users_kept)}/{len(users_seen)} ({100 * len(users_kept)/len(users_seen):.0f}%) users')
+	print(f'{len(tweets_kept)}/{tweet_count} ({100 * len(tweets_kept)/tweet_count:.0f}%) tweets')
 	print()
 	print(f'{med_uc:.2f} tweets / user (median)')
 	print(f'{mean_uc:.2f} tweets / user (mean)')

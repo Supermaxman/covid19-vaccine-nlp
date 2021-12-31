@@ -193,21 +193,9 @@ python pytorch-gleam/pytorch_gleam/callbacks/prediction.py \
   --input_path /nas1-nfs1/data/maw150130/covid19/stance-predictions \
   --output_path /nas1-nfs1/data/maw150130/covid19/covid19-frame-rel-v2_stance-predictions.json
 
-#python pytorch-gleam/pytorch_gleam/search/cross_rerank.py \
-#  --data_path data/covid19-frame-rel-v2_candidates.jsonl \
-#  --questions_path data/frames-covid19-parsed.jsonl \
-#  --output_path data/covid19-frame-rel-v2_rerank_scores_cross \
-#  --pre_model_name nboost/pt-biobert-base-msmarco \
-#  --batch_size 64 \
-#  --max_seq_len 128 \
-#  --num_workers 1 \
-#  --gpus 2,3,4,5,6,7
 
-#python pytorch-gleam/pytorch_gleam/search/cross_rerank.py \
-#  --data_path data/covid19-frame-rel-v2_candidates.jsonl \
-#  --questions_path data/frames-covid19-parsed.jsonl \
-#  --output_path data/covid19-frame-rel-v2_rerank_scores \
-#  --pre_model_name nboost/pt-biobert-base-msmarco \
-#  --batch_size 64 \
-#  --max_seq_len 128 \
-#  --gpus 2,3,4,5,6,7
+
+python pytorch-gleam/pytorch_gleam/stance/stance_merge.py \
+  --input_path /nas1-nfs1/data/maw150130/covid19/covid19-frame-rel-v2_stance-predictions.json \
+  --tweet_path /nas1-nfs1/data/maw150130/covid19/covid19-frame-rel-v2_candidates.jsonl \
+  --output_path /nas1-nfs1/data/maw150130/covid19/covid19-frame-rel-v2_stance-scores.json
