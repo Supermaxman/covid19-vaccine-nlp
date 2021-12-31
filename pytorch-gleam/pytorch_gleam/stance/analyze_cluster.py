@@ -1,34 +1,14 @@
-
 import argparse
 import pickle
-from collections import defaultdict
 
+import numpy as np
 import ujson as json
-import sklearn.cluster as skc
+import scipy.sparse as scp
 
 
-def cluster_kmeans(user_ids, user_vecs, num_clusters):
-	model = skc.KMeans(
-		n_clusters=num_clusters,
-		random_state=0,
-		n_init=20,
-		verbose=1
-	)
-
-	model = model.fit(user_vecs)
-	centroids = model.cluster_centers_
-	cluster_users = defaultdict(list)
-	clusters = {}
-	for user_id, cluster_id in zip(user_ids, model.labels_):
-		cluster_users[cluster_id].append(user_id)
-
-	for cluster_id, cluster_users in cluster_users.items():
-		cluster_centroid = centroids[cluster_id]
-		clusters[cluster_id] = {
-			'users': cluster_users,
-			'centroid': cluster_centroid.tolist()
-		}
-	return clusters
+def sim(a, b):
+	a_b = -np.linalg.norm(a - b, axis=-1)
+	return a_b
 
 
 def main():
@@ -58,6 +38,7 @@ def main():
 		profiles = pickle.load(f)
 		user_ids = profiles['users']
 		user_vecs = profiles['matrix']
+		user_lookup = {user_id: idx for (idx, user_id) in enumerate(user_ids)}
 
 	print(user_vecs.shape)
 	print('loading clusters...')
@@ -70,7 +51,15 @@ def main():
 	for cluster_id, cluster in sorted(clusters.items(), key=lambda x: len(x[1]['users']), reverse=True):
 		c_users = cluster['users']
 		c_centroid = cluster['centroid']
-		print(f'cluster {cluster_id}: {len(c_users):,} users ({100*len(c_users)/total_users:.0f}%)')
+		c_user_vecs = scp.vstack([user_vecs[user_lookup[user_id]] for user_id in c_users]).toarray()
+		user_sim = sim(c_user_vecs, np.expand_dims(c_centroid, axis=0))
+		avg_sim = np.mean(user_sim)
+
+		print(
+			f'Cluster {cluster_id}: {len(c_users):,} '
+			f'users ({100 * len(c_users) / total_users:.0f}%) '
+			f'{-avg_sim:.2f} avg centroid distance'
+		)
 		current_tax = None
 		for t_idx, t_text in idx2txt.items():
 			t_score = c_centroid[t_idx]
@@ -97,6 +86,7 @@ def main():
 					tax_name = tax_name.title()
 					print(f'  {tax_name} Taxonomy')
 				print(f'    {t_score:+.2f}: {t_text}')
+		print('-------')
 
 
 if __name__ == '__main__':
