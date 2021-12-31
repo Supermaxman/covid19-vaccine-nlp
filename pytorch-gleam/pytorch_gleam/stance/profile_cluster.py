@@ -69,7 +69,7 @@ def main():
 		user_ids.append(user_id)
 		u_vec = np.zeros(shape=[vec_size], dtype=np.float32)
 		indices, values = zip(*[(int(t_idx), t_score) for t_idx, t_score in u_sparse.items()])
-		u_vec[indices] = values
+		u_vec[list(indices)] = values
 		u_vec = scp.csr_matrix(u_vec)
 		user_vecs.append(u_vec)
 
