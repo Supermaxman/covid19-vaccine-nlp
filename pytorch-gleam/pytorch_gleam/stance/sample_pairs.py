@@ -16,14 +16,14 @@ def create_user_text(u_tweets):
 	for tweet in u_tweets:
 		tweet_text = tweet['full_text'] if 'full_text' in tweet else tweet['text']
 		for line in wrap(tweet_text, 50):
-			lines.append(f'  {line}')
+			lines.append(f'    {line}')
 		lines.append(f'  ----')
 	return '\n'.join(lines)
 
 
 def sample_from_pop(pos_pop, sample_pop, seen_sample_ids, num_samples):
 	samples = []
-	while len(samples) <= num_samples:
+	while len(samples) < num_samples:
 		pos_user = random.sample(pos_pop, 1)[0]
 		pos_user_id = pos_user['user_id']
 		pos_user_tweets = pos_user['tweets']
