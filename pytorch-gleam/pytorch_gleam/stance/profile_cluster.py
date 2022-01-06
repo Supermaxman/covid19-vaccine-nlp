@@ -18,14 +18,13 @@ def cluster_kmeans(user_ids, user_vecs, num_clusters, method):
 			n_clusters=num_clusters,
 			random_state=0,
 			n_init=20,
-			verbose=0
+			verbose=1
 		)
 	else:
 		raise ValueError(f'Unknown clustering method: {method}')
 
 	# l2 normalize user embeddings
-	uc_vecs = user_vecs / np.linalg.norm(user_vecs, axis=-1, keepdims=True)
-	model = model.fit(uc_vecs)
+	model = model.fit(user_vecs)
 	# l2 normalize centroid embeddings
 	centroids = model.cluster_centers_ / np.linalg.norm(model.cluster_centers_, axis=-1, keepdims=True)
 	cluster_users = defaultdict(list)
@@ -37,8 +36,8 @@ def cluster_kmeans(user_ids, user_vecs, num_clusters, method):
 	for cluster_id, cluster_users in cluster_users.items():
 		cluster_centroid = centroids[cluster_id]
 		cluster_user_idxs = [user_lookup[user_id] for user_id in cluster_users]
-		c_uc_vecs = uc_vecs[cluster_user_idxs]
-		user_sims = np.dot(cluster_centroid, c_uc_vecs.T)
+		c_uc_vecs = user_vecs[cluster_user_idxs]
+		user_sims = c_uc_vecs.dot(cluster_centroid)
 		avg_sim = np.mean(user_sims)
 
 		clusters[cluster_id] = {
