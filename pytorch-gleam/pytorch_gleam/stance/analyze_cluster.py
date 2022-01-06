@@ -51,12 +51,12 @@ def main():
 	for cluster_id, cluster in sorted(clusters.items(), key=lambda x: len(x[1]['users']), reverse=True):
 		c_users = cluster['users']
 		c_centroid = cluster['centroid']
-		c_avg_centroid_sim = cluster['sim']
+		c_avg_centroid_dist = cluster['dist']
 
 		print(
 			f'Cluster {cluster_id}: {len(c_users):,} '
 			f'users ({100 * len(c_users) / total_users:.0f}%) '
-			f'{c_avg_centroid_sim:.3f} avg centroid cosine similarity'
+			f'{c_avg_centroid_dist:.3f} avg centroid distance'
 		)
 		tax_info = {}
 		current_tax = None

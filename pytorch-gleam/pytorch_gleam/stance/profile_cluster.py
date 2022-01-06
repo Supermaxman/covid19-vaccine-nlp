@@ -12,21 +12,16 @@ def dist(a, b):
 	return a_b
 
 
-def cluster_kmeans(user_ids, user_vecs, num_clusters, method):
-	if method == 'kmeans':
-		model = KMeans(
-			n_clusters=num_clusters,
-			random_state=0,
-			n_init=20,
-			verbose=1
-		)
-	else:
-		raise ValueError(f'Unknown clustering method: {method}')
+def cluster_kmeans(user_ids, user_vecs, num_clusters):
+	model = KMeans(
+		n_clusters=num_clusters,
+		random_state=0,
+		n_init=20,
+		verbose=0
+	)
 
-	# l2 normalize user embeddings
 	model = model.fit(user_vecs)
-	# l2 normalize centroid embeddings
-	centroids = model.cluster_centers_ / np.linalg.norm(model.cluster_centers_, axis=-1, keepdims=True)
+	centroids = model.cluster_centers_
 	cluster_users = defaultdict(list)
 	clusters = {}
 	for user_id, cluster_id in zip(user_ids, model.labels_):
@@ -36,12 +31,12 @@ def cluster_kmeans(user_ids, user_vecs, num_clusters, method):
 	for cluster_id, cluster_users in cluster_users.items():
 		cluster_centroid = centroids[cluster_id]
 		cluster_user_idxs = [user_lookup[user_id] for user_id in cluster_users]
-		c_uc_vecs = user_vecs[cluster_user_idxs]
-		user_sims = c_uc_vecs.dot(cluster_centroid)
-		avg_sim = np.mean(user_sims)
+		c_user_vecs = user_vecs[cluster_user_idxs]
+		user_dist = dist(cluster_centroid, c_user_vecs)
+		avg_dist = np.mean(user_dist)
 
 		clusters[cluster_id] = {
-			'sim': float(avg_sim),
+			'dist': float(avg_dist),
 			'users': cluster_users,
 			'centroid': cluster_centroid.tolist()
 		}
@@ -53,13 +48,11 @@ def main():
 	parser.add_argument('-i', '--input_path', required=True)
 	parser.add_argument('-o', '--output_path', required=True)
 	parser.add_argument('-c', '--num_clusters', default=5, type=int)
-	parser.add_argument('-m', '--method', default='kmeans')
 	args = parser.parse_args()
 
 	input_path = args.input_path
 	output_path = args.output_path
 	num_clusters = args.num_clusters
-	method = args.method.lower()
 
 	print('collecting user vectors...')
 	with open(input_path, 'rb') as f:
@@ -69,7 +62,7 @@ def main():
 
 	print(user_vecs.shape)
 	print('clustering...')
-	clusters = cluster_kmeans(user_ids, user_vecs, num_clusters, method)
+	clusters = cluster_kmeans(user_ids, user_vecs, num_clusters)
 
 	for cluster_id, cluster in clusters.items():
 		print(f'{cluster_id}: {len(cluster["users"])}')
