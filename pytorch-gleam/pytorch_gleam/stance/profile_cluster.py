@@ -24,7 +24,7 @@ def cluster_kmeans(user_ids, user_vecs, num_clusters, method):
 		raise ValueError(f'Unknown clustering method: {method}')
 
 	model = model.fit(user_vecs)
-	centroids = model.cluster_centers_
+	centroids = model.cluster_centers_ / np.linalg.norm(model.cluster_centers_, axis=-1)
 	cluster_users = defaultdict(list)
 	clusters = {}
 	for user_id, cluster_id in zip(user_ids, model.labels_):

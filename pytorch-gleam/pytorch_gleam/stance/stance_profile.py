@@ -26,19 +26,17 @@ def embed_user(args):
 			for vec_idx, vec_sign in frame_map[frame_id]:
 				if mode == 'prob':
 					u_vec[vec_idx] += vec_sign * frame_score
-				elif mode == 'sign' or mode == 'cosine':
+				elif mode == 'sign':
 					u_vec[vec_idx] += vec_sign * np.sign(frame_score)
 				else:
 					raise ValueError(f'Unknown mode: {mode}')
 				u_vec_count[vec_idx] += 1.0
-
+	u_count = u_vec_count.sum()
 	u_norm = np.linalg.norm(u_vec, axis=-1)
-	if u_vec_count.sum() == 0 or u_norm == 0:
+	if u_count == 0 or u_norm == 0:
 		return None, None
 	# divide each vec_idx by the number of stances the user has on it
 	u_vec /= np.maximum(u_vec_count, 1.0)
-	if mode == 'cosine':
-		u_vec /= u_norm
 	u_vec = scp.csr_matrix(u_vec)
 	return user_id, u_vec
 
