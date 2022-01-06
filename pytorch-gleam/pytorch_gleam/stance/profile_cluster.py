@@ -4,7 +4,8 @@ import pickle
 from collections import defaultdict
 
 import numpy as np
-import sklearn.cluster as skc
+from sklearn.cluster import KMeans
+from spherecluster import SphericalKMeans
 
 
 def dist(a, b):
@@ -12,13 +13,23 @@ def dist(a, b):
 	return a_b
 
 
-def cluster_kmeans(user_ids, user_vecs, num_clusters):
-	model = skc.KMeans(
-		n_clusters=num_clusters,
-		random_state=0,
-		n_init=20,
-		verbose=0
-	)
+def cluster_kmeans(user_ids, user_vecs, num_clusters, method):
+	if method == 'kmeans':
+		model = KMeans(
+			n_clusters=num_clusters,
+			random_state=0,
+			n_init=20,
+			verbose=0
+		)
+	elif method == 'skmeans':
+		model = SphericalKMeans(
+			n_clusters=num_clusters,
+			random_state=0,
+			n_init=20,
+			verbose=0
+		)
+	else:
+		raise ValueError(f'Unknown clustering method: {method}')
 
 	model = model.fit(user_vecs)
 	centroids = model.cluster_centers_
@@ -48,11 +59,13 @@ def main():
 	parser.add_argument('-i', '--input_path', required=True)
 	parser.add_argument('-o', '--output_path', required=True)
 	parser.add_argument('-c', '--num_clusters', default=5, type=int)
+	parser.add_argument('-m', '--method', default='kmeans')
 	args = parser.parse_args()
 
 	input_path = args.input_path
 	output_path = args.output_path
 	num_clusters = args.num_clusters
+	method = args.method.lower()
 
 	print('collecting user vectors...')
 	with open(input_path, 'rb') as f:
@@ -62,7 +75,7 @@ def main():
 
 	print(user_vecs.shape)
 	print('clustering...')
-	clusters = cluster_kmeans(user_ids, user_vecs, num_clusters)
+	clusters = cluster_kmeans(user_ids, user_vecs, num_clusters, method)
 
 	for cluster_id, cluster in clusters.items():
 		print(f'{cluster_id}: {len(cluster["users"])}')
