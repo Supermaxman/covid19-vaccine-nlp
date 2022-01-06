@@ -23,8 +23,11 @@ def cluster_kmeans(user_ids, user_vecs, num_clusters, method):
 	else:
 		raise ValueError(f'Unknown clustering method: {method}')
 
-	model = model.fit(user_vecs)
-	centroids = model.cluster_centers_ / np.linalg.norm(model.cluster_centers_, axis=-1)
+	# l2 normalize user embeddings
+	uc_vecs = user_vecs / np.linalg.norm(user_vecs, axis=-1, keepdims=True)
+	model = model.fit(uc_vecs)
+	# l2 normalize centroid embeddings
+	centroids = model.cluster_centers_ / np.linalg.norm(model.cluster_centers_, axis=-1, keepdims=True)
 	cluster_users = defaultdict(list)
 	clusters = {}
 	for user_id, cluster_id in zip(user_ids, model.labels_):
@@ -34,12 +37,12 @@ def cluster_kmeans(user_ids, user_vecs, num_clusters, method):
 	for cluster_id, cluster_users in cluster_users.items():
 		cluster_centroid = centroids[cluster_id]
 		cluster_user_idxs = [user_lookup[user_id] for user_id in cluster_users]
-		c_user_vecs = user_vecs[cluster_user_idxs]
-		user_dist = dist(cluster_centroid, c_user_vecs)
-		avg_dist = np.mean(user_dist)
+		c_uc_vecs = uc_vecs[cluster_user_idxs]
+		user_sims = np.dot(cluster_centroid, c_uc_vecs.T)
+		avg_sim = np.mean(user_sims)
 
 		clusters[cluster_id] = {
-			'dist': float(avg_dist),
+			'sim': float(avg_sim),
 			'users': cluster_users,
 			'centroid': cluster_centroid.tolist()
 		}
