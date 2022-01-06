@@ -4,14 +4,14 @@ data_path=/nas1-nfs1/data/maw150130/covid19
 base_name=covid19-frame-rel-v2_stance
 profile_type=cosine
 cluster_version=v4
-cluster_method=skmeans
+cluster_method=kmeans
 
-python pytorch-gleam/pytorch_gleam/stance/stance_profile.py \
-  --input_path ${data_path}/${base_name}-scores.json \
-  --frame_map_path ${data_path}/frame_map.json \
-  --output_path ${data_path}/${base_name}-profiles-m${profile_type}.pk \
-  --mode ${profile_type} \
-  --num_processes 12
+#python pytorch-gleam/pytorch_gleam/stance/stance_profile.py \
+#  --input_path ${data_path}/${base_name}-scores.json \
+#  --frame_map_path ${data_path}/frame_map.json \
+#  --output_path ${data_path}/${base_name}-profiles-m${profile_type}.pk \
+#  --mode ${profile_type} \
+#  --num_processes 12
 
 for cluster_count in {3..10}
 do

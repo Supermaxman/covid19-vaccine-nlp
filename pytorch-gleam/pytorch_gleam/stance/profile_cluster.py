@@ -5,7 +5,6 @@ from collections import defaultdict
 
 import numpy as np
 from sklearn.cluster import KMeans
-from spherecluster import SphericalKMeans
 
 
 def dist(a, b):
@@ -16,13 +15,6 @@ def dist(a, b):
 def cluster_kmeans(user_ids, user_vecs, num_clusters, method):
 	if method == 'kmeans':
 		model = KMeans(
-			n_clusters=num_clusters,
-			random_state=0,
-			n_init=20,
-			verbose=0
-		)
-	elif method == 'skmeans':
-		model = SphericalKMeans(
 			n_clusters=num_clusters,
 			random_state=0,
 			n_init=20,
