@@ -22,10 +22,10 @@ done
 
 
 #cluster_count=9
-#python pytorch-gleam/pytorch_gleam/stance/analyze_cluster.py \
-#  --input_path ${data_path}/${base_name}-clusters-m${profile_type}-v${cluster_version}-k${cluster_count}.pk  \
-#  --user_path ${data_path}/${base_name}-profiles-m${profile_type}.pk \
-#  --theme_path ${data_path}/theme_map.json
+python pytorch-gleam/pytorch_gleam/stance/analyze_cluster.py \
+  --input_path ${data_path}/${base_name}-clusters-m${profile_type}-v${cluster_version}-k${cluster_count}.pk  \
+  --user_path ${data_path}/${base_name}-profiles-m${profile_type}.pk \
+  --theme_path ${data_path}/theme_map.json
 
 
 

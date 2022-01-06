@@ -206,10 +206,27 @@ python pytorch-gleam/pytorch_gleam/stance/stance_taxonomy.py \
   --frame_map_output_path /nas1-nfs1/data/maw150130/covid19/frame_map.json \
   --theme_output_path /nas1-nfs1/data/maw150130/covid19/theme_map.json
 
-bash experiments/profile/cluster-v1-k5.sh
+data_path=/nas1-nfs1/data/maw150130/covid19
+base_name=covid19-frame-rel-v2_stance
+profile_type=sign
+cluster_version=v5
+cluster_count=9
 
-bash experiments/profile/cluster-v2-k5.sh
+#python pytorch-gleam/pytorch_gleam/stance/profile_cluster.py \
+#   --input_path ${data_path}/${base_name}-profiles-m${profile_type}.pk \
+#   --output_path ${data_path}/${base_name}-clusters-m${profile_type}-v${cluster_version}-k${cluster_count}.pk \
+#   --num_clusters ${cluster_count}
 
-bash experiments/profile/cluster-v2-kf.sh
+python pytorch-gleam/pytorch_gleam/stance/analyze_cluster.py \
+  --input_path ${data_path}/${base_name}-clusters-m${profile_type}-v${cluster_version}-k${cluster_count}.pk  \
+  --user_path ${data_path}/${base_name}-profiles-m${profile_type}.pk \
+  --theme_path ${data_path}/theme_map.json \
+  --threshold 0.05
 
-bash experiments/profile/cluster-v3-kf.sh
+python pytorch-gleam/pytorch_gleam/stance/collect_cluster_users.py \
+  --input_path ${data_path}/${base_name}-clusters-m${profile_type}-v${cluster_version}-k${cluster_count}.pk  \
+  --user_path ${data_path}/${base_name}-profiles-m${profile_type}.pk \
+  --tweets_path ${data_path}/covid19-frame-rel-v2_candidates.jsonl \
+  --output_path ${data_path}/${base_name}-clusters-m${profile_type}-v${cluster_version}-k${cluster_count}-users.pk \
+  --num_samples 50 \
+  --max_tweets 5
