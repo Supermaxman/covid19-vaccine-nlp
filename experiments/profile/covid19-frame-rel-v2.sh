@@ -230,3 +230,10 @@ python pytorch-gleam/pytorch_gleam/stance/collect_cluster_users.py \
   --output_path ${data_path}/${base_name}-clusters-m${profile_type}-v${cluster_version}-k${cluster_count}-users.pk \
   --num_samples 50 \
   --max_tweets 5
+
+
+python pytorch-gleam/pytorch_gleam/stance/sample_pairs.py \
+  --input_path ${data_path}/${base_name}-clusters-m${profile_type}-v${cluster_version}-k${cluster_count}-users.pk  \
+  --output_path data/user_samples.xlsx \
+  --label_path data/user_sample_labels.json \
+  --samples_per_cluster 20

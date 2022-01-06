@@ -63,7 +63,8 @@ def create_excel(data, output_path, columns=None, labels=None):
 
 	df = pd.DataFrame(
 		data=data,
-		columns=columns
+		index=columns[0],
+		columns=columns[1:]
 	)
 	df = df.fillna('')
 	data_size = len(df)
