@@ -32,8 +32,7 @@ def embed_user(args):
 					raise ValueError(f'Unknown mode: {mode}')
 				u_vec_count[vec_idx] += 1.0
 	if u_vec_count.sum() == 0:
-		user_id = None
-		u_vec = None
+		return None, None
 	# divide each vec_idx by the number of stances the user has on it
 	u_vec /= np.maximum(u_vec_count, 1.0)
 	if mode == 'cosine':
