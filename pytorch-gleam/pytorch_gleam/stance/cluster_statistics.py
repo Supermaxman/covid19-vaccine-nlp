@@ -46,7 +46,7 @@ def main():
 		for user_id in c_users:
 			user_cluster[user_id] = cluster_id
 
-	cluster_frame_stances = defaultdict(lambda: defaultdict(dict))
+	cluster_frame_stances = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
 	print('collecting tweets for each user...')
 	for tweet in tqdm(read_jsonl(tweets_path), total=8161354):
 		user_id = tweet['author_id']
