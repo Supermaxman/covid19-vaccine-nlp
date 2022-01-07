@@ -237,3 +237,12 @@ python pytorch-gleam/pytorch_gleam/stance/sample_pairs.py \
   --output_path data/user_samples.xlsx \
   --label_path data/user_sample_labels.json \
   --samples_per_cluster 20
+
+python pytorch-gleam/pytorch_gleam/stance/evaluate_clusters.py --input_path "D:/Google Drive/Homework/UTD/Research/ICWSM 2022/profile_eval/user_samples.xlsx" --label_path "D:/Google Drive/Homework/UTD/Research/ICWSM 2022/profile_eval/user_sample_labels.json"
+
+python pytorch-gleam/pytorch_gleam/stance/cluster_statistics.py \
+  --input_path ${data_path}/${base_name}-clusters-m${profile_type}-v${cluster_version}-k${cluster_count}.pk  \
+  --scores_path ${data_path}/covid19-frame-rel-v2_stance-scores.json  \
+  --tweets_path ${data_path}/covid19-frame-rel-v2_candidates.jsonl \
+  --output_path ${data_path}/${base_name}-clusters-m${profile_type}-v${cluster_version}-k${cluster_count}-stats.json
+

@@ -165,10 +165,8 @@ def main():
 		}
 	)
 
-
 	with open(label_path, 'w') as f:
 		json.dump(labels, f)
-
 
 
 if __name__ == '__main__':
