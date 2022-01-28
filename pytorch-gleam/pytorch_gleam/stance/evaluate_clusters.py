@@ -55,11 +55,30 @@ def main():
 	jc = jaccard_coefficient(tp, tn, fp, fn)
 	ri = rand_index(tp, tn, fp, fn)
 	fmi = fowlkes_mallow_index(tp, tn, fp, fn)
-
+	p = tp / (tp + fp)
+	r = tp / (tp + fn)
 	print(f'jaccard_coefficient={jc:.3f}')
 	print(f'rand_index={ri:.3f}')
 	print(f'fowlkes_mallow_index={fmi:.3f}')
+	print(f'precision={p:.3f}')
+	print(f'recall={r:.3f}')
 
+	# identified as similar and same cluster
+	# tp
+
+	# identified as similar but not the same cluster
+	# fn
+	# identified as different and same different
+	# tn
+	# identified as different but not different cluster
+	# fp
+
+	sim_same = ((df['judgement'] == 1) & (df['label'] == 1)).sum()
+	sim_diff = ((df['judgement'] == 1) & (df['label'] == 0)).sum()
+	print(f'SAME: {sim_same}/{sim_diff}')
+	diff_diff = ((df['judgement'] == 0) & (df['label'] == 0)).sum()
+	diff_same = ((df['judgement'] == 0) & (df['label'] == 1)).sum()
+	print(f'DIFF: {diff_diff}/{diff_same}')
 
 if __name__ == '__main__':
 	main()

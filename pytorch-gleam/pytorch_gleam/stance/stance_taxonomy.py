@@ -4,11 +4,9 @@ from abc import ABC, abstractmethod
 import argparse
 from collections import defaultdict
 import os
-from multiprocessing import Pool
 from typing import List
 
 import ujson as json
-from tqdm import tqdm
 import numpy as np
 import pandas as pd
 
@@ -29,6 +27,10 @@ class Taxonomy(ABC):
 
 	@abstractmethod
 	def frames_to_themes(self):
+		pass
+
+	@abstractmethod
+	def frame_to_themes(self, f_id):
 		pass
 
 
@@ -74,17 +76,25 @@ class MisinformationTaxonomy(HierarchicalTaxonomy):
 	def frames_to_themes(self):
 		f_lookup = defaultdict(set)
 		for f_id, frame in self.frames.iterrows():
-			for m_id in frame['misinformation|Accept']:
-				if len(m_id) > 0:
-					mt_id = self.concerns.loc[m_id]['theme']
-					# ensure same theme only gets score once for one frame - stance pair, no need to count multiple times
-					f_lookup[f_id].add((mt_id, 1))
-			for m_id in frame['misinformation|Reject']:
-				if len(m_id) > 0:
-					mt_id = self.concerns.loc[m_id]['theme']
-					# ensure same theme only gets score once for one frame - stance pair, no need to count multiple times
-					f_lookup[f_id].add((mt_id, -1))
+			f_lookup[f_id] = self.frame_to_themes(f_id)
 		return f_lookup
+
+	def frame_to_themes(self, f_id):
+		f_themes = set()
+		if f_id not in self.frames.index:
+			return f_themes
+		frame = self.frames.loc[f_id]
+		for m_id in frame['misinformation|Accept']:
+			if len(m_id) > 0:
+				mt_id = self.concerns.loc[m_id]['theme']
+				# ensure same theme only gets score once for one frame - stance pair, no need to count multiple times
+				f_themes.add((mt_id, 1))
+		for m_id in frame['misinformation|Reject']:
+			if len(m_id) > 0:
+				mt_id = self.concerns.loc[m_id]['theme']
+				# ensure same theme only gets score once for one frame - stance pair, no need to count multiple times
+				f_themes.add((mt_id, -1))
+		return f_themes
 
 	def theme_score(self, scores, frames):
 		mt_scores = defaultdict(list)
@@ -143,19 +153,27 @@ class TrustTaxonomy(HierarchicalTaxonomy):
 	def frames_to_themes(self):
 		f_lookup = defaultdict(set)
 		for f_id, frame in self.frames.iterrows():
-			for t_id in frame['trust|Accept']:
-				if len(t_id) > 0 and t_id in self.concerns.index:
-					# ensure same theme only gets score once for one frame - stance pair, no need to count multiple times
-					tp_id = self.concerns.loc[t_id]['theme']
-					if len(tp_id) > 0:
-						f_lookup[f_id].add((tp_id, 1))
-			for t_id in frame['trust|Reject']:
-				if len(t_id) > 0 and t_id in self.concerns.index:
-					# ensure same theme only gets score once for one frame - stance pair, no need to count multiple times
-					tp_id = self.concerns.loc[t_id]['theme']
-					if len(tp_id) > 0:
-						f_lookup[f_id].add((tp_id, -1))
+			f_lookup[f_id] = self.frame_to_themes(f_id)
 		return f_lookup
+
+	def frame_to_themes(self, f_id):
+		f_themes = set()
+		if f_id not in self.frames.index:
+			return f_themes
+		frame = self.frames.loc[f_id]
+		for t_id in frame['trust|Accept']:
+			if len(t_id) > 0 and t_id in self.concerns.index:
+				# ensure same theme only gets score once for one frame - stance pair, no need to count multiple times
+				tp_id = self.concerns.loc[t_id]['theme']
+				if len(tp_id) > 0:
+					f_themes.add((tp_id, 1))
+		for t_id in frame['trust|Reject']:
+			if len(t_id) > 0 and t_id in self.concerns.index:
+				# ensure same theme only gets score once for one frame - stance pair, no need to count multiple times
+				tp_id = self.concerns.loc[t_id]['theme']
+				if len(tp_id) > 0:
+					f_themes.add((tp_id, -1))
+		return f_themes
 
 	def theme_score(self, scores, frames):
 		tp_scores = defaultdict(list)
@@ -219,10 +237,18 @@ class MoralityTaxonomy(Taxonomy):
 	def frames_to_themes(self):
 		f_lookup = defaultdict(set)
 		for f_id, frame in self.frames.iterrows():
-			for m_id in frame['morality']:
-				if len(m_id) > 0:
-					f_lookup[f_id].add((m_id, 1))
+			f_lookup[f_id] = self.frame_to_themes(f_id)
 		return f_lookup
+
+	def frame_to_themes(self, f_id):
+		f_themes = set()
+		if f_id not in self.frames.index:
+			return f_themes
+		frame = self.frames.loc[f_id]
+		for m_id in frame['morality']:
+			if len(m_id) > 0:
+				f_themes.add((m_id, 1))
+		return f_themes
 
 	def theme_score(self, scores, frames):
 		m_scores = defaultdict(list)
@@ -254,13 +280,21 @@ class LiteracyTaxonomy(Taxonomy):
 	def frames_to_themes(self):
 		f_lookup = defaultdict(set)
 		for f_id, frame in self.frames.iterrows():
-			for m_id in frame['literacy+|Accept']:
-				if len(m_id) > 0:
-					f_lookup[f_id].add(('+', 1))
-			for m_id in frame['literacy-|Accept']:
-				if len(m_id) > 0:
-					f_lookup[f_id].add(('-', 1))
+			f_lookup[f_id] = self.frame_to_themes(f_id)
 		return f_lookup
+
+	def frame_to_themes(self, f_id):
+		f_themes = set()
+		if f_id not in self.frames.index:
+			return f_themes
+		frame = self.frames.loc[f_id]
+		for m_id in frame['literacy+|Accept']:
+			if len(m_id) > 0:
+				f_themes.add(('+', 1))
+		for m_id in frame['literacy-|Accept']:
+			if len(m_id) > 0:
+				f_themes.add(('-', 1))
+		return f_themes
 
 	def theme_score(self, scores, frames):
 		m_scores = defaultdict(list)
@@ -297,13 +331,21 @@ class CivilRightsTaxonomy(Taxonomy):
 	def frames_to_themes(self):
 		f_lookup = defaultdict(set)
 		for f_id, frame in self.frames.iterrows():
-			for m_id in frame['civil_rights+|Accept']:
-				if len(m_id) > 0:
-					f_lookup[f_id].add(('+', 1))
-			for m_id in frame['civil_rights-|Accept']:
-				if len(m_id) > 0:
-					f_lookup[f_id].add(('-', 1))
+			f_lookup[f_id] = self.frame_to_themes(f_id)
 		return f_lookup
+
+	def frame_to_themes(self, f_id):
+		f_themes = set()
+		if f_id not in self.frames.index:
+			return f_themes
+		frame = self.frames.loc[f_id]
+		for m_id in frame['civil_rights+|Accept']:
+			if len(m_id) > 0:
+				f_themes.add(('+', 1))
+		for m_id in frame['civil_rights-|Accept']:
+			if len(m_id) > 0:
+				f_themes.add(('-', 1))
+		return f_themes
 
 	def theme_score(self, scores, frames):
 		m_scores = defaultdict(list)
@@ -359,6 +401,27 @@ class FrameTaxonomy(object):
 					theme_idx = self.themes.loc[tax.name, tax_theme_id]['idx']
 					f_lookup[f_id].append((int(theme_idx), score_sign))
 		return f_lookup
+
+	def frame_to_themes(self, f_id):
+		f_themes = []
+		for tax in self.taxonomies:
+			f_tax_themes = tax.frame_to_themes(f_id)
+			for tax_theme_id, score_sign in f_tax_themes:
+				theme_idx = self.themes.loc[tax.name, tax_theme_id]['idx']
+				f_themes.append((int(theme_idx), score_sign))
+		return f_themes
+
+	def frame_to_tax(self, f_id):
+		f_tax = {}
+		for tax in self.taxonomies:
+			tax_hier = {}
+			f_tax_themes = tax.frame_to_themes(f_id)
+			for tax_theme_id, score_sign in f_tax_themes:
+				theme_txt = self.themes.loc[tax.name, tax_theme_id]['text']
+				tax_hier[theme_txt] = 'Agree' if score_sign > 0 else 'Disagree'
+			if len(tax_hier) > 0:
+				f_tax[tax.name] = tax_hier
+		return f_tax
 
 	@staticmethod
 	def load_frames(file_path: str):
