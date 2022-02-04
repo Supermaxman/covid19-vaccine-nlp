@@ -2,59 +2,22 @@
 
 ## Identifying the Adoption or Rejection of Misinformation Targeting COVID-19 Vaccines in Twitter Discourse
 
-This repository contains the code and annotations utilized in the following research paper:
+This repository contains the code utilized in the following research paper:
 
-``[Identifying the Adoption or Rejection of Misinformation Targeting COVID-19 Vaccines in Twitter Discourse]()".
-
-Please cite as the following:
-
-```
-
-```
-
-
-## ICWSM 2022
-
-This repository contains the code and annotations utilized in the following research paper:
-
-``[ICWSM 2022]()".
+[Identifying the Adoption or Rejection of Misinformation Targeting COVID-19 Vaccines in Twitter Discourse](https://doi.org/10.1145/3485447.3512039)
 
 Please cite as the following:
-
 ```
-
+@inproceedings{weinzierl-acs,
+	title        = {Identifying the Adoption or Rejection of Misinformation Targeting COVID-19 Vaccines in Twitter Discourse},
+	author       = {Weinzierl, Maxwell and Harabagiu, Sanda},
+	year         = 2022,
+	booktitle    = {Proceedings of the Web Conference 2022},
+	publisher    = {Association for Computing Machinery},
+	address      = {New York, NY, USA},
+	isbn         = 9781450390965,
+	url          = {https://doi.org/10.1145/3485447.3512039},
+	doi			 = {10.1145/3485447.3512039},
+	numpages     = 10
+}
 ```
-
-
-## LREC CoVaxLies
-
-
-This repository contains the code and annotations utilized in the following research paper:
-
-``[LREC CoVaxLies]()".
-
-Please cite as the following:
-
-```
-
-```
-
-Annotated tweet ids and misinformation targets can be found in the annotations folder.
-You will need to use the Twitter API to download the text of these tweets, as we cannot directly provide this info.
-
-
-## LREC CoVaxTrust
-
-
-This repository contains the code and annotations utilized in the following research paper:
-
-``[LREC CoVaxTrust]()".
-
-Please cite as the following:
-
-```
-
-```
-
-Annotated tweet ids and trust framings can be found in the annotations folder.
-You will need to use the Twitter API to download the text of these tweets, as we cannot directly provide this info.
