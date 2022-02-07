@@ -17,7 +17,7 @@ Please cite as the following:
 	address      = {New York, NY, USA},
 	isbn         = 9781450390965,
 	url          = {https://doi.org/10.1145/3485447.3512039},
-	doi			 = {10.1145/3485447.3512039},
+	doi          = {10.1145/3485447.3512039},
 	numpages     = 10
 }
 ```
