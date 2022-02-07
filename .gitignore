@@ -12,6 +12,7 @@ __pycache__/
 # C extensions
 *.so
 .idea/
+pytorch-gleam/.idea/
 
 # Distribution / packaging
 .Python
